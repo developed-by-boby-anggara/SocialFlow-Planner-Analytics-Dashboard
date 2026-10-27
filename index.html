@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocialFlow Planner & Analytics Dashboard (V2.4.1)</title>
+  <title>SocialFlow Planner & Analytics Dashboard (V2.4.2)</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -26,6 +26,7 @@
       #printable-report { position: absolute; left: 0; top: 0; width: 100%; }
     }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   </style>
 </head>
@@ -35,7 +36,7 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // --- INISIALISASI FIREBASE OTOMATIS (V2.4.1) ---
+    // --- INISIALISASI FIREBASE (V2.4.2) ---
     const firebaseConfig = {
       apiKey: "AIzaSyCEJGbd7A3SqqzvyiY1aP9sqeeHKnzyfqI",
       authDomain: "socialflow-planner-analytics.firebaseapp.com",
@@ -52,21 +53,21 @@
       }
       firestoreDb = firebase.firestore();
     } catch (err) {
-      console.warn("Firestore inisialisasi offline fallback:", err);
+      console.warn("Firestore fallback:", err);
     }
 
-    // --- DATA KONSTANTA ---
+    // --- KONSTANTA PLATFORM & STATUS ---
     const PLATFORMS = {
-      TIKTOK: { name: 'TikTok', bg: 'bg-black text-white', color: '#000000' },
-      INSTAGRAM: { name: 'Instagram', bg: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white', color: '#E1306C' },
-      FACEBOOK: { name: 'Facebook', bg: 'bg-blue-600 text-white', color: '#1877F2' }
+      TIKTOK: { name: 'TikTok', bg: 'bg-black text-white', border: 'border-black' },
+      INSTAGRAM: { name: 'Instagram', bg: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white', border: 'border-pink-500' },
+      FACEBOOK: { name: 'Facebook', bg: 'bg-blue-600 text-white', border: 'border-blue-600' }
     };
 
     const STATUS_LIST = ['Ide', 'Brief', 'Produksi', 'Editing', 'Siap Posting', 'Terjadwal', 'Published', 'Cancelled'];
     const PILLARS = ['Edukasi', 'Hiburan', 'Promosi', 'Testimoni', 'Behind the Scenes', 'Tips & Trik', 'Inspirasi'];
     const FORMATS = ['Reels', 'TikTok Video', 'Story', 'Carousel', 'Foto', 'Facebook Video', 'Live'];
 
-    // --- DATA AWAL (DEMO INITIALIZER) ---
+    // --- DATA AWAL (DEFAULT) ---
     const INITIAL_CONTENTS = [
       {
         id: "demo-1",
@@ -155,11 +156,40 @@
 
     function App() {
       const [currentTab, setCurrentTab] = useState('dashboard');
-      const [deviceMode, setDeviceMode] = useState('web'); // 'web' atau 'hp'
-      const [isSyncing, setIsSyncing] = useState(false);
+      const [deviceMode, setDeviceMode] = useState('web');
+      const [calendarViewMode, setCalendarViewMode] = useState('spreadsheet'); // 'spreadsheet', 'grid', 'list'
       const [toast, setToast] = useState(null);
 
-      // State Data Konten & Ide
+      // --- JAM REALTIME (WIB - ASIA/JAKARTA) ---
+      const [currentTime, setCurrentTime] = useState(new Date());
+
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      const formattedClock = useMemo(() => {
+        return currentTime.toLocaleTimeString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      }, [currentTime]);
+
+      const formattedDateHeader = useMemo(() => {
+        return currentTime.toLocaleDateString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+      }, [currentTime]);
+
+      // --- DATA KONTEN & IDE ---
       const [contents, setContents] = useState(() => {
         const saved = localStorage.getItem('sf_contents');
         return saved ? JSON.parse(saved) : INITIAL_CONTENTS;
@@ -170,7 +200,7 @@
         return saved ? JSON.parse(saved) : INITIAL_IDEAS;
       });
 
-      // Filter & Pencarian
+      // Filter & Search
       const [searchQuery, setSearchQuery] = useState('');
       const [filterPlatform, setFilterPlatform] = useState('ALL');
       const [filterStatus, setFilterStatus] = useState('ALL');
@@ -178,9 +208,8 @@
       // Modals
       const [showContentModal, setShowContentModal] = useState(false);
       const [editingContent, setEditingContent] = useState(null);
-      const [showDetailModal, setShowDetailModal] = useState(null);
 
-      // Form State Content
+      // Form Konten
       const [formData, setFormData] = useState({
         title: '',
         platform: 'Instagram',
@@ -201,7 +230,7 @@
         saves: 0
       });
 
-      // Form State Ide Spontan
+      // Form Ide Spontan
       const [ideaForm, setIdeaForm] = useState({
         title: '',
         platform: 'TikTok',
@@ -216,7 +245,7 @@
         setTimeout(() => setToast(null), 3000);
       };
 
-      // Simpan ke LocalStorage
+      // Simpan LocalStorage & Sync Firestore
       useEffect(() => {
         localStorage.setItem('sf_contents', JSON.stringify(contents));
       }, [contents]);
@@ -225,30 +254,23 @@
         localStorage.setItem('sf_ideas', JSON.stringify(ideas));
       }, [ideas]);
 
-      // Sinkronisasi Dua Arah ke Cloud Firestore (V2.4.1)
       useEffect(() => {
         if (!firestoreDb) return;
-        setIsSyncing(true);
         const unsubscribe = firestoreDb.collection("contents").onSnapshot((snapshot) => {
           if (!snapshot.empty) {
             const remoteData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setContents(remoteData);
           }
-          setIsSyncing(false);
-        }, (error) => {
-          console.warn("Firestore sync fallback to local:", error);
-          setIsSyncing(false);
-        });
-
+        }, (err) => console.warn("Firestore sync:", err));
         return () => unsubscribe();
       }, []);
 
-      // Simpan / Update Konten ke Firestore & State
+      // CRUD HANDLERS
       const handleSaveContent = async (e) => {
         e.preventDefault();
         if (!formData.title.trim()) return;
 
-        const newPayload = {
+        const payload = {
           ...formData,
           views: Number(formData.views) || 0,
           reach: Number(formData.reach) || 0,
@@ -260,71 +282,54 @@
         };
 
         if (editingContent) {
-          // Update
           const targetId = editingContent.id;
-          setContents(prev => prev.map(c => c.id === targetId ? { ...newPayload, id: targetId } : c));
+          setContents(prev => prev.map(c => c.id === targetId ? { ...payload, id: targetId } : c));
           if (firestoreDb) {
-            try { await firestoreDb.collection("contents").doc(String(targetId)).set(newPayload, { merge: true }); } catch (err) {}
+            try { await firestoreDb.collection("contents").doc(String(targetId)).set(payload, { merge: true }); } catch (err) {}
           }
           showToastMessage("Konten berhasil diperbarui!");
         } else {
-          // Buat Baru
           const newId = "cnt-" + Date.now();
-          const toAdd = { ...newPayload, id: newId, createdAt: new Date().toISOString() };
+          const toAdd = { ...payload, id: newId, createdAt: new Date().toISOString() };
           setContents(prev => [toAdd, ...prev]);
           if (firestoreDb) {
             try { await firestoreDb.collection("contents").doc(newId).set(toAdd); } catch (err) {}
           }
-          showToastMessage("Rencana konten baru berhasil ditambahkan!");
+          showToastMessage("Rencana konten baru berhasil dibuat!");
         }
-
         setShowContentModal(false);
         setEditingContent(null);
       };
 
-      // Hapus Konten
       const handleDeleteContent = async (id) => {
-        if (!confirm("Yakin ingin menghapus konten ini?")) return;
+        if (!confirm("Hapus jadwal konten ini?")) return;
         setContents(prev => prev.filter(c => c.id !== id));
         if (firestoreDb) {
           try { await firestoreDb.collection("contents").doc(String(id)).delete(); } catch (err) {}
         }
-        showToastMessage("Konten telah dihapus.");
-        if (showDetailModal && showDetailModal.id === id) setShowDetailModal(null);
+        showToastMessage("Konten berhasil dihapus.");
       };
 
-      // Duplikasi Konten
       const handleDuplicateContent = (item) => {
         const dupId = "cnt-" + Date.now();
-        const duplicated = {
-          ...item,
-          id: dupId,
-          title: item.title + " (Copy)",
-          status: "Ide",
-          views: 0, reach: 0, likes: 0, comments: 0, shares: 0, saves: 0
-        };
-        setContents(prev => [duplicated, ...prev]);
+        const dup = { ...item, id: dupId, title: item.title + " (Duplikat)", status: "Ide" };
+        setContents(prev => [dup, ...prev]);
         if (firestoreDb) {
-          try { firestoreDb.collection("contents").doc(dupId).set(duplicated); } catch (err) {}
+          try { firestoreDb.collection("contents").doc(dupId).set(dup); } catch (err) {}
         }
-        showToastMessage("Konten berhasil diduplikasi!");
+        showToastMessage("Konten diduplikasi ke Bank Ide!");
       };
 
-      // Simpan Ide Baru
+      // IDE HANDLERS
       const handleSaveIdea = (e) => {
         e.preventDefault();
         if (!ideaForm.title.trim()) return;
-        const newIdea = {
-          ...ideaForm,
-          id: "idea-" + Date.now(),
-          status: "Dipertimbangkan"
-        };
+        const newIdea = { ...ideaForm, id: "idea-" + Date.now(), status: "Dipertimbangkan" };
         setIdeas([newIdea, ...ideas]);
         setIdeaForm({ title: '', platform: 'TikTok', pillar: 'Edukasi', description: '', referenceUrl: '', assetUrl: '' });
-        showToastMessage("Ide konten berhasil disimpan di Bank Ide!");
+        showToastMessage("Ide tersimpan di Bank Ide!");
       };
 
-      // Ubah Ide Menjadi Rencana Konten (Forward Data & URLs)
       const handlePromoteIdea = (idea) => {
         setEditingContent(null);
         setFormData({
@@ -344,13 +349,26 @@
         setShowContentModal(true);
       };
 
-      // Hapus Ide
       const handleDeleteIdea = (id) => {
         setIdeas(prev => prev.filter(i => i.id !== id));
-        showToastMessage("Ide berhasil dihapus.");
+        showToastMessage("Ide dihapus.");
       };
 
-      // --- PERHITUNGAN KPI & ANALITIK ---
+      // METRIK SUMMARY
+      const metrics = useMemo(() => {
+        const total = contents.length;
+        const published = contents.filter(c => c.status === 'Published').length;
+        const inProgress = contents.filter(c => ['Brief', 'Produksi', 'Editing', 'Siap Posting'].includes(c.status)).length;
+        const scheduled = contents.filter(c => c.status === 'Terjadwal').length;
+
+        const totalViews = contents.reduce((acc, c) => acc + (Number(c.views) || 0), 0);
+        const totalReach = contents.reduce((acc, c) => acc + (Number(c.reach) || 0), 0);
+        const totalEngagement = contents.reduce((acc, c) => acc + (Number(c.likes)||0) + (Number(c.comments)||0) + (Number(c.shares)||0) + (Number(c.saves)||0), 0);
+        const avgER = totalReach > 0 ? ((totalEngagement / totalReach) * 100).toFixed(2) : "0.00";
+
+        return { total, published, inProgress, scheduled, totalViews, totalReach, totalEngagement, avgER };
+      }, [contents]);
+
       const filteredContents = useMemo(() => {
         return contents.filter(c => {
           const matchSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -361,31 +379,9 @@
         });
       }, [contents, searchQuery, filterPlatform, filterStatus]);
 
-      const metrics = useMemo(() => {
-        const total = contents.length;
-        const published = contents.filter(c => c.status === 'Published').length;
-        const inProgress = contents.filter(c => ['Brief', 'Produksi', 'Editing', 'Siap Posting'].includes(c.status)).length;
-        const scheduled = contents.filter(c => c.status === 'Terjadwal').length;
-
-        const totalViews = contents.reduce((acc, c) => acc + (Number(c.views) || 0), 0);
-        const totalReach = contents.reduce((acc, c) => acc + (Number(c.reach) || 0), 0);
-        const totalLikes = contents.reduce((acc, c) => acc + (Number(c.likes) || 0), 0);
-        const totalComments = contents.reduce((acc, c) => acc + (Number(c.comments) || 0), 0);
-        const totalShares = contents.reduce((acc, c) => acc + (Number(c.shares) || 0), 0);
-        const totalSaves = contents.reduce((acc, c) => acc + (Number(c.saves) || 0), 0);
-
-        const totalEngagement = totalLikes + totalComments + totalShares + totalSaves;
-        const avgER = totalReach > 0 ? ((totalEngagement / totalReach) * 100).toFixed(2) : "0.00";
-
-        return {
-          total, published, inProgress, scheduled,
-          totalViews, totalReach, totalEngagement, avgER
-        };
-      }, [contents]);
-
       // Ekspor CSV
       const handleExportCSV = () => {
-        const headers = ["ID", "Judul", "Platform", "Format", "Pillar", "Status", "Jadwal Tanggal", "Jadwal Jam", "Views", "Reach", "Likes", "Comments", "Shares", "Saves", "Ref Link", "Asset Link"];
+        const headers = ["ID", "Judul", "Platform", "Format", "Pillar", "Status", "Tanggal", "Jam", "Views", "Reach", "Likes", "Comments", "Shares", "Saves", "Referensi", "Aset"];
         const rows = contents.map(c => [
           c.id, `"${c.title.replace(/"/g, '""')}"`, c.platform, c.format, c.pillar, c.status,
           c.scheduledDate, c.scheduledTime, c.views, c.reach, c.likes, c.comments, c.shares, c.saves,
@@ -395,43 +391,41 @@
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `SocialFlow_Rekap_${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute("download", `SocialFlow_Planner_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        showToastMessage("Data CSV berhasil diunduh!");
+        showToastMessage("Data CSV berhasil didownload!");
       };
 
       return (
         <div className={`min-h-screen ${deviceMode === 'hp' ? 'bg-slate-800 p-2 sm:p-6 flex justify-center items-start' : 'bg-slate-50'}`}>
           
-          {/* CONTAINER SIMULATOR RESPONSIVE */}
           <div className={`w-full transition-all duration-300 flex flex-col ${
             deviceMode === 'hp' 
               ? 'max-w-md bg-white min-h-[844px] rounded-[36px] shadow-2xl border-4 border-slate-700 overflow-hidden relative' 
               : 'min-h-screen lg:flex-row flex'
           }`}>
 
-            {/* SIDEBAR (Desktop Mode Only) */}
+            {/* SIDEBAR (Desktop Web Mode) */}
             {deviceMode === 'web' && (
               <aside className="w-64 bg-slate-900 text-slate-100 flex-shrink-0 flex flex-col justify-between p-5 border-r border-slate-800">
                 <div>
                   <div className="flex items-center gap-3 mb-8">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-indigo-500/30">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-indigo-500/30">
                       S
                     </div>
                     <div>
                       <h1 className="font-extrabold text-base tracking-tight leading-none text-white">SocialFlow</h1>
-                      <div className="flex items-center gap-1.5 mt-1">
+                      <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                          V2.4.1
+                          V2.4.2
                         </span>
-                        {isSyncing && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>}
                       </div>
                     </div>
                   </div>
 
-                  <nav className="space-y-1 text-sm font-semibold">
+                  <nav className="space-y-1.5 text-sm font-semibold">
                     {[
                       { id: 'dashboard', label: 'Dashboard', icon: '📊' },
                       { id: 'planner', label: 'Content Planner', icon: '📝' },
@@ -457,47 +451,53 @@
                   </nav>
                 </div>
 
-                <div className="pt-4 border-t border-slate-800/80 text-xs text-slate-400">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="font-medium text-slate-300">Cloud Firestore Connected</span>
+                {/* JAM REALTIME WIB & STATUS FIREBASE */}
+                <div className="pt-4 border-t border-slate-800/80 text-xs text-slate-400 space-y-2.5">
+                  <div className="bg-slate-800/70 p-3 rounded-xl border border-slate-700/60">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Waktu Real-time</span>
+                    <div className="flex items-baseline gap-1.5 mt-0.5">
+                      <span className="text-lg font-black text-white font-mono">{formattedClock}</span>
+                      <span className="text-[10px] font-bold text-indigo-400">WIB</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1 truncate">{formattedDateHeader}</p>
                   </div>
-                  <p className="text-[11px] text-slate-500">Zona: Asia/Jakarta (WIB)</p>
+
+                  <div className="flex items-center gap-2 px-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 animate-pulse"></span>
+                    <span className="font-semibold text-slate-300 text-xs">Cloud Firestore Connected</span>
+                  </div>
                 </div>
               </aside>
             )}
 
-            {/* MAIN CONTENT AREA */}
+            {/* MAIN AREA */}
             <main className="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar pb-20 lg:pb-6">
               
               {/* TOP HEADER */}
               <header className="bg-white/80 backdrop-blur sticky top-0 z-30 px-5 py-3.5 border-b border-slate-200/80 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   {deviceMode === 'hp' && (
-                    <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center">S</span>
+                    <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center">S</span>
                   )}
                   <div>
                     <h2 className="font-extrabold text-slate-900 text-lg leading-tight capitalize">
-                      {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab}
+                      {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab === 'calendar' ? 'Kalender & Spreadsheet' : currentTab}
                     </h2>
                     <p className="text-xs text-slate-500 hidden sm:block">Perencanaan & Analisis Konten Multi-Platform</p>
                   </div>
                 </div>
 
-                {/* DEVICE TOGGLE & ACTION BUTTONS */}
                 <div className="flex items-center gap-2">
-                  <div className="bg-slate-100 p-1 rounded-lg flex items-center gap-1 border border-slate-200 text-xs font-semibold">
+                  <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 text-xs font-semibold">
                     <button
                       onClick={() => setDeviceMode('hp')}
-                      className={`px-2.5 py-1 rounded-md transition ${deviceMode === 'hp' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
-                      title="Simulasi Tampilan HP"
+                      className={`px-2.5 py-1 rounded-lg transition ${deviceMode === 'hp' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
                     >
                       📱 HP
                     </button>
                     <button
                       onClick={() => setDeviceMode('web')}
-                      className={`px-2.5 py-1 rounded-md transition ${deviceMode === 'web' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
-                      title="Tampilan Desktop / Web"
+                      className={`px-2.5 py-1 rounded-lg transition ${deviceMode === 'web' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
                     >
                       💻 Web
                     </button>
@@ -523,67 +523,65 @@
 
               {/* TOAST NOTIFIKASI */}
               {toast && (
-                <div className="fixed top-16 right-6 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 animate-fade-in">
+                <div className="fixed top-16 right-6 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700">
                   <span className="text-emerald-400">✓</span> {toast}
                 </div>
               )}
 
-              {/* CONTENT VIEW ROUTING */}
+              {/* ROUTING TAB VIEW */}
               <div className="p-4 sm:p-6 space-y-6">
 
                 {/* TAB 1: DASHBOARD */}
                 {currentTab === 'dashboard' && (
                   <div className="space-y-6">
-                    {/* 8 KARTU KPI UTAMA */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Konten</span>
                         <p className="text-2xl font-black text-slate-900 mt-1">{metrics.total}</p>
-                        <p className="text-[11px] text-indigo-600 font-semibold mt-1">Direncanakan & Terbit</p>
+                        <p className="text-[11px] text-indigo-600 font-semibold mt-1">Direncanakan & Tayang</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sudah Publish</span>
                         <p className="text-2xl font-black text-emerald-600 mt-1">{metrics.published}</p>
-                        <p className="text-[11px] text-slate-500 mt-1">Live di saluran</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Live di feed / shorts</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sedang Diproduksi</span>
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sedang Produksi</span>
                         <p className="text-2xl font-black text-amber-600 mt-1">{metrics.inProgress}</p>
-                        <p className="text-[11px] text-slate-500 mt-1">Tahap Brief & Edit</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Brief & editing</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Terjadwal</span>
                         <p className="text-2xl font-black text-blue-600 mt-1">{metrics.scheduled}</p>
-                        <p className="text-[11px] text-slate-500 mt-1">Siap auto-post</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Siap posting</p>
                       </div>
 
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Tayangan</span>
                         <p className="text-2xl font-black text-slate-900 mt-1">{metrics.totalViews.toLocaleString('id-ID')}</p>
-                        <p className="text-[11px] text-purple-600 font-semibold mt-1">Views organik</p>
+                        <p className="text-[11px] text-purple-600 font-semibold mt-1">Akumulasi views</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Reach</span>
                         <p className="text-2xl font-black text-slate-900 mt-1">{metrics.totalReach.toLocaleString('id-ID')}</p>
-                        <p className="text-[11px] text-slate-500 mt-1">Akun unik</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Akun unik terjangkau</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Interaksi</span>
                         <p className="text-2xl font-black text-slate-900 mt-1">{metrics.totalEngagement.toLocaleString('id-ID')}</p>
-                        <p className="text-[11px] text-slate-500 mt-1">Likes, Komen, Share, Save</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Likes, komentar, save</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Avg. ER by Reach</span>
                         <p className="text-2xl font-black text-indigo-600 mt-1">{metrics.avgER}%</p>
-                        <p className="text-[11px] text-emerald-600 font-semibold mt-1">Engagement rate sehat</p>
+                        <p className="text-[11px] text-emerald-600 font-semibold mt-1">Rasio interaksi sehat</p>
                       </div>
                     </div>
 
-                    {/* KONTEN DENGAN PERFORMA TERBAIK */}
                     <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="font-extrabold text-slate-900 text-sm">Top Konten Berdasarkan Views</h3>
-                        <span className="text-xs text-indigo-600 font-semibold cursor-pointer" onClick={() => setCurrentTab('database')}>Lihat Semua →</span>
+                        <span className="text-xs text-indigo-600 font-semibold cursor-pointer" onClick={() => setCurrentTab('database')}>Lihat Semua Database →</span>
                       </div>
                       <div className="space-y-3">
                         {contents.filter(c => c.views > 0).sort((a,b) => b.views - a.views).slice(0, 3).map((item, idx) => (
@@ -613,7 +611,6 @@
                 {/* TAB 2: CONTENT PLANNER */}
                 {currentTab === 'planner' && (
                   <div className="space-y-4">
-                    {/* Filter & Pencarian */}
                     <div className="flex flex-wrap gap-2 items-center justify-between bg-white p-3.5 rounded-2xl border border-slate-200">
                       <input
                         type="text"
@@ -644,7 +641,6 @@
                       </div>
                     </div>
 
-                    {/* List Planner Card */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {filteredContents.map(item => (
                         <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow transition flex flex-col justify-between">
@@ -660,7 +656,6 @@
                             <h3 className="font-extrabold text-sm text-slate-900 mb-1">{item.title}</h3>
                             <p className="text-xs text-slate-500 line-clamp-2 mb-3">{item.caption || 'Belum ada caption.'}</p>
                             
-                            {/* Tags URL */}
                             <div className="flex flex-wrap gap-1.5 mb-3 text-[10px]">
                               {item.referenceUrl && (
                                 <a href={item.referenceUrl} target="_blank" rel="noreferrer" className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-semibold hover:underline">
@@ -678,31 +673,9 @@
                           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
                             <span>📅 {item.scheduledDate} ({item.scheduledTime})</span>
                             <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={() => handleDuplicateContent(item)}
-                                className="text-slate-600 hover:text-indigo-600 p-1"
-                                title="Duplikasi"
-                              >
-                                📋
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setEditingContent(item);
-                                  setFormData(item);
-                                  setShowContentModal(true);
-                                }}
-                                className="text-slate-600 hover:text-indigo-600 p-1"
-                                title="Edit"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                onClick={() => handleDeleteContent(item.id)}
-                                className="text-slate-400 hover:text-rose-600 p-1"
-                                title="Hapus"
-                              >
-                                🗑️
-                              </button>
+                              <button onClick={() => handleDuplicateContent(item)} className="p-1 hover:text-indigo-600" title="Duplikasi">📋</button>
+                              <button onClick={() => { setEditingContent(item); setFormData(item); setShowContentModal(true); }} className="p-1 hover:text-indigo-600" title="Edit">✏️</button>
+                              <button onClick={() => handleDeleteContent(item.id)} className="p-1 hover:text-rose-600" title="Hapus">🗑️</button>
                             </div>
                           </div>
                         </div>
@@ -711,43 +684,186 @@
                   </div>
                 )}
 
-                {/* TAB 3: KALENDER KONTEN */}
+                {/* TAB 3: KALENDER KONTEN (SPREADSHEET + GRID + LIST) */}
                 {currentTab === 'calendar' && (
-                  <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-bold text-slate-900 text-sm">Kalender Posting Konten (WIB)</h3>
-                      <button
-                        onClick={() => {
-                          setEditingContent(null);
-                          setShowContentModal(true);
-                        }}
-                        className="text-xs bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-100"
-                      >
-                        + Jadwal Baru
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      {contents.sort((a,b) => new Date(a.scheduledDate) - new Date(b.scheduledDate)).map(item => (
-                        <div key={item.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
-                          <div className="flex items-center gap-3">
-                            <div className="text-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-xs">
-                              <span className="block text-[10px] font-bold text-slate-400 uppercase">{item.scheduledDate.split('-')[1]}</span>
-                              <span className="block text-sm font-black text-slate-800 leading-none">{item.scheduledDate.split('-')[2]}</span>
-                            </div>
-                            <div>
-                              <h4 className="text-xs font-bold text-slate-900">{item.title}</h4>
-                              <p className="text-[10px] text-slate-500">{item.platform} • Jam {item.scheduledTime} WIB • <span className="font-semibold text-indigo-600">{item.status}</span></p>
-                            </div>
-                          </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
+                    {/* Switcher Tampilan Kalender */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
+                      <div>
+                        <h3 className="font-extrabold text-slate-900 text-sm">Kalender & Matrix Rencana Posting</h3>
+                        <p className="text-xs text-slate-400">Pilih mode tampilan kalender yang paling nyaman digunakan.</p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 text-xs font-semibold">
                           <button
-                            onClick={() => { setEditingContent(item); setFormData(item); setShowContentModal(true); }}
-                            className="text-xs text-indigo-600 font-semibold px-2 py-1 rounded hover:bg-indigo-50"
+                            onClick={() => setCalendarViewMode('spreadsheet')}
+                            className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1 ${
+                              calendarViewMode === 'spreadsheet' ? 'bg-white shadow text-indigo-600 font-bold' : 'text-slate-500'
+                            }`}
                           >
-                            Atur Jam
+                            <span>📊</span> Spreadsheet
+                          </button>
+                          <button
+                            onClick={() => setCalendarViewMode('grid')}
+                            className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1 ${
+                              calendarViewMode === 'grid' ? 'bg-white shadow text-indigo-600 font-bold' : 'text-slate-500'
+                            }`}
+                          >
+                            <span>🗓️</span> Grid Bulanan
+                          </button>
+                          <button
+                            onClick={() => setCalendarViewMode('list')}
+                            className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1 ${
+                              calendarViewMode === 'list' ? 'bg-white shadow text-indigo-600 font-bold' : 'text-slate-500'
+                            }`}
+                          >
+                            <span>📋</span> List Agenda
                           </button>
                         </div>
-                      ))}
+
+                        <button
+                          onClick={() => { setEditingContent(null); setShowContentModal(true); }}
+                          className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold text-xs px-3 py-2 rounded-xl transition"
+                        >
+                          + Jadwal Baru
+                        </button>
+                      </div>
                     </div>
+
+                    {/* MODE 1: SPREADSHEET MATRIX (BARU) */}
+                    {calendarViewMode === 'spreadsheet' && (
+                      <div className="overflow-x-auto rounded-xl border border-slate-200">
+                        <table className="w-full text-left text-xs text-slate-700">
+                          <thead className="bg-slate-100/80 text-[10px] text-slate-500 uppercase font-black border-b border-slate-200">
+                            <tr>
+                              <th className="px-3.5 py-3">Tanggal & Jam</th>
+                              <th className="px-3.5 py-3">Platform</th>
+                              <th className="px-3.5 py-3">Judul & Gagasan Konten</th>
+                              <th className="px-3.5 py-3">Pillar & Format</th>
+                              <th className="px-3.5 py-3">Referensi / Aset</th>
+                              <th className="px-3.5 py-3">Status</th>
+                              <th className="px-3.5 py-3 text-center">Atur</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-medium">
+                            {contents.sort((a,b) => new Date(a.scheduledDate) - new Date(b.scheduledDate)).map(item => (
+                              <tr key={item.id} className="hover:bg-indigo-50/40 transition">
+                                <td className="px-3.5 py-3 whitespace-nowrap">
+                                  <span className="font-bold text-slate-900 block">{item.scheduledDate}</span>
+                                  <span className="text-[11px] text-slate-400 font-mono">{item.scheduledTime} WIB</span>
+                                </td>
+                                <td className="px-3.5 py-3">
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${PLATFORMS[item.platform.toUpperCase()]?.bg || 'bg-slate-800 text-white'}`}>
+                                    {item.platform}
+                                  </span>
+                                </td>
+                                <td className="px-3.5 py-3 max-w-xs">
+                                  <p className="font-bold text-slate-900 line-clamp-1">{item.title}</p>
+                                  <p className="text-[11px] text-slate-400 line-clamp-1">{item.caption || 'Tanpa caption'}</p>
+                                </td>
+                                <td className="px-3.5 py-3 whitespace-nowrap text-slate-500">
+                                  {item.pillar} <span className="text-slate-300">•</span> {item.format}
+                                </td>
+                                <td className="px-3.5 py-3">
+                                  <div className="flex gap-1.5 text-[10px]">
+                                    {item.referenceUrl ? (
+                                      <a href={item.referenceUrl} target="_blank" rel="noreferrer" className="text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded hover:underline">Link</a>
+                                    ) : <span className="text-slate-300">-</span>}
+                                    {item.assetUrl && (
+                                      <a href={item.assetUrl} target="_blank" rel="noreferrer" className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded hover:underline">Drive</a>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-3.5 py-3 whitespace-nowrap">
+                                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                                    item.status === 'Published' ? 'bg-emerald-100 text-emerald-800' :
+                                    item.status === 'Siap Posting' ? 'bg-teal-100 text-teal-800' :
+                                    item.status === 'Terjadwal' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-slate-100 text-slate-700'
+                                  }`}>
+                                    {item.status}
+                                  </span>
+                                </td>
+                                <td className="px-3.5 py-3 text-center whitespace-nowrap">
+                                  <button
+                                    onClick={() => { setEditingContent(item); setFormData(item); setShowContentModal(true); }}
+                                    className="text-indigo-600 font-bold hover:underline"
+                                  >
+                                    Edit
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* MODE 2: GRID KALENDER BULANAN (BARU) */}
+                    {calendarViewMode === 'grid' && (
+                      <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                        <div className="grid grid-cols-7 bg-slate-100 text-center text-[10px] font-black text-slate-500 uppercase py-2.5 border-b border-slate-200">
+                          <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+                        </div>
+                        <div className="grid grid-cols-7 auto-rows-fr gap-px bg-slate-200">
+                          {Array.from({ length: 35 }).map((_, i) => {
+                            const dayNum = ((i % 31) + 1);
+                            const dayStr = dayNum < 10 ? `0${dayNum}` : `${dayNum}`;
+                            const matchedItems = contents.filter(c => c.scheduledDate && c.scheduledDate.endsWith(`-${dayStr}`));
+                            return (
+                              <div key={i} className="bg-white min-h-[90px] p-1.5 flex flex-col justify-between hover:bg-slate-50 transition">
+                                <span className="text-[10px] font-extrabold text-slate-400 block">{dayNum}</span>
+                                <div className="space-y-1 my-1 overflow-hidden">
+                                  {matchedItems.map(ev => (
+                                    <div
+                                      key={ev.id}
+                                      onClick={() => { setEditingContent(ev); setFormData(ev); setShowContentModal(true); }}
+                                      className={`text-[9px] font-bold p-1 rounded cursor-pointer truncate ${PLATFORMS[ev.platform.toUpperCase()]?.bg || 'bg-slate-800 text-white'}`}
+                                      title={ev.title}
+                                    >
+                                      {ev.scheduledTime} {ev.title}
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="text-[9px] text-right text-slate-300">
+                                  {matchedItems.length > 0 ? `${matchedItems.length} post` : ''}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* MODE 3: LIST AGENDA (Bawaan Lama yang Dipertahankan) */}
+                    {calendarViewMode === 'list' && (
+                      <div className="space-y-3">
+                        {contents.sort((a,b) => new Date(a.scheduledDate) - new Date(b.scheduledDate)).map(item => (
+                          <div key={item.id} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+                            <div className="flex items-center gap-3">
+                              <div className="text-center bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs">
+                                <span className="block text-[10px] font-bold text-slate-400 uppercase">{item.scheduledDate.split('-')[1]}</span>
+                                <span className="block text-base font-black text-slate-800 leading-none">{item.scheduledDate.split('-')[2]}</span>
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-900">{item.title}</h4>
+                                <p className="text-[11px] text-slate-500">
+                                  {item.platform} • Jam {item.scheduledTime} WIB • <span className="font-semibold text-indigo-600">{item.status}</span>
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => { setEditingContent(item); setFormData(item); setShowContentModal(true); }}
+                              className="text-xs text-indigo-600 font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-50"
+                            >
+                              Atur Jam
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                   </div>
                 )}
 
@@ -845,15 +961,14 @@
                   </div>
                 )}
 
-                {/* TAB 6: BANK IDE KONTEN (Lengkap dengan Link Referensi & File Aset) */}
+                {/* TAB 6: BANK IDE KONTEN */}
                 {currentTab === 'ideas' && (
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-xl font-black text-slate-900">Bank Ide Konten</h2>
-                      <p className="text-xs text-slate-500">Catat ide spontan beserta referensi & link aset, lalu ubah 1-klik menjadi rencana konten riil.</p>
+                      <p className="text-xs text-slate-500">Catat ide spontan beserta link referensi & aset materi, lalu ubah 1-klik menjadi rencana konten riil.</p>
                     </div>
 
-                    {/* Form Tambah Ide Spontan */}
                     <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm">
                       <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase block mb-3">TAMBAH IDE SPONTAN</span>
                       <form onSubmit={handleSaveIdea} className="space-y-3">
@@ -884,7 +999,6 @@
                           </select>
                         </div>
 
-                        {/* Input Link Referensi & File Aset (Sesuai Permintaan) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <input
                             type="url"
@@ -919,7 +1033,6 @@
                       </form>
                     </div>
 
-                    {/* Grid Kartu Bank Ide */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {ideas.map(item => (
                         <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
@@ -935,7 +1048,6 @@
                             <h3 className="font-extrabold text-sm text-slate-900 mb-1">{item.title}</h3>
                             <p className="text-xs text-slate-500 mb-3">{item.description || 'Tidak ada catatan detail.'}</p>
 
-                            {/* Badge Link Referensi & Aset */}
                             <div className="flex flex-wrap gap-2 mb-3 text-[10px]">
                               {item.referenceUrl && (
                                 <a href={item.referenceUrl} target="_blank" rel="noreferrer" className="text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md font-semibold hover:underline">
@@ -971,19 +1083,19 @@
                   </div>
                 )}
 
-                {/* TAB 7: PENGATURAN & CLOUD */}
+                {/* TAB 7: PENGATURAN */}
                 {currentTab === 'settings' && (
                   <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
                     <div>
-                      <h3 className="font-extrabold text-slate-900 text-base">Status Integrasi Cloud Firebase (V2.4.1)</h3>
-                      <p className="text-xs text-slate-500">Database Firestore Anda aktif permanen seumur hidup tanpa masa kedaluwarsa 30 hari.</p>
+                      <h3 className="font-extrabold text-slate-900 text-base">Status Integrasi Cloud Firebase (V2.4.2)</h3>
+                      <p className="text-xs text-slate-500">Database Firestore Anda aktif permanen seumur hidup tanpa batas kedaluwarsa.</p>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto space-y-1">
                       <p className="text-slate-400">// Project Firebase Terhubung:</p>
                       <p>Project ID: <span className="text-emerald-400">socialflow-planner-analytics</span></p>
                       <p>Auth Domain: <span className="text-indigo-300">socialflow-planner-analytics.firebaseapp.com</span></p>
-                      <p>Database: <span className="text-emerald-400">Cloud Firestore (Multi-Platform Active)</span></p>
+                      <p>Database: <span className="text-emerald-400">Cloud Firestore (Active)</span></p>
                     </div>
 
                     <div className="flex gap-2 pt-2">
@@ -1006,7 +1118,7 @@
               </div>
             </main>
 
-            {/* BOTTOM NAV BAR (Khusus Smartphone / HP Mode) */}
+            {/* BOTTOM NAV BAR (Mode Smartphone) */}
             <div className={`lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 flex justify-around items-center z-40 ${deviceMode === 'hp' ? 'absolute rounded-b-[32px]' : ''}`}>
               {[
                 { id: 'dashboard', label: 'Home', icon: '📊' },
@@ -1030,7 +1142,7 @@
 
           </div>
 
-          {/* MODAL FORM TAMBAH / EDIT KONTEN */}
+          {/* MODAL FORM KONTEN */}
           {showContentModal && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
               <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl my-8 border border-slate-100">
@@ -1123,7 +1235,6 @@
                     </div>
                   </div>
 
-                  {/* Input Link Referensi & File Aset */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">Link Referensi</label>
@@ -1158,7 +1269,6 @@
                     ></textarea>
                   </div>
 
-                  {/* Metrik Hasil (Jika Sudah Publish) */}
                   {formData.status === 'Published' && (
                     <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                       <span className="font-bold text-slate-800 text-[11px] block">Pencatatan Metrik Performa:</span>
