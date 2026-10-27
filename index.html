@@ -3,300 +3,866 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocialFlow Planner & Analytics Dashboard</title>
+  <title>SocialFlow Planner & Analytics Dashboard V2.2.22</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- React & ReactDOM (Umd) -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#1e1b4b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   
-  <!-- Babel untuk membaca JSX di browser -->
+  <!-- Babel Standalone untuk JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Google Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    @media print {
+      .print-hidden { display: none !important; }
+      .print-visible { display: block !important; }
+      body { background-color: #ffffff !important; color: #000000 !important; }
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
   <div id="root"></div>
 
+  <!-- SVG Icon Component Library (Inline Native Icons for Zero Dependency Errors) -->
   <script type="text/babel">
-    const { useState, useMemo } = React;
-
-    const PLATFORMS = {
-      TIKTOK: { name: 'TikTok', bg: 'bg-black text-white' },
-      INSTAGRAM: { name: 'Instagram', bg: 'bg-pink-600 text-white' },
-      FACEBOOK: { name: 'Facebook', bg: 'bg-blue-600 text-white' }
-    };
-
-    function App() {
-      const [tab, setTab] = useState('dashboard');
-      const [contents, setContents] = useState([
-        {
-          id: 1,
-          title: '5 Tips Optimasi Reels & Algoritma 2026',
-          platform: 'Instagram',
-          format: 'Reels',
-          pillar: 'Edukasi',
-          status: 'Published',
-          views: 18400,
-          reach: 14200,
-          likes: 1120,
-          comments: 84
-        },
-        {
-          id: 2,
-          title: 'POV: Kerja di Agensi pas Hari Jumat Sore',
-          platform: 'TikTok',
-          format: 'TikTok Video',
-          pillar: 'Hiburan',
-          status: 'Published',
-          views: 65200,
-          reach: 49000,
-          likes: 5800,
-          comments: 420
-        },
-        {
-          id: 3,
-          title: 'Promo Flash Sale Payday Akhir Bulan',
-          platform: 'Facebook',
-          format: 'Carousel',
-          pillar: 'Promosi',
-          status: 'Siap Posting',
-          views: 0,
-          reach: 0,
-          likes: 0,
-          comments: 0
-        }
-      ]);
-
-      const [showModal, setShowModal] = useState(false);
-      const [newTitle, setNewTitle] = useState('');
-      const [newPlatform, setNewPlatform] = useState('Instagram');
-      const [newFormat, setNewFormat] = useState('Reels');
-      const [newPillar, setNewPillar] = useState('Edukasi');
-
-      const handleAddContent = (e) => {
-        e.preventDefault();
-        if (!newTitle.trim()) return;
-        const item = {
-          id: Date.now(),
-          title: newTitle,
-          platform: newPlatform,
-          format: newFormat,
-          pillar: newPillar,
-          status: 'Ide',
-          views: 0,
-          reach: 0,
-          likes: 0,
-          comments: 0
-        };
-        setContents([item, ...contents]);
-        setNewTitle('');
-        setShowModal(false);
+    const Icon = ({ name, className = "w-4 h-4", ...props }) => {
+      const icons = {
+        layout: (
+          <path d="M3 3h7v9H3V3zm11 0h7v5h-7V3zm0 9h7v9h-7v-9zM3 16h7v5H3v-5z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        calendar: (
+          <path d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        table: (
+          <path d="M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-4m-6 0v18m6-18v18M3 10h18M3 16h18" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        chart: (
+          <path d="M18 20V10m-6 10V4M6 20v-6" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        bulb: (
+          <path d="M9 18h6m-3 4v-4m6-6a6 6 0 10-12 0c0 2.5 1.5 4.5 3 6h6c1.5-1.5 3-3.5 3-6z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        settings: (
+          <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        plus: (
+          <path d="M12 5v14m-7-7h14" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        search: (
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        check: (
+          <path d="M5 13l4 4L19 7" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        close: (
+          <path d="M6 18L18 6M6 6l12 12" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        alert: (
+          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        trash: (
+          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        edit: (
+          <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        copy: (
+          <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        download: (
+          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        print: (
+          <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        external: (
+          <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        sparkles: (
+          <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.286L13 21l-2.286-6.857L5 12l5.714-2.286L13 3z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        clock: (
+          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        eye: (
+          <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        heart: (
+          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        users: (
+          <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        chevronLeft: (
+          <path d="M15 19l-7-7 7-7" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        ),
+        chevronRight: (
+          <path d="M9 5l7 7-7 7" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        )
       };
 
-      const totalViews = useMemo(() => contents.reduce((acc, c) => acc + (c.views || 0), 0), [contents]);
-      const totalReach = useMemo(() => contents.reduce((acc, c) => acc + (c.reach || 0), 0), [contents]);
-      const totalLikes = useMemo(() => contents.reduce((acc, c) => acc + (c.likes || 0), 0), [contents]);
-      const avgER = totalReach > 0 ? ((totalLikes / totalReach) * 100).toFixed(2) : 0;
+      return (
+        <svg viewBox="0 0 24 24" className={className} {...props}>
+          {icons[name] || icons.sparkles}
+        </svg>
+      );
+    };
+
+    // ==========================================
+    // DATA SEED & MODEL ENUM
+    // ==========================================
+    const APP_VERSION = "V2.2.22";
+
+    const PLATFORMS = {
+      tiktok: { id: 'tiktok', name: 'TikTok', color: '#000000', badgeClass: 'bg-black text-white' },
+      instagram: { id: 'instagram', name: 'Instagram', color: '#E1306C', badgeClass: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' },
+      facebook: { id: 'facebook', name: 'Facebook', color: '#1877F2', badgeClass: 'bg-blue-600 text-white' }
+    };
+
+    const CONTENT_FORMATS = ['Reels', 'TikTok Video', 'Story', 'Carousel', 'Foto', 'Facebook Video', 'Live'];
+    const CONTENT_PILLARS = ['Edukasi', 'Hiburan', 'Promosi', 'Testimoni', 'Behind the Scenes', 'Tips & Trik', 'Inspirasi'];
+    
+    const STATUSES = {
+      'Ide': { id: 'Ide', label: 'Ide', bg: 'bg-slate-100 text-slate-700 border-slate-300' },
+      'Brief': { id: 'Brief', label: 'Brief', bg: 'bg-amber-50 text-amber-700 border-amber-300' },
+      'Produksi': { id: 'Produksi', label: 'Produksi', bg: 'bg-blue-50 text-blue-700 border-blue-300' },
+      'Editing': { id: 'Editing', label: 'Editing', bg: 'bg-purple-50 text-purple-700 border-purple-300' },
+      'Siap Posting': { id: 'Siap Posting', label: 'Siap Posting', bg: 'bg-teal-50 text-teal-700 border-teal-300' },
+      'Terjadwal': { id: 'Terjadwal', label: 'Terjadwal', bg: 'bg-indigo-50 text-indigo-700 border-indigo-300' },
+      'Published': { id: 'Published', label: 'Published', bg: 'bg-emerald-50 text-emerald-700 border-emerald-300' },
+      'Cancelled': { id: 'Cancelled', label: 'Cancelled', bg: 'bg-rose-50 text-rose-700 border-rose-300' }
+    };
+
+    const formatWIB = (dateStr, options = {}) => {
+      if (!dateStr) return '-';
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '-';
+        return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', ...options }).format(d);
+      } catch (e) {
+        return dateStr;
+      }
+    };
+
+    const formatNum = (n) => new Intl.NumberFormat('id-ID').format(n || 0);
+
+    const calcER = (likes = 0, comments = 0, shares = 0, saves = 0, reach = 0) => {
+      if (!reach || Number(reach) <= 0) return 0;
+      const total = Number(likes || 0) + Number(comments || 0) + Number(shares || 0) + Number(saves || 0);
+      return Number(((total / Number(reach)) * 100).toFixed(2));
+    };
+
+    const initialDemoContents = [
+      {
+        id: 'cnt-1',
+        title: '5 Tips Optimasi Hook Video 3 Detik Pertama',
+        description: 'Trik copywriting hook visual untuk meningkatkan watch-time reels & tiktok.',
+        platforms: ['tiktok', 'instagram'],
+        format: 'Reels',
+        contentPillar: 'Edukasi',
+        campaign: 'Creator Growth 2026',
+        targetAudiens: 'Content Creator & Brand Owner',
+        objective: 'Trafik & Saves',
+        caption: 'Mau video kamu tembus FYP? Jangan skip 3 detik pertama ini! 🚀 #tipsngonten #creatorindonesia',
+        hashtags: '#tipsngonten #marketing #socialmedia #fyp',
+        referenceUrl: 'https://instagram.com',
+        assetUrl: 'https://drive.google.com',
+        scheduledAt: new Date(Date.now() - 86400000 * 2).toISOString().slice(0, 16),
+        deadlineAt: new Date(Date.now() - 86400000 * 3).toISOString().slice(0, 16),
+        assignee: 'Boby PIC',
+        priority: 'Tinggi',
+        status: 'Published',
+        internalNotes: 'Audio tren sedang trending di TikTok Indonesia.',
+        isDemo: true,
+        platformMetrics: {
+          tiktok: { views: 42000, reach: 31000, likes: 3200, comments: 240, shares: 510, saves: 890 },
+          instagram: { views: 24500, reach: 18200, likes: 1640, comments: 120, shares: 210, saves: 650 }
+        }
+      },
+      {
+        id: 'cnt-2',
+        title: 'Promo Flash Sale Gajian Diskon 40%',
+        description: 'Desain carousel katalog produk promo gajian akhir pekan.',
+        platforms: ['instagram', 'facebook'],
+        format: 'Carousel',
+        contentPillar: 'Promosi',
+        campaign: 'Payday Special',
+        targetAudiens: 'Pelanggan Aktif',
+        objective: 'Konversi Penjualan',
+        caption: 'Hanya berlaku 3 hari! Dapatkan potongan langsung dan voucher ongkir gratis! 🛒✨',
+        hashtags: '#promogajian #diskon #belanjaonline',
+        referenceUrl: '',
+        assetUrl: '',
+        scheduledAt: new Date(Date.now() + 86400000 * 1).toISOString().slice(0, 16),
+        deadlineAt: new Date(Date.now() + 86400000 * 0).toISOString().slice(0, 16),
+        assignee: 'Sarah Creative',
+        priority: 'Tinggi',
+        status: 'Siap Posting',
+        internalNotes: 'Pastikan link bio toko sudah di-update.',
+        isDemo: true,
+        platformMetrics: {}
+      },
+      {
+        id: 'cnt-3',
+        title: 'Behind the Scenes: Proses Packaging Ramah Lingkungan',
+        description: 'Video estetik unboxing dan komitmen packaging ramah lingkungan.',
+        platforms: ['tiktok'],
+        format: 'TikTok Video',
+        contentPillar: 'Behind the Scenes',
+        campaign: 'Eco Initiative',
+        targetAudiens: 'Gen Z & Eco Lovers',
+        objective: 'Brand Affinity & Engagement',
+        caption: 'Kecil bagi kita, berarti bagi bumi. Ini langkah awal kami 🌿📦',
+        hashtags: '#ecofriendly #packaging #brandstory',
+        referenceUrl: '',
+        assetUrl: '',
+        scheduledAt: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 16),
+        deadlineAt: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
+        assignee: 'Budi Video Editor',
+        priority: 'Normal',
+        status: 'Editing',
+        internalNotes: 'Perlu grading warna tone hangat.',
+        isDemo: true,
+        platformMetrics: {}
+      }
+    ];
+
+    const initialDemoIdeas = [
+      {
+        id: 'id-1',
+        title: 'Kamera HP 2 Jutaan vs iPhone untuk Bikin Konten',
+        description: 'Blind test hasil video tanpa edit untuk mengedukasi pemula bahwa HP murah sudah cukup.',
+        platform: 'tiktok',
+        pillar: 'Edukasi',
+        priority: 'Tinggi',
+        status: 'Disetujui'
+      },
+      {
+        id: 'id-2',
+        title: 'Mitos Shadowban Instagram 2026 yang Masih Dipercaya',
+        description: 'Bongkar mitos pembatasan algoritma berdasarkan pengumuman resmi Meta.',
+        platform: 'instagram',
+        pillar: 'Tips & Trik',
+        priority: 'Normal',
+        status: 'Dipertimbangkan'
+      }
+    ];
+
+    // ==========================================
+    // UTAMA: APLIKASI ROOT
+    // ==========================================
+    function App() {
+      const [currentMenu, setCurrentMenu] = React.useState('dashboard');
+      const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
+      // Data Persistence State
+      const [contents, setContents] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('socialflow_contents_v2');
+          return saved ? JSON.parse(saved) : initialDemoContents;
+        } catch (e) {
+          return initialDemoContents;
+        }
+      });
+
+      const [ideas, setIdeas] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('socialflow_ideas_v2');
+          return saved ? JSON.parse(saved) : initialDemoIdeas;
+        } catch (e) {
+          return initialDemoIdeas;
+        }
+      });
+
+      // Simpan perubahan ke LocalStorage otomatis
+      React.useEffect(() => {
+        localStorage.setItem('socialflow_contents_v2', JSON.stringify(contents));
+      }, [contents]);
+
+      React.useEffect(() => {
+        localStorage.setItem('socialflow_ideas_v2', JSON.stringify(ideas));
+      }, [ideas]);
+
+      // Toast Notifications
+      const [toast, setToast] = React.useState(null);
+      const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+      };
+
+      // Modals
+      const [isModalOpen, setIsModalOpen] = React.useState(false);
+      const [editingItem, setEditingItem] = React.useState(null);
+      const [viewingItem, setViewingItem] = React.useState(null);
+      const [metricModalItem, setMetricModalItem] = React.useState(null);
+      const [deleteConfirmId, setDeleteConfirmId] = React.useState(null);
+
+      // Filters
+      const [periodFilter, setPeriodFilter] = React.useState('all');
+      const [searchQuery, setSearchQuery] = React.useState('');
+      const [filterPlatform, setFilterPlatform] = React.useState('all');
+      const [filterStatus, setFilterStatus] = React.useState('all');
+      const [filterPillar, setFilterPillar] = React.useState('all');
+
+      // Filtered Content
+      const filteredContents = React.useMemo(() => {
+        const now = new Date();
+        return contents.filter(item => {
+          if (filterPlatform !== 'all' && !item.platforms.includes(filterPlatform)) return false;
+          if (filterStatus !== 'all' && item.status !== filterStatus) return false;
+          if (filterPillar !== 'all' && item.contentPillar !== filterPillar) return false;
+          if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            const matchTitle = item.title?.toLowerCase().includes(q);
+            const matchAssignee = item.assignee?.toLowerCase().includes(q);
+            const matchCampaign = item.campaign?.toLowerCase().includes(q);
+            if (!matchTitle && !matchAssignee && !matchCampaign) return false;
+          }
+          if (periodFilter === 'all') return true;
+          const date = new Date(item.scheduledAt);
+          if (isNaN(date.getTime())) return true;
+          const diffDays = (now - date) / (1000 * 3600 * 24);
+
+          if (periodFilter === 'today') return date.toDateString() === now.toDateString();
+          if (periodFilter === '7_days') return diffDays >= -1 && diffDays <= 7;
+          if (periodFilter === '30_days') return diffDays >= -5 && diffDays <= 30;
+          return true;
+        });
+      }, [contents, filterPlatform, filterStatus, filterPillar, searchQuery, periodFilter]);
+
+      // Handler Simpan Konten Baru/Edit
+      const handleSaveContent = (formData) => {
+        // Validasi jadwal bentrok pada platform yang sama
+        const collision = contents.find(c => {
+          if (formData.id && c.id === formData.id) return false;
+          const cTime = new Date(c.scheduledAt).toISOString().slice(0, 13);
+          const fTime = new Date(formData.scheduledAt).toISOString().slice(0, 13);
+          const samePlatform = c.platforms.some(p => formData.platforms.includes(p));
+          return cTime === fTime && samePlatform && c.status !== 'Cancelled';
+        });
+
+        if (collision) {
+          if (!confirm(`Peringatan: Jam posting bentrok dengan "${collision.title}". Tetap simpan?`)) {
+            return;
+          }
+        }
+
+        if (formData.id) {
+          setContents(prev => prev.map(c => c.id === formData.id ? { ...c, ...formData, updatedAt: new Date().toISOString() } : c));
+          showToast('Konten berhasil diperbarui!');
+        } else {
+          const newDoc = {
+            ...formData,
+            id: 'cnt-' + Date.now(),
+            createdAt: new Date().toISOString(),
+            platformMetrics: {}
+          };
+          setContents(prev => [newDoc, ...prev]);
+          showToast('Rencana konten baru berhasil ditambahkan!');
+        }
+        setIsModalOpen(false);
+        setEditingItem(null);
+      };
+
+      const handleDeleteContent = (id) => {
+        setContents(prev => prev.filter(c => c.id !== id));
+        setDeleteConfirmId(null);
+        showToast('Konten berhasil dihapus.', 'info');
+      };
+
+      const handleDuplicate = (item) => {
+        const copy = {
+          ...item,
+          id: 'cnt-' + Date.now(),
+          title: `${item.title} (Salinan)`,
+          status: 'Ide',
+          isDemo: false,
+          platformMetrics: {}
+        };
+        setContents(prev => [copy, ...prev]);
+        showToast('Konten berhasil diduplikasi.');
+      };
+
+      const handleConvertIdea = (idea) => {
+        const plan = {
+          id: '',
+          title: idea.title,
+          description: idea.description,
+          platforms: [idea.platform],
+          format: 'Reels',
+          contentPillar: idea.pillar,
+          campaign: 'Eksplorasi Bank Ide',
+          targetAudiens: '',
+          objective: 'Engagement',
+          caption: '',
+          hashtags: '',
+          referenceUrl: '',
+          assetUrl: '',
+          scheduledAt: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
+          deadlineAt: new Date(Date.now() + 86400000 * 1).toISOString().slice(0, 16),
+          assignee: 'Boby PIC',
+          priority: idea.priority || 'Normal',
+          status: 'Brief',
+          internalNotes: 'Dikonversi dari Bank Ide'
+        };
+        setEditingItem(plan);
+        setIsModalOpen(true);
+      };
+
+      // Export CSV
+      const handleExportCSV = () => {
+        const headers = ['ID', 'Judul', 'Platform', 'Format', 'Pilar', 'Status', 'PIC', 'Jadwal_WIB', 'Total_Views', 'Total_Reach', 'Total_Interaksi', 'ER_Persen'];
+        const rows = filteredContents.map(c => {
+          let v = 0, r = 0, l = 0, co = 0, s = 0, sa = 0;
+          if (c.platformMetrics) {
+            Object.values(c.platformMetrics).forEach(m => {
+              v += Number(m.views || 0);
+              r += Number(m.reach || 0);
+              l += Number(m.likes || 0);
+              co += Number(m.comments || 0);
+              s += Number(m.shares || 0);
+              sa += Number(m.saves || 0);
+            });
+          }
+          const eng = l + co + s + sa;
+          const er = calcER(l, co, s, sa, r);
+          return [
+            `"${c.id}"`,
+            `"${(c.title || '').replace(/"/g, '""')}"`,
+            `"${c.platforms.join(', ')}"`,
+            `"${c.format || ''}"`,
+            `"${c.contentPillar || ''}"`,
+            `"${c.status || ''}"`,
+            `"${c.assignee || ''}"`,
+            `"${formatWIB(c.scheduledAt, { dateStyle: 'short', timeStyle: 'short' })}"`,
+            v, r, eng, `"${er}%"`
+          ].join(',');
+        });
+
+        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows].join('\n');
+        const encoded = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.href = encoded;
+        link.download = `SocialFlow_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        showToast('Laporan CSV berhasil diunduh!');
+      };
 
       return (
-        <div className="flex min-h-screen">
+        <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
+          {/* Toast Notification */}
+          {toast && (
+            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl border border-slate-700">
+              <Icon name={toast.type === 'info' ? 'alert' : 'check'} className="w-4 h-4 text-emerald-400" />
+              <span>{toast.message}</span>
+            </div>
+          )}
+
           {/* Sidebar */}
-          <aside className="w-64 bg-slate-900 text-slate-100 flex flex-col justify-between p-5">
+          <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between transition-transform duration-200 md:static md:translate-x-0 ${
+            sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+          } print-hidden`}>
             <div>
-              <div className="flex items-center gap-2 mb-8">
-                <div className="w-8 h-8 rounded bg-indigo-500 flex items-center justify-center font-bold text-white text-lg">S</div>
-                <h1 className="text-lg font-bold tracking-tight">SocialFlow</h1>
+              {/* Brand Header */}
+              <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                    <Icon name="sparkles" className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
+                      SocialFlow
+                      <span className="text-[10px] font-extrabold uppercase bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/30">
+                        {APP_VERSION}
+                      </span>
+                    </h1>
+                    <p className="text-[10px] text-slate-400">Content & Analytics Hub</p>
+                  </div>
+                </div>
+                <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white">
+                  <Icon name="close" className="w-5 h-5" />
+                </button>
               </div>
-              <nav className="space-y-1">
+
+              {/* Navigation Menu */}
+              <nav className="p-3 space-y-1">
                 {[
-                  { id: 'dashboard', label: '📊 Dashboard' },
-                  { id: 'planner', label: '📝 Content Planner' },
-                  { id: 'database', label: '🗄️ Database Konten' }
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => setTab(item.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition ${
-                      tab === item.id ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+                  { id: 'dashboard', label: 'Dashboard', icon: 'layout' },
+                  { id: 'planner', label: 'Content Planner', icon: 'table' },
+                  { id: 'calendar', label: 'Kalender Konten', icon: 'calendar' },
+                  { id: 'database', label: 'Database Konten', icon: 'chart' },
+                  { id: 'analytics', label: 'Analytics & Rekap', icon: 'chart' },
+                  { id: 'ideas', label: 'Bank Ide Konten', icon: 'bulb' },
+                  { id: 'settings', label: 'Pengaturan & Firebase', icon: 'settings' }
+                ].map((item) => {
+                  const isActive = currentMenu === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setCurrentMenu(item.id);
+                        setSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
+                        isActive
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
+                    >
+                      <Icon name={item.icon} className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
               </nav>
             </div>
-            <div className="text-xs text-slate-400 border-t border-slate-800 pt-4">
-              <p className="font-semibold text-slate-200">SocialFlow Dashboard</p>
-              <p>WIB (Asia/Jakarta)</p>
+
+            {/* Sidebar Footer Info */}
+            <div className="p-4 border-t border-slate-800 m-3 rounded-2xl bg-slate-800/40 text-[11px] text-slate-400 space-y-1">
+              <div className="flex items-center justify-between text-slate-300 font-medium">
+                <span>Zona Waktu:</span>
+                <span className="text-emerald-400 font-bold">WIB (Jakarta)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Target Saluran:</span>
+                <span>TikTok, IG, FB</span>
+              </div>
             </div>
           </aside>
 
-          {/* Main Area */}
-          <main className="flex-1 p-8 overflow-y-auto">
-            {/* Top Bar */}
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 capitalize">{tab}</h2>
-                <p className="text-sm text-slate-500">Kelola dan pantau kinerja seluruh konten media sosial.</p>
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Top Navbar */}
+            <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-3 flex items-center justify-between shadow-xs print-hidden">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                >
+                  <Icon name="layout" className="w-5 h-5" />
+                </button>
+                <div className="relative hidden sm:block w-64 lg:w-80">
+                  <Icon name="search" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Cari judul, kampanye, atau PIC..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-slate-100/80 border border-slate-200 text-xs rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+                  />
+                </div>
               </div>
-              <button
-                onClick={() => setShowModal(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm transition"
-              >
-                + Tambah Rencana Konten
-              </button>
-            </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Konten</p>
-                <p className="text-3xl font-extrabold text-slate-900 mt-2">{contents.length}</p>
-                <p className="text-xs text-emerald-600 mt-2">Direncanakan & Tayang</p>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Views</p>
-                <p className="text-3xl font-extrabold text-slate-900 mt-2">{totalViews.toLocaleString('id-ID')}</p>
-                <p className="text-xs text-indigo-600 mt-2">Akumulasi tayangan</p>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Reach</p>
-                <p className="text-3xl font-extrabold text-slate-900 mt-2">{totalReach.toLocaleString('id-ID')}</p>
-                <p className="text-xs text-purple-600 mt-2">Akun terjangkau</p>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Avg. Engagement Rate</p>
-                <p className="text-3xl font-extrabold text-slate-900 mt-2">{avgER}%</p>
-                <p className="text-xs text-slate-500 mt-2">Rasio interaksi / reach</p>
-              </div>
-            </div>
+              <div className="flex items-center gap-2.5">
+                {/* Reset/Clear Demo Button */}
+                {contents.some(c => c.isDemo) ? (
+                  <button
+                    onClick={() => {
+                      setContents(contents.filter(c => !c.isDemo));
+                      showToast('Data demo dihapus. Database bersih.');
+                    }}
+                    className="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1.5 rounded-xl font-medium hover:bg-amber-100 transition flex items-center gap-1.5"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span>Hapus Demo</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setContents(initialDemoContents);
+                      showToast('Demo data berhasil dimuat kembali.');
+                    }}
+                    className="text-xs bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-1.5 rounded-xl font-medium hover:bg-slate-200 transition"
+                  >
+                    + Muat Demo
+                  </button>
+                )}
 
-            {/* Data Table */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="font-bold text-slate-800">Daftar Konten Aktif</h3>
-                <span className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
-                  {contents.length} item
-                </span>
+                {/* Primary New Content Action */}
+                <button
+                  onClick={() => {
+                    setEditingItem({
+                      id: '',
+                      title: '',
+                      description: '',
+                      platforms: ['tiktok', 'instagram'],
+                      format: 'Reels',
+                      contentPillar: 'Edukasi',
+                      campaign: '',
+                      targetAudiens: '',
+                      objective: 'Engagement',
+                      caption: '',
+                      hashtags: '',
+                      referenceUrl: '',
+                      assetUrl: '',
+                      scheduledAt: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+                      deadlineAt: new Date().toISOString().slice(0, 16),
+                      assignee: 'Boby PIC',
+                      priority: 'Normal',
+                      status: 'Ide',
+                      internalNotes: ''
+                    });
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-sm shadow-indigo-300 flex items-center gap-1.5 transition"
+                >
+                  <Icon name="plus" className="w-4 h-4" />
+                  <span className="hidden sm:inline">Rencana Konten</span>
+                </button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-600">
-                  <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
-                    <tr>
-                      <th className="px-6 py-3">Judul Konten</th>
-                      <th className="px-6 py-3">Platform</th>
-                      <th className="px-6 py-3">Format</th>
-                      <th className="px-6 py-3">Pillar</th>
-                      <th className="px-6 py-3">Status</th>
-                      <th className="px-6 py-3 text-right">Views</th>
-                      <th className="px-6 py-3 text-right">Interaksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {contents.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50 transition">
-                        <td className="px-6 py-4 font-semibold text-slate-800">{item.title}</td>
-                        <td className="px-6 py-4">
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                            item.platform === 'Instagram' ? 'bg-pink-100 text-pink-700' :
-                            item.platform === 'TikTok' ? 'bg-slate-900 text-white' : 'bg-blue-100 text-blue-700'
-                          }`}>
-                            {item.platform}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">{item.format}</td>
-                        <td className="px-6 py-4">{item.pillar}</td>
-                        <td className="px-6 py-4">
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right font-medium text-slate-700">{item.views.toLocaleString('id-ID')}</td>
-                        <td className="px-6 py-4 text-right font-medium text-slate-700">{(item.likes + item.comments).toLocaleString('id-ID')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </main>
+            </header>
 
-          {/* Modal Tambah Konten */}
-          {showModal && (
-            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Tambah Rencana Konten</h3>
-                <form onSubmit={handleAddContent} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">Judul / Ide Konten</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Contoh: 3 Kombinasi Warna Outfit Musim Panas"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">Platform</label>
-                      <select
-                        value={newPlatform}
-                        onChange={(e) => setNewPlatform(e.target.value)}
-                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value="Instagram">Instagram</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="Facebook">Facebook</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">Format</label>
-                      <select
-                        value={newFormat}
-                        onChange={(e) => setNewFormat(e.target.value)}
-                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value="Reels">Reels / Video</option>
-                        <option value="Carousel">Carousel</option>
-                        <option value="Foto">Foto / Feed</option>
-                        <option value="Story">Story</option>
-                        <option value="Live">Live</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">Pillar Konten</label>
-                    <select
-                      value={newPillar}
-                      onChange={(e) => setNewPillar(e.target.value)}
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="Edukasi">Edukasi</option>
-                      <option value="Hiburan">Hiburan</option>
-                      <option value="Promosi">Promosi</option>
-                      <option value="Behind the Scenes">Behind the Scenes</option>
-                      <option value="Testimoni">Testimoni</option>
-                    </select>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowModal(false)}
-                      className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm"
-                    >
-                      Simpan Konten
-                    </button>
-                  </div>
-                </form>
+            {/* Scrollable View Content */}
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50">
+              {/* VIEW: DASHBOARD */}
+              {currentMenu === 'dashboard' && (
+                <DashboardView
+                  contents={contents}
+                  filteredContents={filteredContents}
+                  periodFilter={periodFilter}
+                  setPeriodFilter={setPeriodFilter}
+                  onOpenDetail={(c) => setViewingItem(c)}
+                  onOpenEdit={(c) => {
+                    setEditingItem(c);
+                    setIsModalOpen(true);
+                  }}
+                  onOpenMetric={(c) => setMetricModalItem(c)}
+                />
+              )}
+
+              {/* VIEW: CONTENT PLANNER */}
+              {currentMenu === 'planner' && (
+                <PlannerView
+                  contents={filteredContents}
+                  filterPlatform={filterPlatform}
+                  setFilterPlatform={setFilterPlatform}
+                  filterStatus={filterStatus}
+                  setFilterStatus={setFilterStatus}
+                  filterPillar={filterPillar}
+                  setFilterPillar={setFilterPillar}
+                  onOpenCreate={() => {
+                    setEditingItem({
+                      id: '',
+                      title: '',
+                      description: '',
+                      platforms: ['tiktok'],
+                      format: 'TikTok Video',
+                      contentPillar: 'Edukasi',
+                      campaign: '',
+                      targetAudiens: '',
+                      objective: 'Engagement',
+                      caption: '',
+                      hashtags: '',
+                      referenceUrl: '',
+                      assetUrl: '',
+                      scheduledAt: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+                      deadlineAt: new Date().toISOString().slice(0, 16),
+                      assignee: 'Boby PIC',
+                      priority: 'Normal',
+                      status: 'Ide',
+                      internalNotes: ''
+                    });
+                    setIsModalOpen(true);
+                  }}
+                  onOpenEdit={(c) => {
+                    setEditingItem(c);
+                    setIsModalOpen(true);
+                  }}
+                  onOpenDetail={(c) => setViewingItem(c)}
+                  onDuplicate={handleDuplicate}
+                  onDelete={(id) => setDeleteConfirmId(id)}
+                  onOpenMetric={(c) => setMetricModalItem(c)}
+                />
+              )}
+
+              {/* VIEW: KALENDER KONTEN */}
+              {currentMenu === 'calendar' && (
+                <CalendarView
+                  contents={contents}
+                  onOpenDetail={(c) => setViewingItem(c)}
+                  onDateClick={(dateStr) => {
+                    setEditingItem({
+                      id: '',
+                      title: '',
+                      description: '',
+                      platforms: ['instagram'],
+                      format: 'Reels',
+                      contentPillar: 'Edukasi',
+                      campaign: '',
+                      targetAudiens: '',
+                      objective: 'Engagement',
+                      caption: '',
+                      hashtags: '',
+                      referenceUrl: '',
+                      assetUrl: '',
+                      scheduledAt: `${dateStr}T10:00`,
+                      deadlineAt: `${dateStr}T08:00`,
+                      assignee: 'Boby PIC',
+                      priority: 'Normal',
+                      status: 'Ide',
+                      internalNotes: ''
+                    });
+                    setIsModalOpen(true);
+                  }}
+                />
+              )}
+
+              {/* VIEW: DATABASE MASTER */}
+              {currentMenu === 'database' && (
+                <DatabaseView
+                  contents={filteredContents}
+                  onOpenDetail={(c) => setViewingItem(c)}
+                  onOpenEdit={(c) => {
+                    setEditingItem(c);
+                    setIsModalOpen(true);
+                  }}
+                  onDelete={(id) => setDeleteConfirmId(id)}
+                  onDuplicate={handleDuplicate}
+                  onExportCSV={handleExportCSV}
+                />
+              )}
+
+              {/* VIEW: ANALYTICS & REKAP */}
+              {currentMenu === 'analytics' && (
+                <AnalyticsView
+                  contents={filteredContents}
+                  onExportCSV={handleExportCSV}
+                  onPrint={() => window.print()}
+                />
+              )}
+
+              {/* VIEW: BANK IDE KONTEN */}
+              {currentMenu === 'ideas' && (
+                <IdeaBankView
+                  ideas={ideas}
+                  setIdeas={setIdeas}
+                  onConvertToPlan={handleConvertIdea}
+                  showToast={showToast}
+                />
+              )}
+
+              {/* VIEW: PENGATURAN & FIREBASE */}
+              {currentMenu === 'settings' && (
+                <SettingsView showToast={showToast} />
+              )}
+            </main>
+          </div>
+
+          {/* ========================================================
+              MODALS & OVERLAYS
+          ======================================================== */}
+
+          {/* Modal Form Tambah & Edit */}
+          {isModalOpen && (
+            <ContentFormModal
+              item={editingItem}
+              onClose={() => {
+                setIsModalOpen(false);
+                setEditingItem(null);
+              }}
+              onSave={handleSaveContent}
+            />
+          )}
+
+          {/* Modal Detail View */}
+          {viewingItem && (
+            <ContentDetailModal
+              item={viewingItem}
+              onClose={() => setViewingItem(null)}
+              onEdit={() => {
+                setEditingItem(viewingItem);
+                setViewingItem(null);
+                setIsModalOpen(true);
+              }}
+              onInputMetric={() => {
+                setMetricModalItem(viewingItem);
+              }}
+            />
+          )}
+
+          {/* Modal Input Metrik Snapshot */}
+          {metricModalItem && (
+            <MetricModal
+              item={metricModalItem}
+              onClose={() => setMetricModalItem(null)}
+              onSave={(updated) => {
+                setContents(prev => prev.map(c => c.id === updated.id ? updated : c));
+                if (viewingItem?.id === updated.id) setViewingItem(updated);
+                setMetricModalItem(null);
+                showToast('Metrik performa berhasil disimpan!');
+              }}
+            />
+          )}
+
+          {/* Modal Konfirmasi Hapus */}
+          {deleteConfirmId && (
+            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 text-center">
+                <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+                  <Icon name="alert" className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 mb-1">Hapus Konten Ini?</h3>
+                <p className="text-xs text-slate-500 mb-6">
+                  Rencana konten dan catatan metriknya akan dihapus permanen dari memori dashboard.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setDeleteConfirmId(null)}
+                    className="flex-1 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={() => handleDeleteContent(deleteConfirmId)}
+                    className="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs"
+                  >
+                    Hapus
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -304,6 +870,1164 @@
       );
     }
 
+    // ==========================================
+    // 1. DASHBOARD VIEW COMPONENT
+    // ==========================================
+    function DashboardView({ contents, filteredContents, periodFilter, setPeriodFilter, onOpenDetail, onOpenEdit, onOpenMetric }) {
+      // Perhitungan KPI
+      const kpis = React.useMemo(() => {
+        let planned = 0, published = 0, inProgress = 0, upcoming = 0;
+        let views = 0, reach = 0, likes = 0, comments = 0, shares = 0, saves = 0;
+
+        filteredContents.forEach(c => {
+          planned++;
+          if (c.status === 'Published') published++;
+          else if (['Produksi', 'Editing', 'Siap Posting'].includes(c.status)) inProgress++;
+          else if (c.status === 'Terjadwal') upcoming++;
+
+          if (c.platformMetrics) {
+            Object.values(c.platformMetrics).forEach(m => {
+              views += Number(m.views || 0);
+              reach += Number(m.reach || 0);
+              likes += Number(m.likes || 0);
+              comments += Number(m.comments || 0);
+              shares += Number(m.shares || 0);
+              saves += Number(m.saves || 0);
+            });
+          }
+        });
+
+        const totalEng = likes + comments + shares + saves;
+        const avgEr = calcER(likes, comments, shares, saves, reach);
+
+        return { planned, published, inProgress, upcoming, views, reach, totalEng, avgEr };
+      }, [filteredContents]);
+
+      // Distribusi Platform
+      const platformDist = React.useMemo(() => {
+        const counts = { tiktok: 0, instagram: 0, facebook: 0 };
+        filteredContents.forEach(c => {
+          c.platforms.forEach(p => { if (counts[p] !== undefined) counts[p]++; });
+        });
+        const total = counts.tiktok + counts.instagram + counts.facebook || 1;
+        return [
+          { name: 'TikTok', count: counts.tiktok, pct: Math.round((counts.tiktok / total) * 100), color: '#000000' },
+          { name: 'Instagram', count: counts.instagram, pct: Math.round((counts.instagram / total) * 100), color: '#E1306C' },
+          { name: 'Facebook', count: counts.facebook, pct: Math.round((counts.facebook / total) * 100), color: '#1877F2' }
+        ];
+      }, [filteredContents]);
+
+      // Platform Views Comparison
+      const platformViews = React.useMemo(() => {
+        const res = { tiktok: 0, instagram: 0, facebook: 0 };
+        filteredContents.forEach(c => {
+          if (c.platformMetrics) {
+            Object.entries(c.platformMetrics).forEach(([p, m]) => {
+              if (res[p] !== undefined) res[p] += Number(m.views || 0);
+            });
+          }
+        });
+        return res;
+      }, [filteredContents]);
+
+      return (
+        <div className="space-y-6">
+          {/* Header Dashboard & Periode Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Executive Dashboard</h2>
+              <p className="text-xs text-slate-500">Ringkasan operasional dan analisis performa lintas channel media sosial.</p>
+            </div>
+            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs self-start">
+              <Icon name="calendar" className="w-4 h-4 text-slate-400" />
+              <select
+                value={periodFilter}
+                onChange={(e) => setPeriodFilter(e.target.value)}
+                className="text-xs font-semibold text-slate-700 bg-transparent focus:outline-none"
+              >
+                <option value="all">Semua Waktu</option>
+                <option value="today">Hari Ini</option>
+                <option value="7_days">7 Hari Terakhir</option>
+                <option value="30_days">30 Hari Terakhir</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 8 KARTU KPI UTAMA */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: 'Direncanakan', val: kpis.planned, sub: 'Total konten pipeline', icon: 'table', color: 'text-indigo-600 bg-indigo-50' },
+              { label: 'Dipublikasikan', val: kpis.published, sub: 'Sudah tayang', icon: 'check', color: 'text-emerald-600 bg-emerald-50' },
+              { label: 'Dalam Proses', val: kpis.inProgress, sub: 'Produksi / editing', icon: 'clock', color: 'text-amber-600 bg-amber-50' },
+              { label: 'Akan Datang', val: kpis.upcoming, sub: 'Jadwal terbit siap', icon: 'calendar', color: 'text-purple-600 bg-purple-50' },
+              { label: 'Total Views', val: formatNum(kpis.views), sub: 'Penayangan video', icon: 'eye', color: 'text-sky-600 bg-sky-50' },
+              { label: 'Total Reach', val: formatNum(kpis.reach), sub: 'Akun unik tercapai', icon: 'users', color: 'text-indigo-600 bg-indigo-50' },
+              { label: 'Total Interaksi', val: formatNum(kpis.totalEng), sub: 'Like, komen, share, simpan', icon: 'heart', color: 'text-rose-600 bg-rose-50' },
+              { label: 'Avg Engagement Rate', val: `${kpis.avgEr}%`, sub: 'Interaksi / Reach', icon: 'sparkles', color: 'text-teal-600 bg-teal-50' },
+            ].map((kpi, idx) => (
+              <div key={idx} className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{kpi.label}</span>
+                  <div className={`p-2 rounded-xl ${kpi.color}`}>
+                    <Icon name={kpi.icon} className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">{kpi.val}</div>
+                <p className="text-[10px] text-slate-400 mt-1 font-medium">{kpi.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* VISUALISASI GRAFIK DISTRIBUSI & PERFORMA */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Donut Chart: Distribusi Platform */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Distribusi Platform</h3>
+                <p className="text-xs text-slate-400 mb-4">Porsi publikasi tiap channel</p>
+              </div>
+              
+              <div className="flex items-center justify-center py-2">
+                <div className="relative w-36 h-36 flex items-center justify-center">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="14" fill="transparent" stroke="#f1f5f9" strokeWidth="4" />
+                    <circle cx="18" cy="18" r="14" fill="transparent" stroke="#000000" strokeWidth="4" strokeDasharray={`${platformDist[0].pct} 100`} />
+                    <circle cx="18" cy="18" r="14" fill="transparent" stroke="#E1306C" strokeWidth="4" strokeDasharray={`${platformDist[1].pct} 100`} strokeDashoffset={`-${platformDist[0].pct}`} />
+                    <circle cx="18" cy="18" r="14" fill="transparent" stroke="#1877F2" strokeWidth="4" strokeDasharray={`${platformDist[2].pct} 100`} strokeDashoffset={`-${platformDist[0].pct + platformDist[1].pct}`} />
+                  </svg>
+                  <div className="absolute text-center">
+                    <span className="text-lg font-bold text-slate-800">{filteredContents.length}</span>
+                    <span className="block text-[9px] text-slate-400 uppercase font-semibold">Total</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 text-center">
+                {platformDist.map(item => (
+                  <div key={item.name} className="p-2 bg-slate-50 rounded-xl">
+                    <p className="text-[10px] text-slate-500 font-semibold">{item.name}</p>
+                    <p className="text-sm font-bold text-slate-900 mt-0.5">{item.count}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">{item.pct}%</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bar Chart: Views Antar Platform */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Perbandingan Views</h3>
+                <p className="text-xs text-slate-400 mb-4">Total views terkumpul dari postingan</p>
+              </div>
+
+              <div className="space-y-3.5 my-auto">
+                {[
+                  { name: 'TikTok', views: platformViews.tiktok, color: 'bg-black' },
+                  { name: 'Instagram', views: platformViews.instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+                  { name: 'Facebook', views: platformViews.facebook, color: 'bg-blue-600' }
+                ].map(p => {
+                  const max = Math.max(...Object.values(platformViews), 1);
+                  const width = Math.min(100, Math.round((p.views / max) * 100));
+                  return (
+                    <div key={p.name} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="flex justify-between text-xs font-semibold mb-1.5">
+                        <span className="text-slate-800">{p.name}</span>
+                        <span className="text-indigo-600 font-bold">{formatNum(p.views)} Views</span>
+                      </div>
+                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div className={`h-full ${p.color}`} style={{ width: `${width}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p className="text-[10px] text-slate-400 text-center mt-3 pt-3 border-t border-slate-100">
+                Pencatatan metrik manual via tombol "Input Metrik"
+              </p>
+            </div>
+
+            {/* Top Content Rankings */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Top Postingan Terunggul</h3>
+                <p className="text-xs text-slate-400 mb-4">Berdasarkan volume penayangan</p>
+              </div>
+
+              <div className="space-y-2.5 my-auto">
+                {filteredContents
+                  .filter(c => c.status === 'Published')
+                  .slice(0, 3)
+                  .map(c => {
+                    let totalV = 0;
+                    if (c.platformMetrics) {
+                      Object.values(c.platformMetrics).forEach(m => totalV += Number(m.views || 0));
+                    }
+                    return (
+                      <div key={c.id} onClick={() => onOpenDetail(c)} className="p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                        <p className="font-semibold text-xs text-slate-900 line-clamp-1">{c.title}</p>
+                        <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1">
+                          <span className="capitalize">{c.format} • {c.contentPillar}</span>
+                          <span className="font-bold text-emerald-600">{formatNum(totalV)} Views</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                {filteredContents.filter(c => c.status === 'Published').length === 0 && (
+                  <p className="text-xs text-slate-400 text-center py-6">Belum ada konten published dengan metrik.</p>
+                )}
+              </div>
+
+              <p className="text-[10px] text-slate-400 text-center mt-3 pt-3 border-t border-slate-100">
+                Update berkala untuk meningkatkan ER
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 2. CONTENT PLANNER COMPONENT
+    // ==========================================
+    function PlannerView({ contents, filterPlatform, setFilterPlatform, filterStatus, setFilterStatus, filterPillar, setFilterPillar, onOpenCreate, onOpenEdit, onOpenDetail, onDuplicate, onDelete, onOpenMetric }) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Content Planner</h2>
+              <p className="text-xs text-slate-500">Susun pipeline produksi dari ide hingga siap terbit di media sosial.</p>
+            </div>
+            <button
+              onClick={onOpenCreate}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-1.5 self-start"
+            >
+              <Icon name="plus" className="w-4 h-4" />
+              <span>Tambah Konten</span>
+            </button>
+          </div>
+
+          {/* Filter Bar */}
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-2.5 items-center">
+            <select
+              value={filterPlatform}
+              onChange={(e) => setFilterPlatform(e.target.value)}
+              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-2 font-medium"
+            >
+              <option value="all">Semua Platform</option>
+              <option value="tiktok">TikTok</option>
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+            </select>
+
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-2 font-medium"
+            >
+              <option value="all">Semua Status</option>
+              {Object.keys(STATUSES).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+
+            <select
+              value={filterPillar}
+              onChange={(e) => setFilterPillar(e.target.value)}
+              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-2 font-medium"
+            >
+              <option value="all">Semua Pilar Konten</option>
+              {CONTENT_PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+
+          {/* Kanban / Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+            {['Ide', 'Produksi', 'Siap Posting', 'Published'].map(col => {
+              const items = contents.filter(c => {
+                if (col === 'Produksi') return ['Brief', 'Produksi', 'Editing'].includes(c.status);
+                if (col === 'Siap Posting') return ['Siap Posting', 'Terjadwal'].includes(c.status);
+                return c.status === col;
+              });
+
+              return (
+                <div key={col} className="bg-slate-100/90 rounded-2xl p-3.5 border border-slate-200/80">
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <span className="text-xs font-bold uppercase text-slate-700 tracking-wider">
+                      {col === 'Produksi' ? 'Dalam Proses' : col}
+                    </span>
+                    <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                      {items.length}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 min-h-[260px]">
+                    {items.length === 0 ? (
+                      <div className="h-24 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-xs">
+                        Kosong
+                      </div>
+                    ) : (
+                      items.map(item => {
+                        const isOverdue = item.status !== 'Published' && item.deadlineAt && new Date(item.deadlineAt) < new Date();
+                        return (
+                          <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs hover:shadow-md transition space-y-2.5">
+                            <div className="flex items-center justify-between gap-1">
+                              <div className="flex gap-1 flex-wrap">
+                                {item.platforms.map(p => (
+                                  <span key={p} className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${PLATFORMS[p]?.badgeClass}`}>
+                                    {p}
+                                  </span>
+                                ))}
+                              </div>
+                              <span className="text-[9px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                {item.format}
+                              </span>
+                            </div>
+
+                            <h4
+                              onClick={() => onOpenDetail(item)}
+                              className="font-bold text-xs text-slate-900 cursor-pointer hover:text-indigo-600 transition line-clamp-2 leading-snug"
+                            >
+                              {item.title}
+                            </h4>
+
+                            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-100">
+                              <span>PIC: <b className="text-slate-700">{item.assignee}</b></span>
+                              <span>{formatWIB(item.scheduledAt, { month: 'short', day: 'numeric' })}</span>
+                            </div>
+
+                            {isOverdue && (
+                              <div className="bg-rose-50 text-rose-600 text-[9px] font-bold px-2 py-1 rounded flex items-center gap-1">
+                                <Icon name="alert" className="w-3 h-3" />
+                                <span>Deadline Terlewat</span>
+                              </div>
+                            )}
+
+                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                              {item.status === 'Published' ? (
+                                <button
+                                  onClick={() => onOpenMetric(item)}
+                                  className="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded transition"
+                                >
+                                  + Input Metrik
+                                </button>
+                              ) : (
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${STATUSES[item.status]?.bg}`}>
+                                  {item.status}
+                                </span>
+                              )}
+
+                              <div className="flex items-center gap-1 text-slate-400">
+                                <button onClick={() => onOpenEdit(item)} className="p-1 hover:text-indigo-600">
+                                  <Icon name="edit" className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => onDuplicate(item)} className="p-1 hover:text-slate-800">
+                                  <Icon name="copy" className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => onDelete(item.id)} className="p-1 hover:text-rose-600">
+                                  <Icon name="trash" className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 3. KALENDER KONTEN VIEW COMPONENT
+    // ==========================================
+    function CalendarView({ contents, onOpenDetail, onDateClick }) {
+      const [currentDate, setCurrentDate] = React.useState(new Date());
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Kalender Posting</h2>
+              <p className="text-xs text-slate-500">Visualisasi jadwal penerbitan konten (WIB / Asia-Jakarta).</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentDate(new Date())}
+                className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-xs"
+              >
+                Hari Ini
+              </button>
+              <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-xs">
+                <button
+                  onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
+                  className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-l-xl"
+                >
+                  <Icon name="chevronLeft" className="w-4 h-4" />
+                </button>
+                <span className="text-xs font-bold px-3 text-slate-800">
+                  {monthNames[month]} {year}
+                </span>
+                <button
+                  onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
+                  className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-r-xl"
+                >
+                  <Icon name="chevronRight" className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center py-2.5 text-xs font-bold text-slate-600">
+              <span className="text-rose-500">Minggu</span>
+              <span>Senin</span>
+              <span>Selasa</span>
+              <span>Rabu</span>
+              <span>Kamis</span>
+              <span>Jumat</span>
+              <span>Sabtu</span>
+            </div>
+
+            <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 min-h-[500px]">
+              {Array.from({ length: firstDay }).map((_, i) => (
+                <div key={`empty-${i}`} className="bg-slate-50/40 p-2"></div>
+              ))}
+
+              {Array.from({ length: totalDays }).map((_, i) => {
+                const day = i + 1;
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+
+                const dayContents = contents.filter(c => {
+                  if (!c.scheduledAt) return false;
+                  const cd = new Date(c.scheduledAt);
+                  return cd.getFullYear() === year && cd.getMonth() === month && cd.getDate() === day;
+                });
+
+                return (
+                  <div
+                    key={day}
+                    onClick={() => onDateClick(dateStr)}
+                    className={`p-2 min-h-[95px] hover:bg-indigo-50/30 cursor-pointer transition flex flex-col justify-between group ${
+                      isToday ? 'bg-indigo-50/20' : ''
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${
+                        isToday ? 'bg-indigo-600 text-white' : 'text-slate-700'
+                      }`}>
+                        {day}
+                      </span>
+                      <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition">+ Rencana</span>
+                    </div>
+
+                    <div className="space-y-1 overflow-y-auto max-h-[60px] my-1">
+                      {dayContents.map(c => (
+                        <div
+                          key={c.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenDetail(c);
+                          }}
+                          className="text-[10px] p-1 bg-white border border-slate-200 rounded font-medium truncate flex items-center gap-1 shadow-2xs"
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            c.status === 'Published' ? 'bg-emerald-500' : 'bg-indigo-500'
+                          }`}></span>
+                          <span className="truncate text-slate-800">{c.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 4. DATABASE KONTEN MASTER COMPONENT
+    // ==========================================
+    function DatabaseView({ contents, onOpenDetail, onOpenEdit, onDelete, onDuplicate, onExportCSV }) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Database Master</h2>
+              <p className="text-xs text-slate-500">Arsip terpusat seluruh aset konten, link referensi, dan riwayat tayang.</p>
+            </div>
+            <button
+              onClick={onExportCSV}
+              className="bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center gap-1.5 self-start"
+            >
+              <Icon name="download" className="w-4 h-4 text-slate-500" />
+              <span>Export CSV</span>
+            </button>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold text-[10px]">
+                  <tr>
+                    <th className="py-3 px-4">Judul Konten</th>
+                    <th className="py-3 px-3">Platform</th>
+                    <th className="py-3 px-3">Format</th>
+                    <th className="py-3 px-3">Pilar</th>
+                    <th className="py-3 px-3">Status</th>
+                    <th className="py-3 px-3">Jadwal (WIB)</th>
+                    <th className="py-3 px-3">File Aset</th>
+                    <th className="py-3 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {contents.map(item => (
+                    <tr key={item.id} className="hover:bg-slate-50 transition">
+                      <td className="py-3.5 px-4 font-bold text-slate-900 max-w-xs truncate">{item.title}</td>
+                      <td className="py-3.5 px-3">
+                        <div className="flex gap-1">
+                          {item.platforms.map(p => (
+                            <span key={p} className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${PLATFORMS[p]?.badgeClass}`}>
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-3">{item.format}</td>
+                      <td className="py-3.5 px-3">{item.contentPillar}</td>
+                      <td className="py-3.5 px-3">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${STATUSES[item.status]?.bg}`}>
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-3 whitespace-nowrap">{formatWIB(item.scheduledAt, { dateStyle: 'short', timeStyle: 'short' })}</td>
+                      <td className="py-3.5 px-3">
+                        {item.assetUrl ? (
+                          <a href={item.assetUrl} target="_blank" className="text-indigo-600 font-bold hover:underline flex items-center gap-1">
+                            <Icon name="external" className="w-3 h-3" />
+                            <span>Buka</span>
+                          </a>
+                        ) : '-'}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5 text-slate-400">
+                          <button onClick={() => onOpenDetail(item)} className="p-1 hover:text-indigo-600"><Icon name="eye" className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => onOpenEdit(item)} className="p-1 hover:text-indigo-600"><Icon name="edit" className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => onDuplicate(item)} className="p-1 hover:text-slate-800"><Icon name="copy" className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => onDelete(item.id)} className="p-1 hover:text-rose-600"><Icon name="trash" className="w-3.5 h-3.5" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 5. ANALYTICS & REKAP VIEW COMPONENT
+    // ==========================================
+    function AnalyticsView({ contents, onExportCSV, onPrint }) {
+      const summary = React.useMemo(() => {
+        let totalViews = 0, totalReach = 0, totalLikes = 0, totalComments = 0, totalShares = 0, totalSaves = 0;
+        contents.forEach(c => {
+          if (c.platformMetrics) {
+            Object.values(c.platformMetrics).forEach(m => {
+              totalViews += Number(m.views || 0);
+              totalReach += Number(m.reach || 0);
+              totalLikes += Number(m.likes || 0);
+              totalComments += Number(m.comments || 0);
+              totalShares += Number(m.shares || 0);
+              totalSaves += Number(m.saves || 0);
+            });
+          }
+        });
+        const totalEng = totalLikes + totalComments + totalShares + totalSaves;
+        const avgEr = calcER(totalLikes, totalComments, totalShares, totalSaves, totalReach);
+        return { totalViews, totalReach, totalEng, avgEr };
+      }, [contents]);
+
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Rekap & Laporan Performa</h2>
+              <p className="text-xs text-slate-500">Laporan evaluasi efektivitas kampanye konten media sosial.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onPrint}
+                className="bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center gap-1.5"
+              >
+                <Icon name="print" className="w-4 h-4 text-slate-500" />
+                <span>Cetak PDF</span>
+              </button>
+              <button
+                onClick={onExportCSV}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5"
+              >
+                <Icon name="download" className="w-4 h-4" />
+                <span>Unduh CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <span className="text-xs text-slate-400 font-semibold uppercase">Total Views</span>
+              <p className="text-2xl font-bold text-slate-900 mt-1">{formatNum(summary.totalViews)}</p>
+            </div>
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <span className="text-xs text-slate-400 font-semibold uppercase">Total Reach</span>
+              <p className="text-2xl font-bold text-indigo-600 mt-1">{formatNum(summary.totalReach)}</p>
+            </div>
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <span className="text-xs text-slate-400 font-semibold uppercase">Total Interaksi</span>
+              <p className="text-2xl font-bold text-rose-600 mt-1">{formatNum(summary.totalEng)}</p>
+            </div>
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <span className="text-xs text-slate-400 font-semibold uppercase">Engagement Rate</span>
+              <p className="text-2xl font-bold text-teal-600 mt-1">{summary.avgEr}%</p>
+            </div>
+          </div>
+
+          {/* Evaluasi Komparasi */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <Icon name="sparkles" className="w-4 h-4 text-emerald-500" />
+                <span>Konten Terunggul (Top Performance)</span>
+              </h3>
+              <div className="space-y-3">
+                {contents.filter(c => c.status === 'Published').slice(0, 3).map(c => (
+                  <div key={c.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                    <p className="font-bold text-slate-900">{c.title}</p>
+                    <p className="text-slate-500 text-[10px] mt-0.5">{c.format} • {c.contentPillar}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <Icon name="alert" className="w-4 h-4 text-amber-500" />
+                <span>Rekomendasi & Optimasi</span>
+              </h3>
+              <div className="space-y-2.5 text-xs text-slate-600">
+                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl">
+                  <b className="text-amber-900">Hook 3 Detik:</b> Format Reels & TikTok membutuhkan pembuka dinamis agar audiens tidak langsung scrolling.
+                </div>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <b className="text-slate-800">Prime Time Posting:</b> Publikasikan konsisten pada rentang waktu istirahat siang (12:00 WIB) atau malam (19:30 WIB).
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 6. BANK IDE KONTEN COMPONENT
+    // ==========================================
+    function IdeaBankView({ ideas, setIdeas, onConvertToPlan, showToast }) {
+      const [title, setTitle] = React.useState('');
+      const [desc, setDesc] = React.useState('');
+      const [platform, setPlatform] = React.useState('tiktok');
+      const [pillar, setPillar] = React.useState('Edukasi');
+
+      const handleAdd = (e) => {
+        e.preventDefault();
+        if (!title.trim()) return;
+        const newIdea = {
+          id: 'id-' + Date.now(),
+          title,
+          description: desc,
+          platform,
+          pillar,
+          priority: 'Normal',
+          status: 'Draft'
+        };
+        setIdeas([newIdea, ...ideas]);
+        setTitle('');
+        setDesc('');
+        showToast('Ide baru tersimpan di Bank Ide!');
+      };
+
+      return (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Bank Ide Konten</h2>
+            <p className="text-xs text-slate-500">Catat ide spontan, lalu ubah 1-klik menjadi rencana konten riil.</p>
+          </div>
+
+          <form onSubmit={handleAdd} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+            <h3 className="text-xs font-bold uppercase text-slate-400">Tambah Ide Spontan</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <input
+                type="text"
+                placeholder="Judul ide konten..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:col-span-1 focus:outline-none focus:bg-white"
+              />
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+              >
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+                <option value="facebook">Facebook</option>
+              </select>
+              <select
+                value={pillar}
+                onChange={(e) => setPillar(e.target.value)}
+                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+              >
+                {CONTENT_PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <textarea
+              placeholder="Catatan brief / hook gagasan..."
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              rows={2}
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:bg-white"
+            />
+            <button
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
+            >
+              + Simpan Ide
+            </button>
+          </form>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {ideas.map(item => (
+              <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${PLATFORMS[item.platform]?.badgeClass}`}>
+                      {item.platform}
+                    </span>
+                    <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
+                      {item.status}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-xs text-slate-900">{item.title}</h4>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-3">{item.description || 'Tidak ada catatan.'}</p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <button
+                    onClick={() => onConvertToPlan(item)}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-xl flex items-center gap-1 transition"
+                  >
+                    <Icon name="sparkles" className="w-3.5 h-3.5" />
+                    <span>Jadikan Rencana</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIdeas(ideas.filter(i => i.id !== item.id));
+                      showToast('Ide berhasil dihapus.');
+                    }}
+                    className="text-slate-400 hover:text-rose-600 p-1"
+                  >
+                    <Icon name="trash" className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 7. PENGATURAN & SETUP FIREBASE COMPONENT
+    // ==========================================
+    function SettingsView({ showToast }) {
+      return (
+        <div className="space-y-6 max-w-4xl">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Pengaturan & Integrasi Firebase</h2>
+            <p className="text-xs text-slate-500">Panduan konfigurasi Cloud Firestore permanen dan deployment GitHub Pages.</p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs">
+            <h3 className="font-bold text-slate-900 text-sm">Status Database Aktif</h3>
+            <p className="text-slate-600">
+              Saat ini data tersimpan di penyimpanan browser lokal (<b>LocalStorage</b>) sehingga aman dari batas kedaluwarsa 30 hari. 
+              Untuk menghubungkan langsung ke Firebase Firestore Anda:
+            </p>
+
+            <div className="p-4 bg-slate-900 text-slate-200 rounded-xl font-mono text-[11px] overflow-x-auto space-y-2">
+              <p className="text-indigo-400">// Salin aturan keamanan firestore.rules di Firebase Console:</p>
+              <pre>{`rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}`}</pre>
+            </div>
+
+            <div className="pt-2 text-slate-500">
+              <p><b>Tips:</b> Dengan aturan di atas, database Firebase Anda akan aktif permanen seumur hidup tanpa masa kedaluwarsa 30 hari karena mode testing otomatis diganti dengan aturan otentikasi UID terisolasi.</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // MODALS: FORM, DETAIL, & INPUT METRIK
+    // ==========================================
+    function ContentFormModal({ item, onClose, onSave }) {
+      const [formData, setFormData] = React.useState({
+        id: item?.id || '',
+        title: item?.title || '',
+        description: item?.description || '',
+        platforms: item?.platforms || ['tiktok'],
+        format: item?.format || 'Reels',
+        contentPillar: item?.contentPillar || 'Edukasi',
+        campaign: item?.campaign || '',
+        targetAudiens: item?.targetAudiens || '',
+        objective: item?.objective || 'Engagement',
+        caption: item?.caption || '',
+        hashtags: item?.hashtags || '',
+        referenceUrl: item?.referenceUrl || '',
+        assetUrl: item?.assetUrl || '',
+        scheduledAt: item?.scheduledAt || new Date().toISOString().slice(0, 16),
+        deadlineAt: item?.deadlineAt || new Date().toISOString().slice(0, 16),
+        assignee: item?.assignee || 'Boby PIC',
+        priority: item?.priority || 'Normal',
+        status: item?.status || 'Ide',
+        internalNotes: item?.internalNotes || ''
+      });
+
+      const togglePlatform = (p) => {
+        if (formData.platforms.includes(p)) {
+          if (formData.platforms.length === 1) return;
+          setFormData({ ...formData, platforms: formData.platforms.filter(x => x !== p) });
+        } else {
+          setFormData({ ...formData, platforms: [...formData.platforms, p] });
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-100 my-8 flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-base text-slate-900">{formData.id ? 'Edit Rencana Konten' : 'Buat Rencana Baru'}</h3>
+              <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-700">
+                <Icon name="close" className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-6 overflow-y-auto space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Judul Konten *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Contoh: 5 Alasan Kenapa Bisnis Butuh Video Singkat"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1.5">Platform Target *</label>
+                <div className="flex gap-2">
+                  {['tiktok', 'instagram', 'facebook'].map(p => {
+                    const active = formData.platforms.includes(p);
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => togglePlatform(p)}
+                        className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold uppercase transition flex items-center gap-1 ${
+                          active ? PLATFORMS[p]?.badgeClass + ' border-transparent' : 'bg-slate-50 text-slate-500 border-slate-200'
+                        }`}
+                      >
+                        {active && <Icon name="check" className="w-3.5 h-3.5" />}
+                        <span>{p}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Format</label>
+                  <select
+                    value={formData.format}
+                    onChange={(e) => setFormData({ ...formData, format: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+                  >
+                    {CONTENT_FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Pilar Konten</label>
+                  <select
+                    value={formData.contentPillar}
+                    onChange={(e) => setFormData({ ...formData, contentPillar: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+                  >
+                    {CONTENT_PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Prioritas</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+                  >
+                    <option value="Rendah">Rendah</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Tinggi">Tinggi</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Jadwal Publikasi (WIB)</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.scheduledAt}
+                    onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Deadline Produksi</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.deadlineAt}
+                    onChange={(e) => setFormData({ ...formData, deadlineAt: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Draft Caption</label>
+                <textarea
+                  rows={2}
+                  value={formData.caption}
+                  onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+                  placeholder="Tulis draf caption..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs"
+                >
+                  Simpan Konten
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    function ContentDetailModal({ item, onClose, onEdit, onInputMetric }) {
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl border border-slate-100 p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${STATUSES[item.status]?.bg}`}>
+                {item.status}
+              </span>
+              <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+                <Icon name="close" className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-slate-900">{item.title}</h3>
+              <p className="text-slate-500 mt-1">{item.description || 'Tidak ada deskripsi singkat.'}</p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-slate-50 rounded-xl text-slate-700">
+              <div><span className="text-slate-400 block text-[10px]">Format:</span><b>{item.format}</b></div>
+              <div><span className="text-slate-400 block text-[10px]">Pilar:</span><b>{item.contentPillar}</b></div>
+              <div><span className="text-slate-400 block text-[10px]">PIC:</span><b>{item.assignee}</b></div>
+              <div><span className="text-slate-400 block text-[10px]">Prioritas:</span><b>{item.priority}</b></div>
+            </div>
+
+            {item.caption && (
+              <div className="space-y-1">
+                <span className="font-bold text-slate-700">Caption:</span>
+                <div className="p-3 bg-slate-50 rounded-xl whitespace-pre-wrap">{item.caption}</div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+              {item.status === 'Published' && (
+                <button onClick={onInputMetric} className="bg-emerald-600 text-white font-semibold px-3 py-1.5 rounded-xl">
+                  + Catat Metrik
+                </button>
+              )}
+              <div className="flex gap-2 ml-auto">
+                <button onClick={onEdit} className="border border-slate-200 px-3 py-1.5 rounded-xl font-semibold text-slate-700">Edit</button>
+                <button onClick={onClose} className="bg-slate-900 text-white px-3 py-1.5 rounded-xl font-semibold">Tutup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MetricModal({ item, onClose, onSave }) {
+      const [platform, setPlatform] = React.useState(item.platforms[0] || 'tiktok');
+      const cur = item.platformMetrics?.[platform] || {};
+
+      const [views, setViews] = React.useState(cur.views || 0);
+      const [reach, setReach] = React.useState(cur.reach || 0);
+      const [likes, setLikes] = React.useState(cur.likes || 0);
+      const [comments, setComments] = React.useState(cur.comments || 0);
+      const [shares, setShares] = React.useState(cur.shares || 0);
+      const [saves, setSaves] = React.useState(cur.saves || 0);
+
+      const er = calcER(likes, comments, shares, saves, reach);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        const updated = {
+          ...item,
+          status: 'Published',
+          platformMetrics: {
+            ...(item.platformMetrics || {}),
+            [platform]: {
+              views: Number(views),
+              reach: Number(reach),
+              likes: Number(likes),
+              comments: Number(comments),
+              shares: Number(shares),
+              saves: Number(saves),
+              updatedAt: new Date().toISOString()
+            }
+          }
+        };
+        onSave(updated);
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-100 p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-sm text-slate-900">Catat Metrik: {item.title}</h3>
+              <button onClick={onClose}><Icon name="close" className="w-5 h-5 text-slate-400" /></button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="flex gap-2">
+                {item.platforms.map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => {
+                      setPlatform(p);
+                      const m = item.platformMetrics?.[p] || {};
+                      setViews(m.views || 0);
+                      setReach(m.reach || 0);
+                      setLikes(m.likes || 0);
+                      setComments(m.comments || 0);
+                      setShares(m.shares || 0);
+                      setSaves(m.saves || 0);
+                    }}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold uppercase ${
+                      platform === p ? PLATFORMS[p]?.badgeClass : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Views</label>
+                  <input type="number" min="0" value={views} onChange={e => setViews(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Reach</label>
+                  <input type="number" min="0" value={reach} onChange={e => setReach(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Likes</label>
+                  <input type="number" min="0" value={likes} onChange={e => setLikes(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Comments</label>
+                  <input type="number" min="0" value={comments} onChange={e => setComments(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Shares</label>
+                  <input type="number" min="0" value={shares} onChange={e => setShares(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Saves</label>
+                  <input type="number" min="0" value={saves} onChange={e => setSaves(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+                </div>
+              </div>
+
+              <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex justify-between items-center">
+                <span className="font-semibold text-indigo-900">Engagement Rate:</span>
+                <span className="font-bold text-indigo-600 text-sm">{er}%</span>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-200 rounded-xl">Batal</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Simpan Metrik</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // Render App ke Root Element
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
