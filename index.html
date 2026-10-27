@@ -3,2206 +3,1221 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocialFlow Planner & Analytics Dashboard V2.4.0</title>
+  <title>SocialFlow Planner & Analytics Dashboard (V2.4.1)</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-              900: '#1e1b4b',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- React 18 & ReactDOM -->
+  
+  <!-- React & ReactDOM (UMD) -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   
-  <!-- Babel Standalone untuk JSX -->
+  <!-- Babel untuk membaca JSX di browser -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Google Font Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Firebase App & Firestore SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
     @media print {
-      .print-hidden { display: none !important; }
-      .print-visible { display: block !important; }
-      body { background-color: #ffffff !important; color: #000000 !important; }
+      body * { visibility: hidden; }
+      #printable-report, #printable-report * { visibility: visible; }
+      #printable-report { position: absolute; left: 0; top: 0; width: 100%; }
     }
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 antialiased font-sans">
   <div id="root"></div>
 
-  <!-- SVG Icon Component Library (Inline Native Icons for Zero Dependency Errors) -->
   <script type="text/babel">
-    const Icon = ({ name, className = "w-4 h-4", ...props }) => {
-      const icons = {
-        layout: (
-          <path d="M3 3h7v9H3V3zm11 0h7v5h-7V3zm0 9h7v9h-7v-9zM3 16h7v5H3v-5z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        calendar: (
-          <path d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        table: (
-          <path d="M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-4m-6 0v18m6-18v18M3 10h18M3 16h18" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        chart: (
-          <path d="M18 20V10m-6 10V4M6 20v-6" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        bulb: (
-          <path d="M9 18h6m-3 4v-4m6-6a6 6 0 10-12 0c0 2.5 1.5 4.5 3 6h6c1.5-1.5 3-3.5 3-6z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        settings: (
-          <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        plus: (
-          <path d="M12 5v14m-7-7h14" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        search: (
-          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        check: (
-          <path d="M5 13l4 4L19 7" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        close: (
-          <path d="M6 18L18 6M6 6l12 12" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        alert: (
-          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        trash: (
-          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        edit: (
-          <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        copy: (
-          <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        download: (
-          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        print: (
-          <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        external: (
-          <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        sparkles: (
-          <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.286L13 21l-2.286-6.857L5 12l5.714-2.286L13 3z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        clock: (
-          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        eye: (
-          <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        heart: (
-          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        users: (
-          <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        chevronLeft: (
-          <path d="M15 19l-7-7 7-7" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        ),
-        chevronRight: (
-          <path d="M9 5l7 7-7 7" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-        )
-      };
+    const { useState, useEffect, useMemo } = React;
 
-      return (
-        <svg viewBox="0 0 24 24" className={className} {...props}>
-          {icons[name] || icons.sparkles}
-        </svg>
-      );
+    // --- INISIALISASI FIREBASE OTOMATIS (V2.4.1) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCEJGbd7A3SqqzvyiY1aP9sqeeHKnzyfqI",
+      authDomain: "socialflow-planner-analytics.firebaseapp.com",
+      projectId: "socialflow-planner-analytics",
+      storageBucket: "socialflow-planner-analytics.firebasestorage.app",
+      messagingSenderId: "41368071647",
+      appId: "1:41368071647:web:878b7ada81d622cb64286a"
     };
 
-    // ==========================================
-    // DATA SEED & MODEL ENUM
-    // ==========================================
-    const APP_VERSION = "V2.4.0";
+    let firestoreDb = null;
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      firestoreDb = firebase.firestore();
+    } catch (err) {
+      console.warn("Firestore inisialisasi offline fallback:", err);
+    }
 
+    // --- DATA KONSTANTA ---
     const PLATFORMS = {
-      tiktok: { id: 'tiktok', name: 'TikTok', color: '#000000', badgeClass: 'bg-black text-white' },
-      instagram: { id: 'instagram', name: 'Instagram', color: '#E1306C', badgeClass: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' },
-      facebook: { id: 'facebook', name: 'Facebook', color: '#1877F2', badgeClass: 'bg-blue-600 text-white' }
+      TIKTOK: { name: 'TikTok', bg: 'bg-black text-white', color: '#000000' },
+      INSTAGRAM: { name: 'Instagram', bg: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white', color: '#E1306C' },
+      FACEBOOK: { name: 'Facebook', bg: 'bg-blue-600 text-white', color: '#1877F2' }
     };
 
-    const CONTENT_FORMATS = ['Reels', 'TikTok Video', 'Story', 'Carousel', 'Foto', 'Facebook Video', 'Live'];
-    const CONTENT_PILLARS = ['Edukasi', 'Hiburan', 'Promosi', 'Testimoni', 'Behind the Scenes', 'Tips & Trik', 'Inspirasi'];
-    
-    const STATUSES = {
-      'Ide': { id: 'Ide', label: 'Ide', bg: 'bg-slate-100 text-slate-700 border-slate-300' },
-      'Brief': { id: 'Brief', label: 'Brief', bg: 'bg-amber-50 text-amber-700 border-amber-300' },
-      'Produksi': { id: 'Produksi', label: 'Produksi', bg: 'bg-blue-50 text-blue-700 border-blue-300' },
-      'Editing': { id: 'Editing', label: 'Editing', bg: 'bg-purple-50 text-purple-700 border-purple-300' },
-      'Siap Posting': { id: 'Siap Posting', label: 'Siap Posting', bg: 'bg-teal-50 text-teal-700 border-teal-300' },
-      'Terjadwal': { id: 'Terjadwal', label: 'Terjadwal', bg: 'bg-indigo-50 text-indigo-700 border-indigo-300' },
-      'Published': { id: 'Published', label: 'Published', bg: 'bg-emerald-50 text-emerald-700 border-emerald-300' },
-      'Cancelled': { id: 'Cancelled', label: 'Cancelled', bg: 'bg-rose-50 text-rose-700 border-rose-300' }
-    };
+    const STATUS_LIST = ['Ide', 'Brief', 'Produksi', 'Editing', 'Siap Posting', 'Terjadwal', 'Published', 'Cancelled'];
+    const PILLARS = ['Edukasi', 'Hiburan', 'Promosi', 'Testimoni', 'Behind the Scenes', 'Tips & Trik', 'Inspirasi'];
+    const FORMATS = ['Reels', 'TikTok Video', 'Story', 'Carousel', 'Foto', 'Facebook Video', 'Live'];
 
-    const formatWIB = (dateStr, options = {}) => {
-      if (!dateStr) return '-';
-      try {
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return '-';
-        return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', ...options }).format(d);
-      } catch (e) {
-        return dateStr;
-      }
-    };
-
-    const formatNum = (n) => new Intl.NumberFormat('id-ID').format(n || 0);
-
-    const calcER = (likes = 0, comments = 0, shares = 0, saves = 0, reach = 0) => {
-      if (!reach || Number(reach) <= 0) return 0;
-      const total = Number(likes || 0) + Number(comments || 0) + Number(shares || 0) + Number(saves || 0);
-      return Number(((total / Number(reach)) * 100).toFixed(2));
-    };
-
-    const initialDemoContents = [
+    // --- DATA AWAL (DEMO INITIALIZER) ---
+    const INITIAL_CONTENTS = [
       {
-        id: 'cnt-1',
-        title: '5 Tips Optimasi Hook Video 3 Detik Pertama',
-        description: 'Trik copywriting hook visual untuk meningkatkan watch-time reels & tiktok.',
-        platforms: ['tiktok', 'instagram'],
-        format: 'Reels',
-        contentPillar: 'Edukasi',
-        campaign: 'Creator Growth 2026',
-        targetAudiens: 'Content Creator & Brand Owner',
-        objective: 'Trafik & Saves',
-        caption: 'Mau video kamu tembus FYP? Jangan skip 3 detik pertama ini! 🚀 #tipsngonten #creatorindonesia',
-        hashtags: '#tipsngonten #marketing #socialmedia #fyp',
-        referenceUrl: 'https://instagram.com',
-        assetUrl: 'https://drive.google.com',
-        scheduledAt: new Date(Date.now() - 86400000 * 2).toISOString().slice(0, 16),
-        deadlineAt: new Date(Date.now() - 86400000 * 3).toISOString().slice(0, 16),
-        assignee: 'Boby PIC',
-        priority: 'Tinggi',
-        status: 'Published',
-        internalNotes: 'Audio tren sedang trending di TikTok Indonesia.',
-        isDemo: true,
-        platformMetrics: {
-          tiktok: { views: 42000, reach: 31000, likes: 3200, comments: 240, shares: 510, saves: 890 },
-          instagram: { views: 24500, reach: 18200, likes: 1640, comments: 120, shares: 210, saves: 650 }
-        }
+        id: "demo-1",
+        title: "5 Tips Optimasi Reels & Algoritma 2026",
+        platform: "Instagram",
+        format: "Carousel",
+        pillar: "Edukasi",
+        status: "Published",
+        scheduledDate: "2026-10-27",
+        scheduledTime: "19:00",
+        caption: "Mau jangkauan akunmu naik 300%? Terapkan pola hook 3 detik ini! 🚀 #tipsreels #marketing",
+        hashtags: "#tipsreels #marketing #contentstrategy",
+        referenceUrl: "https://instagram.com",
+        assetUrl: "https://drive.google.com",
+        views: 18400,
+        reach: 14200,
+        likes: 1120,
+        comments: 84,
+        shares: 145,
+        saves: 430
       },
       {
-        id: 'cnt-2',
-        title: 'Promo Flash Sale Gajian Diskon 40%',
-        description: 'Desain carousel katalog produk promo gajian akhir pekan.',
-        platforms: ['instagram', 'facebook'],
-        format: 'Carousel',
-        contentPillar: 'Promosi',
-        campaign: 'Payday Special',
-        targetAudiens: 'Pelanggan Aktif',
-        objective: 'Konversi Penjualan',
-        caption: 'Hanya berlaku 3 hari! Dapatkan potongan langsung dan voucher ongkir gratis! 🛒✨',
-        hashtags: '#promogajian #diskon #belanjaonline',
-        referenceUrl: '',
-        assetUrl: '',
-        scheduledAt: new Date(Date.now() + 86400000 * 1).toISOString().slice(0, 16),
-        deadlineAt: new Date(Date.now() + 86400000 * 0).toISOString().slice(0, 16),
-        assignee: 'Sarah Creative',
-        priority: 'Tinggi',
-        status: 'Siap Posting',
-        internalNotes: 'Pastikan link bio toko sudah di-update.',
-        isDemo: true,
-        platformMetrics: {}
+        id: "demo-2",
+        title: "POV: Kerja di Agensi pas Hari Jumat Sore",
+        platform: "TikTok",
+        format: "TikTok Video",
+        pillar: "Hiburan",
+        status: "Published",
+        scheduledDate: "2026-10-26",
+        scheduledTime: "17:00",
+        caption: "Ketika revisi masuk pas jam 16.59... Siapa yang pernah ngalamin? 😂 #agencylife",
+        hashtags: "#agencylife #funny #creator",
+        referenceUrl: "https://tiktok.com",
+        assetUrl: "",
+        views: 65200,
+        reach: 49000,
+        likes: 5800,
+        comments: 420,
+        shares: 1250,
+        saves: 310
       },
       {
-        id: 'cnt-3',
-        title: 'Behind the Scenes: Proses Packaging Ramah Lingkungan',
-        description: 'Video estetik unboxing dan komitmen packaging ramah lingkungan.',
-        platforms: ['tiktok'],
-        format: 'TikTok Video',
-        contentPillar: 'Behind the Scenes',
-        campaign: 'Eco Initiative',
-        targetAudiens: 'Gen Z & Eco Lovers',
-        objective: 'Brand Affinity & Engagement',
-        caption: 'Kecil bagi kita, berarti bagi bumi. Ini langkah awal kami 🌿📦',
-        hashtags: '#ecofriendly #packaging #brandstory',
-        referenceUrl: '',
-        assetUrl: '',
-        scheduledAt: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 16),
-        deadlineAt: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
-        assignee: 'Budi Video Editor',
-        priority: 'Normal',
-        status: 'Editing',
-        internalNotes: 'Perlu grading warna tone hangat.',
-        isDemo: true,
-        platformMetrics: {}
+        id: "demo-3",
+        title: "Promo Flash Sale Payday Akhir Bulan",
+        platform: "Facebook",
+        format: "Carousel",
+        pillar: "Promosi",
+        status: "Siap Posting",
+        scheduledDate: "2026-10-29",
+        scheduledTime: "12:00",
+        caption: "Promo gajian diskon 40% cuma 3 hari! Cek katalog sekarang.",
+        hashtags: "#promopayday #diskon",
+        referenceUrl: "",
+        assetUrl: "https://drive.google.com",
+        views: 0,
+        reach: 0,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        saves: 0
       }
     ];
 
-    const initialDemoIdeas = [
+    const INITIAL_IDEAS = [
       {
-        id: 'id-1',
-        title: 'Kamera HP 2 Jutaan vs iPhone untuk Bikin Konten',
-        description: 'Blind test hasil video tanpa edit untuk mengedukasi pemula bahwa HP murah sudah cukup.',
-        platform: 'tiktok',
-        pillar: 'Edukasi',
-        priority: 'Tinggi',
-        status: 'Disetujui',
-        referenceUrl: 'https://vt.tiktok.com/ZSjDemoSample/',
-        assetUrl: 'https://drive.google.com/drive/folders/sample-asset-1'
+        id: "idea-1",
+        title: "Kamera HP 2 Jutaan vs iPhone untuk Bikin Konten",
+        platform: "TikTok",
+        pillar: "Edukasi",
+        status: "Disetujui",
+        description: "Blind test perbandingan hasil video tanpa edit untuk mengedukasi pemula.",
+        referenceUrl: "https://tiktok.com/@contoh/video/1",
+        assetUrl: "https://drive.google.com/drive/folders/materi-hp"
       },
       {
-        id: 'id-2',
-        title: 'Mitos Shadowban Instagram 2026 yang Masih Dipercaya',
-        description: 'Bongkar mitos pembatasan algoritma berdasarkan pengumuman resmi Meta.',
-        platform: 'instagram',
-        pillar: 'Tips & Trik',
-        priority: 'Normal',
-        status: 'Dipertimbangkan',
-        referenceUrl: 'https://www.instagram.com/reels/sample-myth/',
-        assetUrl: ''
+        id: "idea-2",
+        title: "Mitos Shadowban Instagram 2026 yang Masih Dipercaya",
+        platform: "Instagram",
+        pillar: "Edukasi",
+        status: "Dipertimbangkan",
+        description: "Bongkar mitos pembatasan akun berdasarkan klarifikasi resmi Meta.",
+        referenceUrl: "https://instagram.com/p/referensi",
+        assetUrl: ""
       }
     ];
 
-    // ==========================================
-    // UTAMA: APLIKASI ROOT
-    // ==========================================
     function App() {
-      const [currentMenu, setCurrentMenu] = React.useState('dashboard');
-      const [sidebarOpen, setSidebarOpen] = React.useState(false);
-      const [viewMode, setViewMode] = React.useState('auto'); // 'auto', 'desktop', 'mobile'
+      const [currentTab, setCurrentTab] = useState('dashboard');
+      const [deviceMode, setDeviceMode] = useState('web'); // 'web' atau 'hp'
+      const [isSyncing, setIsSyncing] = useState(false);
+      const [toast, setToast] = useState(null);
 
-      // Data Persistence State
-      const [contents, setContents] = React.useState(() => {
-        try {
-          const saved = localStorage.getItem('socialflow_contents_v2');
-          return saved ? JSON.parse(saved) : initialDemoContents;
-        } catch (e) {
-          return initialDemoContents;
-        }
+      // State Data Konten & Ide
+      const [contents, setContents] = useState(() => {
+        const saved = localStorage.getItem('sf_contents');
+        return saved ? JSON.parse(saved) : INITIAL_CONTENTS;
       });
 
-      const [ideas, setIdeas] = React.useState(() => {
-        try {
-          const saved = localStorage.getItem('socialflow_ideas_v2');
-          return saved ? JSON.parse(saved) : initialDemoIdeas;
-        } catch (e) {
-          return initialDemoIdeas;
-        }
+      const [ideas, setIdeas] = useState(() => {
+        const saved = localStorage.getItem('sf_ideas');
+        return saved ? JSON.parse(saved) : INITIAL_IDEAS;
       });
 
-      // Simpan perubahan ke LocalStorage otomatis
-      React.useEffect(() => {
-        localStorage.setItem('socialflow_contents_v2', JSON.stringify(contents));
-      }, [contents]);
+      // Filter & Pencarian
+      const [searchQuery, setSearchQuery] = useState('');
+      const [filterPlatform, setFilterPlatform] = useState('ALL');
+      const [filterStatus, setFilterStatus] = useState('ALL');
 
-      React.useEffect(() => {
-        localStorage.setItem('socialflow_ideas_v2', JSON.stringify(ideas));
-      }, [ideas]);
+      // Modals
+      const [showContentModal, setShowContentModal] = useState(false);
+      const [editingContent, setEditingContent] = useState(null);
+      const [showDetailModal, setShowDetailModal] = useState(null);
 
-      // Toast Notifications
-      const [toast, setToast] = React.useState(null);
-      const showToast = (message, type = 'success') => {
-        setToast({ message, type });
+      // Form State Content
+      const [formData, setFormData] = useState({
+        title: '',
+        platform: 'Instagram',
+        format: 'Reels',
+        pillar: 'Edukasi',
+        status: 'Ide',
+        scheduledDate: new Date().toISOString().split('T')[0],
+        scheduledTime: '18:00',
+        caption: '',
+        hashtags: '',
+        referenceUrl: '',
+        assetUrl: '',
+        views: 0,
+        reach: 0,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        saves: 0
+      });
+
+      // Form State Ide Spontan
+      const [ideaForm, setIdeaForm] = useState({
+        title: '',
+        platform: 'TikTok',
+        pillar: 'Edukasi',
+        description: '',
+        referenceUrl: '',
+        assetUrl: ''
+      });
+
+      const showToastMessage = (msg) => {
+        setToast(msg);
         setTimeout(() => setToast(null), 3000);
       };
 
-      // Modals
-      const [isModalOpen, setIsModalOpen] = React.useState(false);
-      const [editingItem, setEditingItem] = React.useState(null);
-      const [viewingItem, setViewingItem] = React.useState(null);
-      const [metricModalItem, setMetricModalItem] = React.useState(null);
-      const [deleteConfirmId, setDeleteConfirmId] = React.useState(null);
+      // Simpan ke LocalStorage
+      useEffect(() => {
+        localStorage.setItem('sf_contents', JSON.stringify(contents));
+      }, [contents]);
 
-      // Filters
-      const [periodFilter, setPeriodFilter] = React.useState('all');
-      const [searchQuery, setSearchQuery] = React.useState('');
-      const [filterPlatform, setFilterPlatform] = React.useState('all');
-      const [filterStatus, setFilterStatus] = React.useState('all');
-      const [filterPillar, setFilterPillar] = React.useState('all');
+      useEffect(() => {
+        localStorage.setItem('sf_ideas', JSON.stringify(ideas));
+      }, [ideas]);
 
-      // Filtered Content
-      const filteredContents = React.useMemo(() => {
-        const now = new Date();
-        return contents.filter(item => {
-          if (filterPlatform !== 'all' && !item.platforms.includes(filterPlatform)) return false;
-          if (filterStatus !== 'all' && item.status !== filterStatus) return false;
-          if (filterPillar !== 'all' && item.contentPillar !== filterPillar) return false;
-          if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase();
-            const matchTitle = item.title?.toLowerCase().includes(q);
-            const matchAssignee = item.assignee?.toLowerCase().includes(q);
-            const matchCampaign = item.campaign?.toLowerCase().includes(q);
-            if (!matchTitle && !matchAssignee && !matchCampaign) return false;
+      // Sinkronisasi Dua Arah ke Cloud Firestore (V2.4.1)
+      useEffect(() => {
+        if (!firestoreDb) return;
+        setIsSyncing(true);
+        const unsubscribe = firestoreDb.collection("contents").onSnapshot((snapshot) => {
+          if (!snapshot.empty) {
+            const remoteData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setContents(remoteData);
           }
-          if (periodFilter === 'all') return true;
-          const date = new Date(item.scheduledAt);
-          if (isNaN(date.getTime())) return true;
-          const diffDays = (now - date) / (1000 * 3600 * 24);
-
-          if (periodFilter === 'today') return date.toDateString() === now.toDateString();
-          if (periodFilter === '7_days') return diffDays >= -1 && diffDays <= 7;
-          if (periodFilter === '30_days') return diffDays >= -5 && diffDays <= 30;
-          return true;
-        });
-      }, [contents, filterPlatform, filterStatus, filterPillar, searchQuery, periodFilter]);
-
-      // Handler Simpan Konten Baru/Edit
-      const handleSaveContent = (formData) => {
-        // Validasi jadwal bentrok pada platform yang sama
-        const collision = contents.find(c => {
-          if (formData.id && c.id === formData.id) return false;
-          const cTime = new Date(c.scheduledAt).toISOString().slice(0, 13);
-          const fTime = new Date(formData.scheduledAt).toISOString().slice(0, 13);
-          const samePlatform = c.platforms.some(p => formData.platforms.includes(p));
-          return cTime === fTime && samePlatform && c.status !== 'Cancelled';
+          setIsSyncing(false);
+        }, (error) => {
+          console.warn("Firestore sync fallback to local:", error);
+          setIsSyncing(false);
         });
 
-        if (collision) {
-          if (!confirm(`Peringatan: Jam posting bentrok dengan "${collision.title}". Tetap simpan?`)) {
-            return;
-          }
-        }
+        return () => unsubscribe();
+      }, []);
 
-        if (formData.id) {
-          setContents(prev => prev.map(c => c.id === formData.id ? { ...c, ...formData, updatedAt: new Date().toISOString() } : c));
-          showToast('Konten berhasil diperbarui!');
-        } else {
-          const newDoc = {
-            ...formData,
-            id: 'cnt-' + Date.now(),
-            createdAt: new Date().toISOString(),
-            platformMetrics: {}
-          };
-          setContents(prev => [newDoc, ...prev]);
-          showToast('Rencana konten baru berhasil ditambahkan!');
-        }
-        setIsModalOpen(false);
-        setEditingItem(null);
-      };
+      // Simpan / Update Konten ke Firestore & State
+      const handleSaveContent = async (e) => {
+        e.preventDefault();
+        if (!formData.title.trim()) return;
 
-      const handleDeleteContent = (id) => {
-        setContents(prev => prev.filter(c => c.id !== id));
-        setDeleteConfirmId(null);
-        showToast('Konten berhasil dihapus.', 'info');
-      };
-
-      const handleDuplicate = (item) => {
-        const copy = {
-          ...item,
-          id: 'cnt-' + Date.now(),
-          title: `${item.title} (Salinan)`,
-          status: 'Ide',
-          isDemo: false,
-          platformMetrics: {}
+        const newPayload = {
+          ...formData,
+          views: Number(formData.views) || 0,
+          reach: Number(formData.reach) || 0,
+          likes: Number(formData.likes) || 0,
+          comments: Number(formData.comments) || 0,
+          shares: Number(formData.shares) || 0,
+          saves: Number(formData.saves) || 0,
+          updatedAt: new Date().toISOString()
         };
-        setContents(prev => [copy, ...prev]);
-        showToast('Konten berhasil diduplikasi.');
+
+        if (editingContent) {
+          // Update
+          const targetId = editingContent.id;
+          setContents(prev => prev.map(c => c.id === targetId ? { ...newPayload, id: targetId } : c));
+          if (firestoreDb) {
+            try { await firestoreDb.collection("contents").doc(String(targetId)).set(newPayload, { merge: true }); } catch (err) {}
+          }
+          showToastMessage("Konten berhasil diperbarui!");
+        } else {
+          // Buat Baru
+          const newId = "cnt-" + Date.now();
+          const toAdd = { ...newPayload, id: newId, createdAt: new Date().toISOString() };
+          setContents(prev => [toAdd, ...prev]);
+          if (firestoreDb) {
+            try { await firestoreDb.collection("contents").doc(newId).set(toAdd); } catch (err) {}
+          }
+          showToastMessage("Rencana konten baru berhasil ditambahkan!");
+        }
+
+        setShowContentModal(false);
+        setEditingContent(null);
       };
 
-      const handleConvertIdea = (idea) => {
-        const plan = {
-          id: '',
+      // Hapus Konten
+      const handleDeleteContent = async (id) => {
+        if (!confirm("Yakin ingin menghapus konten ini?")) return;
+        setContents(prev => prev.filter(c => c.id !== id));
+        if (firestoreDb) {
+          try { await firestoreDb.collection("contents").doc(String(id)).delete(); } catch (err) {}
+        }
+        showToastMessage("Konten telah dihapus.");
+        if (showDetailModal && showDetailModal.id === id) setShowDetailModal(null);
+      };
+
+      // Duplikasi Konten
+      const handleDuplicateContent = (item) => {
+        const dupId = "cnt-" + Date.now();
+        const duplicated = {
+          ...item,
+          id: dupId,
+          title: item.title + " (Copy)",
+          status: "Ide",
+          views: 0, reach: 0, likes: 0, comments: 0, shares: 0, saves: 0
+        };
+        setContents(prev => [duplicated, ...prev]);
+        if (firestoreDb) {
+          try { firestoreDb.collection("contents").doc(dupId).set(duplicated); } catch (err) {}
+        }
+        showToastMessage("Konten berhasil diduplikasi!");
+      };
+
+      // Simpan Ide Baru
+      const handleSaveIdea = (e) => {
+        e.preventDefault();
+        if (!ideaForm.title.trim()) return;
+        const newIdea = {
+          ...ideaForm,
+          id: "idea-" + Date.now(),
+          status: "Dipertimbangkan"
+        };
+        setIdeas([newIdea, ...ideas]);
+        setIdeaForm({ title: '', platform: 'TikTok', pillar: 'Edukasi', description: '', referenceUrl: '', assetUrl: '' });
+        showToastMessage("Ide konten berhasil disimpan di Bank Ide!");
+      };
+
+      // Ubah Ide Menjadi Rencana Konten (Forward Data & URLs)
+      const handlePromoteIdea = (idea) => {
+        setEditingContent(null);
+        setFormData({
           title: idea.title,
-          description: idea.description,
-          platforms: [idea.platform],
+          platform: idea.platform,
           format: 'Reels',
-          contentPillar: idea.pillar,
-          campaign: 'Eksplorasi Bank Ide',
-          targetAudiens: '',
-          objective: 'Engagement',
-          caption: '',
+          pillar: idea.pillar,
+          status: 'Brief',
+          scheduledDate: new Date().toISOString().split('T')[0],
+          scheduledTime: '18:00',
+          caption: idea.description || '',
           hashtags: '',
           referenceUrl: idea.referenceUrl || '',
           assetUrl: idea.assetUrl || '',
-          scheduledAt: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
-          deadlineAt: new Date(Date.now() + 86400000 * 1).toISOString().slice(0, 16),
-          assignee: 'Boby PIC',
-          priority: idea.priority || 'Normal',
-          status: 'Brief',
-          internalNotes: 'Dikonversi dari Bank Ide V2.4.0'
+          views: 0, reach: 0, likes: 0, comments: 0, shares: 0, saves: 0
+        });
+        setShowContentModal(true);
+      };
+
+      // Hapus Ide
+      const handleDeleteIdea = (id) => {
+        setIdeas(prev => prev.filter(i => i.id !== id));
+        showToastMessage("Ide berhasil dihapus.");
+      };
+
+      // --- PERHITUNGAN KPI & ANALITIK ---
+      const filteredContents = useMemo(() => {
+        return contents.filter(c => {
+          const matchSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              (c.caption && c.caption.toLowerCase().includes(searchQuery.toLowerCase()));
+          const matchPlatform = filterPlatform === 'ALL' || c.platform === filterPlatform;
+          const matchStatus = filterStatus === 'ALL' || c.status === filterStatus;
+          return matchSearch && matchPlatform && matchStatus;
+        });
+      }, [contents, searchQuery, filterPlatform, filterStatus]);
+
+      const metrics = useMemo(() => {
+        const total = contents.length;
+        const published = contents.filter(c => c.status === 'Published').length;
+        const inProgress = contents.filter(c => ['Brief', 'Produksi', 'Editing', 'Siap Posting'].includes(c.status)).length;
+        const scheduled = contents.filter(c => c.status === 'Terjadwal').length;
+
+        const totalViews = contents.reduce((acc, c) => acc + (Number(c.views) || 0), 0);
+        const totalReach = contents.reduce((acc, c) => acc + (Number(c.reach) || 0), 0);
+        const totalLikes = contents.reduce((acc, c) => acc + (Number(c.likes) || 0), 0);
+        const totalComments = contents.reduce((acc, c) => acc + (Number(c.comments) || 0), 0);
+        const totalShares = contents.reduce((acc, c) => acc + (Number(c.shares) || 0), 0);
+        const totalSaves = contents.reduce((acc, c) => acc + (Number(c.saves) || 0), 0);
+
+        const totalEngagement = totalLikes + totalComments + totalShares + totalSaves;
+        const avgER = totalReach > 0 ? ((totalEngagement / totalReach) * 100).toFixed(2) : "0.00";
+
+        return {
+          total, published, inProgress, scheduled,
+          totalViews, totalReach, totalEngagement, avgER
         };
-        setEditingItem(plan);
-        setIsModalOpen(true);
-      };
+      }, [contents]);
 
-      // Export CSV
+      // Ekspor CSV
       const handleExportCSV = () => {
-        const headers = ['ID', 'Judul', 'Platform', 'Format', 'Pilar', 'Status', 'PIC', 'Jadwal_WIB', 'Total_Views', 'Total_Reach', 'Total_Interaksi', 'ER_Persen'];
-        const rows = filteredContents.map(c => {
-          let v = 0, r = 0, l = 0, co = 0, s = 0, sa = 0;
-          if (c.platformMetrics) {
-            Object.values(c.platformMetrics).forEach(m => {
-              v += Number(m.views || 0);
-              r += Number(m.reach || 0);
-              l += Number(m.likes || 0);
-              co += Number(m.comments || 0);
-              s += Number(m.shares || 0);
-              sa += Number(m.saves || 0);
-            });
-          }
-          const eng = l + co + s + sa;
-          const er = calcER(l, co, s, sa, r);
-          return [
-            `"${c.id}"`,
-            `"${(c.title || '').replace(/"/g, '""')}"`,
-            `"${c.platforms.join(', ')}"`,
-            `"${c.format || ''}"`,
-            `"${c.contentPillar || ''}"`,
-            `"${c.status || ''}"`,
-            `"${c.assignee || ''}"`,
-            `"${formatWIB(c.scheduledAt, { dateStyle: 'short', timeStyle: 'short' })}"`,
-            v, r, eng, `"${er}%"`
-          ].join(',');
-        });
-
-        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows].join('\n');
-        const encoded = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.href = encoded;
-        link.download = `SocialFlow_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+        const headers = ["ID", "Judul", "Platform", "Format", "Pillar", "Status", "Jadwal Tanggal", "Jadwal Jam", "Views", "Reach", "Likes", "Comments", "Shares", "Saves", "Ref Link", "Asset Link"];
+        const rows = contents.map(c => [
+          c.id, `"${c.title.replace(/"/g, '""')}"`, c.platform, c.format, c.pillar, c.status,
+          c.scheduledDate, c.scheduledTime, c.views, c.reach, c.likes, c.comments, c.shares, c.saves,
+          `"${c.referenceUrl || ''}"`, `"${c.assetUrl || ''}"`
+        ]);
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `SocialFlow_Rekap_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
         link.click();
-        showToast('Laporan CSV berhasil diunduh!');
+        document.body.removeChild(link);
+        showToastMessage("Data CSV berhasil diunduh!");
       };
 
       return (
-        <div className={`min-h-screen bg-slate-900 flex items-center justify-center transition-all ${
-          viewMode === 'mobile' ? 'p-2 sm:p-6 bg-slate-800' : 'bg-slate-50'
-        }`}>
-          {/* Main App Container (with Mobile Simulator Wrapper if in mobile mode) */}
-          <div className={`w-full bg-slate-50 font-sans flex h-screen overflow-hidden transition-all duration-300 ${
-            viewMode === 'mobile' 
-              ? 'max-w-[420px] max-h-[880px] rounded-[38px] shadow-2xl border-[8px] border-slate-900 relative ring-1 ring-slate-700/50' 
-              : 'w-full'
-          }`}>
+        <div className={`min-h-screen ${deviceMode === 'hp' ? 'bg-slate-800 p-2 sm:p-6 flex justify-center items-start' : 'bg-slate-50'}`}>
           
-          {/* Toast Notification */}
-          {toast && (
-            <div className="fixed bottom-16 md:bottom-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl border border-slate-700">
-              <Icon name={toast.type === 'info' ? 'alert' : 'check'} className="w-4 h-4 text-emerald-400" />
-              <span>{toast.message}</span>
-            </div>
-          )}
+          {/* CONTAINER SIMULATOR RESPONSIVE */}
+          <div className={`w-full transition-all duration-300 flex flex-col ${
+            deviceMode === 'hp' 
+              ? 'max-w-md bg-white min-h-[844px] rounded-[36px] shadow-2xl border-4 border-slate-700 overflow-hidden relative' 
+              : 'min-h-screen lg:flex-row flex'
+          }`}>
 
-          {/* Sidebar (Hidden on Mobile View Mode or on mobile viewport) */}
-          <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between transition-transform duration-200 ${
-            viewMode === 'mobile' ? 'hidden' : 'md:static'
-          } ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'} print-hidden`}>
-            <div>
-              {/* Brand Header */}
-              <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-                    <Icon name="sparkles" className="w-5 h-5" />
+            {/* SIDEBAR (Desktop Mode Only) */}
+            {deviceMode === 'web' && (
+              <aside className="w-64 bg-slate-900 text-slate-100 flex-shrink-0 flex flex-col justify-between p-5 border-r border-slate-800">
+                <div>
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-indigo-500/30">
+                      S
+                    </div>
+                    <div>
+                      <h1 className="font-extrabold text-base tracking-tight leading-none text-white">SocialFlow</h1>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                          V2.4.1
+                        </span>
+                        {isSyncing && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
-                      SocialFlow
-                      <span className="text-[10px] font-extrabold uppercase bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/30">
-                        {APP_VERSION}
-                      </span>
-                    </h1>
-                    <p className="text-[10px] text-slate-400">Content & Analytics Hub</p>
+
+                  <nav className="space-y-1 text-sm font-semibold">
+                    {[
+                      { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                      { id: 'planner', label: 'Content Planner', icon: '📝' },
+                      { id: 'calendar', label: 'Kalender Konten', icon: '📅' },
+                      { id: 'database', label: 'Database Master', icon: '🗄️' },
+                      { id: 'analytics', label: 'Rekap & Laporan', icon: '📈' },
+                      { id: 'ideas', label: 'Bank Ide Konten', icon: '💡' },
+                      { id: 'settings', label: 'Pengaturan & Cloud', icon: '⚙️' }
+                    ].map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => setCurrentTab(item.id)}
+                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${
+                          currentTab === item.id 
+                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                        }`}
+                      >
+                        <span className="text-base">{item.icon}</span>
+                        {item.label}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800/80 text-xs text-slate-400">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="font-medium text-slate-300">Cloud Firestore Connected</span>
                   </div>
+                  <p className="text-[11px] text-slate-500">Zona: Asia/Jakarta (WIB)</p>
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white">
-                  <Icon name="close" className="w-5 h-5" />
-                </button>
-              </div>
+              </aside>
+            )}
 
-              {/* Navigation Menu */}
-              <nav className="p-3 space-y-1">
-                {[
-                  { id: 'dashboard', label: 'Dashboard', icon: 'layout' },
-                  { id: 'planner', label: 'Content Planner', icon: 'table' },
-                  { id: 'calendar', label: 'Kalender Konten', icon: 'calendar' },
-                  { id: 'database', label: 'Database Konten', icon: 'chart' },
-                  { id: 'analytics', label: 'Analytics & Rekap', icon: 'chart' },
-                  { id: 'ideas', label: 'Bank Ide Konten', icon: 'bulb' },
-                  { id: 'settings', label: 'Pengaturan & Firebase', icon: 'settings' }
-                ].map((item) => {
-                  const isActive = currentMenu === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setCurrentMenu(item.id);
-                        setSidebarOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
-                        isActive
-                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                      }`}
-                    >
-                      <Icon name={item.icon} className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Sidebar Footer Info */}
-            <div className="p-4 border-t border-slate-800 m-3 rounded-2xl bg-slate-800/40 text-[11px] text-slate-400 space-y-1">
-              <div className="flex items-center justify-between text-slate-300 font-medium">
-                <span>Versi Aktif:</span>
-                <span className="text-indigo-400 font-bold">{APP_VERSION}</span>
-              </div>
-              <div className="flex items-center justify-between text-slate-300 font-medium">
-                <span>Zona Waktu:</span>
-                <span className="text-emerald-400 font-bold">WIB (Jakarta)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Target Saluran:</span>
-                <span>TikTok, IG, FB</span>
-              </div>
-            </div>
-          </aside>
-
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden relative">
-            {/* Top Navbar */}
-            <header className="bg-white border-b border-slate-200 px-3 md:px-6 py-2.5 flex items-center justify-between shadow-xs print-hidden gap-2">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  className={`p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg ${viewMode === 'mobile' ? 'hidden' : 'md:hidden'}`}
-                >
-                  <Icon name="layout" className="w-5 h-5" />
-                </button>
-                <div className="relative hidden sm:block w-48 md:w-64 lg:w-72">
-                  <Icon name="search" className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Cari judul, kampanye, atau PIC..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-100/80 border border-slate-200 text-xs rounded-xl pl-8 pr-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* View Mode Toggle (Desktop / Mobile Preview) */}
-                <div className="bg-slate-100 p-0.5 rounded-xl border border-slate-200 flex items-center text-[10px] font-semibold text-slate-600">
-                  <button
-                    onClick={() => setViewMode(viewMode === 'mobile' ? 'auto' : 'mobile')}
-                    className={`px-2 py-1 rounded-lg flex items-center gap-1 transition ${
-                      viewMode === 'mobile' ? 'bg-indigo-600 text-white shadow-xs' : 'hover:text-slate-900'
-                    }`}
-                    title="Ubah ke Mode Layar HP (Mobile Simulator)"
-                  >
-                    <span>📱 HP</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode('auto')}
-                    className={`px-2 py-1 rounded-lg flex items-center gap-1 transition ${
-                      viewMode === 'auto' ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
-                    }`}
-                    title="Mode Tampilan Penuh / Desktop Web"
-                  >
-                    <span>💻 Web</span>
-                  </button>
-                </div>
-
-                {/* Reset/Clear Demo Button */}
-                {contents.some(c => c.isDemo) ? (
-                  <button
-                    onClick={() => {
-                      setContents(contents.filter(c => !c.isDemo));
-                      showToast('Data demo dihapus. Database bersih.');
-                    }}
-                    className="text-[10px] sm:text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2 py-1 rounded-xl font-medium hover:bg-amber-100 transition flex items-center gap-1"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span className="hidden sm:inline">Hapus Demo</span>
-                    <span className="sm:hidden">Demo</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setContents(initialDemoContents);
-                      showToast('Demo data berhasil dimuat kembali.');
-                    }}
-                    className="text-[10px] sm:text-xs bg-slate-100 text-slate-600 border border-slate-200 px-2 py-1 rounded-xl font-medium hover:bg-slate-200 transition"
-                  >
-                    + Demo
-                  </button>
-                )}
-
-                {/* Primary New Content Action */}
-                <button
-                  onClick={() => {
-                    setEditingItem({
-                      id: '',
-                      title: '',
-                      description: '',
-                      platforms: ['tiktok', 'instagram'],
-                      format: 'Reels',
-                      contentPillar: 'Edukasi',
-                      campaign: '',
-                      targetAudiens: '',
-                      objective: 'Engagement',
-                      caption: '',
-                      hashtags: '',
-                      referenceUrl: '',
-                      assetUrl: '',
-                      scheduledAt: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-                      deadlineAt: new Date().toISOString().slice(0, 16),
-                      assignee: 'Boby PIC',
-                      priority: 'Normal',
-                      status: 'Ide',
-                      internalNotes: ''
-                    });
-                    setIsModalOpen(true);
-                  }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1 transition"
-                >
-                  <Icon name="plus" className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Rencana Konten</span>
-                  <span className="sm:hidden">Rencana</span>
-                </button>
-              </div>
-            </header>
-
-            {/* Scrollable View Content */}
-            <main className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-8 bg-slate-50 pb-20 md:pb-8">
-              {/* VIEW: DASHBOARD */}
-              {currentMenu === 'dashboard' && (
-                <DashboardView
-                  contents={contents}
-                  filteredContents={filteredContents}
-                  periodFilter={periodFilter}
-                  setPeriodFilter={setPeriodFilter}
-                  onOpenDetail={(c) => setViewingItem(c)}
-                  onOpenEdit={(c) => {
-                    setEditingItem(c);
-                    setIsModalOpen(true);
-                  }}
-                  onOpenMetric={(c) => setMetricModalItem(c)}
-                />
-              )}
-
-              {/* VIEW: CONTENT PLANNER */}
-              {currentMenu === 'planner' && (
-                <PlannerView
-                  contents={filteredContents}
-                  filterPlatform={filterPlatform}
-                  setFilterPlatform={setFilterPlatform}
-                  filterStatus={filterStatus}
-                  setFilterStatus={setFilterStatus}
-                  filterPillar={filterPillar}
-                  setFilterPillar={setFilterPillar}
-                  onOpenCreate={() => {
-                    setEditingItem({
-                      id: '',
-                      title: '',
-                      description: '',
-                      platforms: ['tiktok'],
-                      format: 'TikTok Video',
-                      contentPillar: 'Edukasi',
-                      campaign: '',
-                      targetAudiens: '',
-                      objective: 'Engagement',
-                      caption: '',
-                      hashtags: '',
-                      referenceUrl: '',
-                      assetUrl: '',
-                      scheduledAt: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-                      deadlineAt: new Date().toISOString().slice(0, 16),
-                      assignee: 'Boby PIC',
-                      priority: 'Normal',
-                      status: 'Ide',
-                      internalNotes: ''
-                    });
-                    setIsModalOpen(true);
-                  }}
-                  onOpenEdit={(c) => {
-                    setEditingItem(c);
-                    setIsModalOpen(true);
-                  }}
-                  onOpenDetail={(c) => setViewingItem(c)}
-                  onDuplicate={handleDuplicate}
-                  onDelete={(id) => setDeleteConfirmId(id)}
-                  onOpenMetric={(c) => setMetricModalItem(c)}
-                />
-              )}
-
-              {/* VIEW: KALENDER KONTEN */}
-              {currentMenu === 'calendar' && (
-                <CalendarView
-                  contents={contents}
-                  onOpenDetail={(c) => setViewingItem(c)}
-                  onDateClick={(dateStr) => {
-                    setEditingItem({
-                      id: '',
-                      title: '',
-                      description: '',
-                      platforms: ['instagram'],
-                      format: 'Reels',
-                      contentPillar: 'Edukasi',
-                      campaign: '',
-                      targetAudiens: '',
-                      objective: 'Engagement',
-                      caption: '',
-                      hashtags: '',
-                      referenceUrl: '',
-                      assetUrl: '',
-                      scheduledAt: `${dateStr}T10:00`,
-                      deadlineAt: `${dateStr}T08:00`,
-                      assignee: 'Boby PIC',
-                      priority: 'Normal',
-                      status: 'Ide',
-                      internalNotes: ''
-                    });
-                    setIsModalOpen(true);
-                  }}
-                />
-              )}
-
-              {/* VIEW: DATABASE MASTER */}
-              {currentMenu === 'database' && (
-                <DatabaseView
-                  contents={filteredContents}
-                  onOpenDetail={(c) => setViewingItem(c)}
-                  onOpenEdit={(c) => {
-                    setEditingItem(c);
-                    setIsModalOpen(true);
-                  }}
-                  onDelete={(id) => setDeleteConfirmId(id)}
-                  onDuplicate={handleDuplicate}
-                  onExportCSV={handleExportCSV}
-                />
-              )}
-
-              {/* VIEW: ANALYTICS & REKAP */}
-              {currentMenu === 'analytics' && (
-                <AnalyticsView
-                  contents={filteredContents}
-                  onExportCSV={handleExportCSV}
-                  onPrint={() => window.print()}
-                />
-              )}
-
-              {/* VIEW: BANK IDE KONTEN */}
-              {currentMenu === 'ideas' && (
-                <IdeaBankView
-                  ideas={ideas}
-                  setIdeas={setIdeas}
-                  onConvertToPlan={handleConvertIdea}
-                  showToast={showToast}
-                />
-              )}
-
-              {/* VIEW: PENGATURAN & FIREBASE */}
-              {currentMenu === 'settings' && (
-                <SettingsView showToast={showToast} />
-              )}
-            </main>
-
-            {/* Mobile Bottom Navigation Bar (Active on mobile view mode or small screens) */}
-            <div className={`fixed md:hidden bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 flex items-center justify-around z-30 shadow-lg ${
-              viewMode === 'mobile' ? 'absolute !flex' : ''
-            }`}>
-              {[
-                { id: 'dashboard', label: 'Home', icon: 'layout' },
-                { id: 'planner', label: 'Planner', icon: 'table' },
-                { id: 'calendar', label: 'Kalender', icon: 'calendar' },
-                { id: 'database', label: 'Database', icon: 'chart' },
-                { id: 'ideas', label: 'Ide', icon: 'bulb' },
-                { id: 'settings', label: 'Setup', icon: 'settings' }
-              ].map((b) => {
-                const active = currentMenu === b.id;
-                return (
-                  <button
-                    key={b.id}
-                    onClick={() => setCurrentMenu(b.id)}
-                    className={`flex flex-col items-center justify-center p-1 rounded-xl transition ${
-                      active ? 'text-indigo-600 font-bold' : 'text-slate-400 hover:text-slate-600'
-                    }`}
-                  >
-                    <Icon name={b.icon} className={`w-4 h-4 ${active ? 'text-indigo-600' : 'text-slate-400'}`} />
-                    <span className="text-[9px] mt-0.5">{b.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-          </div>
-          </div>
-
-          {/* Global Modals */}
-          {isModalOpen && (
-            <ContentFormModal
-              item={editingItem}
-              onClose={() => {
-                setIsModalOpen(false);
-                setEditingItem(null);
-              }}
-              onSave={handleSaveContent}
-            />
-          )}
-
-          {viewingItem && (
-            <ContentDetailModal
-              item={viewingItem}
-              onClose={() => setViewingItem(null)}
-              onEdit={() => {
-                setEditingItem(viewingItem);
-                setViewingItem(null);
-                setIsModalOpen(true);
-              }}
-              onInputMetric={() => {
-                setMetricModalItem(viewingItem);
-                setViewingItem(null);
-              }}
-            />
-          )}
-
-          {metricModalItem && (
-            <MetricModal
-              item={metricModalItem}
-              onClose={() => setMetricModalItem(null)}
-              onSave={(updated) => {
-                handleSaveContent(updated);
-                setMetricModalItem(null);
-              }}
-            />
-          )}
-
-          {deleteConfirmId && (
-            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl border border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-                  <Icon name="alert" className="w-5 h-5" />
-                </div>
-                <div className="text-center">
-                  <h4 className="font-bold text-sm text-slate-900">Hapus Konten Ini?</h4>
-                  <p className="text-xs text-slate-500 mt-1">Tindakan ini tidak bisa dibatalkan dan akan menghapus metrik terkait.</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setDeleteConfirmId(null)}
-                    className="flex-1 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={() => handleDeleteContent(deleteConfirmId)}
-                    className="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
-                  >
-                    Ya, Hapus
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    // ==========================================
-    // 1. DASHBOARD VIEW COMPONENT
-    // ==========================================
-    function DashboardView({ contents, filteredContents, periodFilter, setPeriodFilter, onOpenDetail, onOpenEdit, onOpenMetric }) {
-      const kpis = React.useMemo(() => {
-        let planned = 0;
-        let published = 0;
-        let inProgress = 0;
-        let upcoming = 0;
-        let views = 0;
-        let reach = 0;
-        let likes = 0;
-        let comments = 0;
-        let shares = 0;
-        let saves = 0;
-
-        filteredContents.forEach(c => {
-          planned++;
-          if (c.status === 'Published') published++;
-          else if (['Brief', 'Produksi', 'Editing', 'Siap Posting'].includes(c.status)) inProgress++;
-          else if (c.status === 'Terjadwal') upcoming++;
-
-          if (c.platformMetrics) {
-            Object.values(c.platformMetrics).forEach(m => {
-              views += Number(m.views || 0);
-              reach += Number(m.reach || 0);
-              likes += Number(m.likes || 0);
-              comments += Number(m.comments || 0);
-              shares += Number(m.shares || 0);
-              saves += Number(m.saves || 0);
-            });
-          }
-        });
-
-        const totalEng = likes + comments + shares + saves;
-        const avgEr = calcER(likes, comments, shares, saves, reach);
-
-        return { planned, published, inProgress, upcoming, views, reach, totalEng, avgEr };
-      }, [filteredContents]);
-
-      // Distribusi Platform
-      const platformDist = React.useMemo(() => {
-        const counts = { tiktok: 0, instagram: 0, facebook: 0 };
-        filteredContents.forEach(c => {
-          c.platforms.forEach(p => {
-            if (counts[p] !== undefined) counts[p]++;
-          });
-        });
-        const total = counts.tiktok + counts.instagram + counts.facebook || 1;
-        return [
-          { name: 'TikTok', count: counts.tiktok, pct: Math.round((counts.tiktok / total) * 100), color: '#000000' },
-          { name: 'Instagram', count: counts.instagram, pct: Math.round((counts.instagram / total) * 100), color: '#E1306C' },
-          { name: 'Facebook', count: counts.facebook, pct: Math.round((counts.facebook / total) * 100), color: '#1877F2' }
-        ];
-      }, [filteredContents]);
-
-      // Platform Views
-      const platformViews = React.useMemo(() => {
-        const pViews = { tiktok: 0, instagram: 0, facebook: 0 };
-        filteredContents.forEach(c => {
-          if (c.platformMetrics) {
-            Object.entries(c.platformMetrics).forEach(([p, m]) => {
-              if (pViews[p] !== undefined) pViews[p] += Number(m.views || 0);
-            });
-          }
-        });
-        return pViews;
-      }, [filteredContents]);
-
-      return (
-        <div className="space-y-6">
-          {/* Header Dashboard & Periode Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Executive Dashboard</h2>
-                <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
-                  {APP_VERSION}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">Ringkasan multi-channel TikTok, Instagram, dan Facebook.</p>
-            </div>
-
-            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-xs self-start">
-              <Icon name="calendar" className="w-3.5 h-3.5 text-slate-400 ml-2" />
-              <select
-                value={periodFilter}
-                onChange={(e) => setPeriodFilter(e.target.value)}
-                className="text-xs font-semibold text-slate-700 bg-transparent pr-3 py-1 focus:outline-none"
-              >
-                <option value="today">Hari Ini</option>
-                <option value="7_days">7 Hari Terakhir</option>
-                <option value="30_days">30 Hari Terakhir</option>
-                <option value="all">Semua Waktu</option>
-              </select>
-            </div>
-          </div>
-
-          {/* 8 KARTU KPI UTAMA */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: 'Direncanakan', val: kpis.planned, sub: 'Total konten pipeline', icon: 'table', color: 'text-indigo-600 bg-indigo-50' },
-              { label: 'Dipublikasikan', val: kpis.published, sub: 'Sudah tayang', icon: 'check', color: 'text-emerald-600 bg-emerald-50' },
-              { label: 'Dalam Proses', val: kpis.inProgress, sub: 'Produksi / editing', icon: 'clock', color: 'text-amber-600 bg-amber-50' },
-              { label: 'Akan Datang', val: kpis.upcoming, sub: 'Jadwal terbit siap', icon: 'calendar', color: 'text-purple-600 bg-purple-50' },
-              { label: 'Total Views', val: formatNum(kpis.views), sub: 'Penayangan video', icon: 'eye', color: 'text-sky-600 bg-sky-50' },
-              { label: 'Total Reach', val: formatNum(kpis.reach), sub: 'Akun unik tercapai', icon: 'users', color: 'text-indigo-600 bg-indigo-50' },
-              { label: 'Total Interaksi', val: formatNum(kpis.totalEng), sub: 'Like, komen, share, simpan', icon: 'heart', color: 'text-rose-600 bg-rose-50' },
-              { label: 'Avg Engagement Rate', val: `${kpis.avgEr}%`, sub: 'Interaksi / Reach', icon: 'sparkles', color: 'text-teal-600 bg-teal-50' },
-            ].map((kpi, idx) => (
-              <div key={idx} className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{kpi.label}</span>
-                  <div className={`p-2 rounded-xl ${kpi.color}`}>
-                    <Icon name={kpi.icon} className="w-4 h-4" />
-                  </div>
-                </div>
-                <div className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">{kpi.val}</div>
-                <p className="text-[10px] text-slate-400 mt-1 font-medium">{kpi.sub}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* VISUALISASI GRAFIK DISTRIBUSI & PERFORMA */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Donut Chart: Distribusi Platform */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Distribusi Platform</h3>
-                <p className="text-xs text-slate-400 mb-4">Porsi publikasi tiap channel</p>
-              </div>
+            {/* MAIN CONTENT AREA */}
+            <main className="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar pb-20 lg:pb-6">
               
-              <div className="flex items-center justify-center py-2">
-                <div className="relative w-36 h-36 flex items-center justify-center">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="14" fill="transparent" stroke="#f1f5f9" strokeWidth="4" />
-                    <circle cx="18" cy="18" r="14" fill="transparent" stroke="#000000" strokeWidth="4" strokeDasharray={`${platformDist[0].pct} 100`} />
-                    <circle cx="18" cy="18" r="14" fill="transparent" stroke="#E1306C" strokeWidth="4" strokeDasharray={`${platformDist[1].pct} 100`} strokeDashoffset={`-${platformDist[0].pct}`} />
-                    <circle cx="18" cy="18" r="14" fill="transparent" stroke="#1877F2" strokeWidth="4" strokeDasharray={`${platformDist[2].pct} 100`} strokeDashoffset={`-${platformDist[0].pct + platformDist[1].pct}`} />
-                  </svg>
-                  <div className="absolute text-center">
-                    <span className="text-lg font-bold text-slate-800">{filteredContents.length}</span>
-                    <span className="block text-[9px] text-slate-400 uppercase font-semibold">Total</span>
+              {/* TOP HEADER */}
+              <header className="bg-white/80 backdrop-blur sticky top-0 z-30 px-5 py-3.5 border-b border-slate-200/80 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  {deviceMode === 'hp' && (
+                    <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center">S</span>
+                  )}
+                  <div>
+                    <h2 className="font-extrabold text-slate-900 text-lg leading-tight capitalize">
+                      {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab}
+                    </h2>
+                    <p className="text-xs text-slate-500 hidden sm:block">Perencanaan & Analisis Konten Multi-Platform</p>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 text-center">
-                {platformDist.map(item => (
-                  <div key={item.name} className="p-2 bg-slate-50 rounded-xl">
-                    <p className="text-[10px] text-slate-500 font-semibold">{item.name}</p>
-                    <p className="text-sm font-bold text-slate-900 mt-0.5">{item.count}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">{item.pct}%</p>
+                {/* DEVICE TOGGLE & ACTION BUTTONS */}
+                <div className="flex items-center gap-2">
+                  <div className="bg-slate-100 p-1 rounded-lg flex items-center gap-1 border border-slate-200 text-xs font-semibold">
+                    <button
+                      onClick={() => setDeviceMode('hp')}
+                      className={`px-2.5 py-1 rounded-md transition ${deviceMode === 'hp' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
+                      title="Simulasi Tampilan HP"
+                    >
+                      📱 HP
+                    </button>
+                    <button
+                      onClick={() => setDeviceMode('web')}
+                      className={`px-2.5 py-1 rounded-md transition ${deviceMode === 'web' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
+                      title="Tampilan Desktop / Web"
+                    >
+                      💻 Web
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Bar Chart: Views Antar Platform */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Perbandingan Views</h3>
-                <p className="text-xs text-slate-400 mb-4">Total views terkumpul dari postingan</p>
-              </div>
+                  <button
+                    onClick={() => {
+                      setEditingContent(null);
+                      setFormData({
+                        title: '', platform: 'Instagram', format: 'Reels', pillar: 'Edukasi', status: 'Ide',
+                        scheduledDate: new Date().toISOString().split('T')[0], scheduledTime: '18:00',
+                        caption: '', hashtags: '', referenceUrl: '', assetUrl: '',
+                        views: 0, reach: 0, likes: 0, comments: 0, shares: 0, saves: 0
+                      });
+                      setShowContentModal(true);
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-md shadow-indigo-500/20 transition flex items-center gap-1.5"
+                  >
+                    <span>+</span> Rencana Konten
+                  </button>
+                </div>
+              </header>
 
-              <div className="space-y-3.5 my-auto">
-                {[
-                  { name: 'TikTok', views: platformViews.tiktok, color: 'bg-black' },
-                  { name: 'Instagram', views: platformViews.instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
-                  { name: 'Facebook', views: platformViews.facebook, color: 'bg-blue-600' }
-                ].map(p => {
-                  const max = Math.max(...Object.values(platformViews), 1);
-                  const width = Math.min(100, Math.round((p.views / max) * 100));
-                  return (
-                    <div key={p.name} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <div className="flex justify-between text-xs font-semibold mb-1.5">
-                        <span className="text-slate-800">{p.name}</span>
-                        <span className="text-indigo-600 font-bold">{formatNum(p.views)} Views</span>
+              {/* TOAST NOTIFIKASI */}
+              {toast && (
+                <div className="fixed top-16 right-6 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 animate-fade-in">
+                  <span className="text-emerald-400">✓</span> {toast}
+                </div>
+              )}
+
+              {/* CONTENT VIEW ROUTING */}
+              <div className="p-4 sm:p-6 space-y-6">
+
+                {/* TAB 1: DASHBOARD */}
+                {currentTab === 'dashboard' && (
+                  <div className="space-y-6">
+                    {/* 8 KARTU KPI UTAMA */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Konten</span>
+                        <p className="text-2xl font-black text-slate-900 mt-1">{metrics.total}</p>
+                        <p className="text-[11px] text-indigo-600 font-semibold mt-1">Direncanakan & Terbit</p>
                       </div>
-                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                        <div className={`h-full ${p.color}`} style={{ width: `${width}%` }}></div>
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sudah Publish</span>
+                        <p className="text-2xl font-black text-emerald-600 mt-1">{metrics.published}</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Live di saluran</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sedang Diproduksi</span>
+                        <p className="text-2xl font-black text-amber-600 mt-1">{metrics.inProgress}</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Tahap Brief & Edit</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Terjadwal</span>
+                        <p className="text-2xl font-black text-blue-600 mt-1">{metrics.scheduled}</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Siap auto-post</p>
+                      </div>
+
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Tayangan</span>
+                        <p className="text-2xl font-black text-slate-900 mt-1">{metrics.totalViews.toLocaleString('id-ID')}</p>
+                        <p className="text-[11px] text-purple-600 font-semibold mt-1">Views organik</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Reach</span>
+                        <p className="text-2xl font-black text-slate-900 mt-1">{metrics.totalReach.toLocaleString('id-ID')}</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Akun unik</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Interaksi</span>
+                        <p className="text-2xl font-black text-slate-900 mt-1">{metrics.totalEngagement.toLocaleString('id-ID')}</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Likes, Komen, Share, Save</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Avg. ER by Reach</span>
+                        <p className="text-2xl font-black text-indigo-600 mt-1">{metrics.avgER}%</p>
+                        <p className="text-[11px] text-emerald-600 font-semibold mt-1">Engagement rate sehat</p>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
 
-              <p className="text-[10px] text-slate-400 text-center mt-3 pt-3 border-t border-slate-100">
-                Pencatatan metrik manual via tombol "Input Metrik"
-              </p>
-            </div>
-
-            {/* Top Content Rankings */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Top Postingan Terunggul</h3>
-                <p className="text-xs text-slate-400 mb-4">Berdasarkan volume penayangan</p>
-              </div>
-
-              <div className="space-y-2.5 my-auto">
-                {filteredContents
-                  .filter(c => c.status === 'Published')
-                  .slice(0, 3)
-                  .map(c => {
-                    let totalV = 0;
-                    if (c.platformMetrics) {
-                      Object.values(c.platformMetrics).forEach(m => totalV += Number(m.views || 0));
-                    }
-                    return (
-                      <div key={c.id} onClick={() => onOpenDetail(c)} className="p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
-                        <p className="font-semibold text-xs text-slate-900 line-clamp-1">{c.title}</p>
-                        <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1">
-                          <span className="capitalize">{c.format} • {c.contentPillar}</span>
-                          <span className="font-bold text-emerald-600">{formatNum(totalV)} Views</span>
-                        </div>
+                    {/* KONTEN DENGAN PERFORMA TERBAIK */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-extrabold text-slate-900 text-sm">Top Konten Berdasarkan Views</h3>
+                        <span className="text-xs text-indigo-600 font-semibold cursor-pointer" onClick={() => setCurrentTab('database')}>Lihat Semua →</span>
                       </div>
-                    );
-                  })}
-                {filteredContents.filter(c => c.status === 'Published').length === 0 && (
-                  <p className="text-xs text-slate-400 text-center py-6">Belum ada konten published dengan metrik.</p>
-                )}
-              </div>
-
-              <p className="text-[10px] text-slate-400 text-center mt-3 pt-3 border-t border-slate-100">
-                Update berkala untuk meningkatkan ER
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ==========================================
-    // 2. CONTENT PLANNER VIEW COMPONENT
-    // ==========================================
-    function PlannerView({
-      contents,
-      filterPlatform,
-      setFilterPlatform,
-      filterStatus,
-      setFilterStatus,
-      filterPillar,
-      setFilterPillar,
-      onOpenCreate,
-      onOpenEdit,
-      onOpenDetail,
-      onDuplicate,
-      onDelete,
-      onOpenMetric
-    }) {
-      const [viewMode, setViewMode] = React.useState('board');
-
-      return (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Content Planner</h2>
-              <p className="text-xs text-slate-500">Pipeline produksi multi-platform dan monitoring jadwal.</p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="bg-slate-200/80 p-0.5 rounded-xl text-xs font-semibold flex">
-                <button
-                  onClick={() => setViewMode('board')}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    viewMode === 'board' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Kanban
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`px-3 py-1.5 rounded-lg transition ${
-                    viewMode === 'list' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Tabel
-                </button>
-              </div>
-
-              <button
-                onClick={onOpenCreate}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition"
-              >
-                <Icon name="plus" className="w-3.5 h-3.5" />
-                <span>Tambah Konten</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Filter Bar */}
-          <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-2.5">
-            <select
-              value={filterPlatform}
-              onChange={(e) => setFilterPlatform(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-medium"
-            >
-              <option value="all">Semua Platform</option>
-              <option value="tiktok">TikTok</option>
-              <option value="instagram">Instagram</option>
-              <option value="facebook">Facebook</option>
-            </select>
-
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-medium"
-            >
-              <option value="all">Semua Status</option>
-              {Object.keys(STATUSES).map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-
-            <select
-              value={filterPillar}
-              onChange={(e) => setFilterPillar(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-medium"
-            >
-              <option value="all">Semua Pilar</option>
-              {CONTENT_PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-
-          {/* Kanban / Tabel */}
-          {viewMode === 'board' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-              {['Ide', 'Produksi', 'Siap Posting', 'Published'].map(col => {
-                const list = contents.filter(c => {
-                  if (col === 'Produksi') return ['Brief', 'Produksi', 'Editing'].includes(c.status);
-                  if (col === 'Siap Posting') return ['Siap Posting', 'Terjadwal'].includes(c.status);
-                  return c.status === col;
-                });
-
-                return (
-                  <div key={col} className="bg-slate-100/90 rounded-2xl p-3 border border-slate-200/80">
-                    <div className="flex items-center justify-between mb-3 px-1">
-                      <span className="font-bold text-xs uppercase text-slate-700 tracking-wider">
-                        {col === 'Produksi' ? 'Dalam Proses' : col}
-                      </span>
-                      <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
-                        {list.length}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3 min-h-[200px]">
-                      {list.length === 0 ? (
-                        <div className="h-24 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-xs">
-                          Kosong
-                        </div>
-                      ) : (
-                        list.map(c => {
-                          const isOverdue = c.status !== 'Published' && c.deadlineAt && new Date(c.deadlineAt) < new Date();
-                          return (
-                            <div key={c.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs space-y-2 hover:shadow-md transition">
-                              <div className="flex items-center justify-between gap-1">
-                                <div className="flex gap-1 flex-wrap">
-                                  {c.platforms.map(p => (
-                                    <span key={p} className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${PLATFORMS[p]?.badgeClass}`}>
-                                      {p}
-                                    </span>
-                                  ))}
-                                </div>
-                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                  c.priority === 'Tinggi' ? 'text-rose-600 bg-rose-50' : 'text-slate-500 bg-slate-50'
-                                }`}>
-                                  {c.priority}
+                      <div className="space-y-3">
+                        {contents.filter(c => c.views > 0).sort((a,b) => b.views - a.views).slice(0, 3).map((item, idx) => (
+                          <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">#{idx+1}</span>
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{item.title}</h4>
+                                <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${PLATFORMS[item.platform.toUpperCase()]?.bg || 'bg-slate-700 text-white'}`}>
+                                  {item.platform} • {item.format}
                                 </span>
                               </div>
-
-                              <h4 onClick={() => onOpenDetail(c)} className="font-bold text-xs text-slate-900 cursor-pointer hover:text-indigo-600 line-clamp-2">
-                                {c.title}
-                              </h4>
-
-                              <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100">
-                                <span>{formatWIB(c.scheduledAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                <span className="font-medium text-slate-700">{c.assignee}</span>
-                              </div>
-
-                              {isOverdue && (
-                                <div className="text-[9px] bg-rose-50 text-rose-600 border border-rose-200 px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
-                                  <Icon name="alert" className="w-3 h-3" />
-                                  <span>Lewat Deadline</span>
-                                </div>
-                              )}
-
-                              <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-slate-400">
-                                {c.status === 'Published' ? (
-                                  <button onClick={() => onOpenMetric(c)} className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                                    Metrik
-                                  </button>
-                                ) : (
-                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${STATUSES[c.status]?.bg}`}>
-                                    {c.status}
-                                  </span>
-                                )}
-
-                                <div className="flex items-center gap-1">
-                                  <button onClick={() => onOpenEdit(c)} className="p-1 hover:text-indigo-600"><Icon name="edit" className="w-3.5 h-3.5" /></button>
-                                  <button onClick={() => onDuplicate(c)} className="p-1 hover:text-slate-700"><Icon name="copy" className="w-3.5 h-3.5" /></button>
-                                  <button onClick={() => onDelete(c.id)} className="p-1 hover:text-rose-600"><Icon name="trash" className="w-3.5 h-3.5" /></button>
-                                </div>
-                              </div>
                             </div>
-                          );
-                        })
-                      )}
+                            <div className="text-right">
+                              <p className="text-xs font-extrabold text-slate-900">{item.views.toLocaleString('id-ID')} views</p>
+                              <p className="text-[10px] text-emerald-600 font-semibold">
+                                {item.reach > 0 ? (((item.likes+item.comments+item.shares+item.saves)/item.reach)*100).toFixed(1) : 0}% ER
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px]">
-                  <tr>
-                    <th className="py-3 px-4">Judul</th>
-                    <th className="py-3 px-3">Platform</th>
-                    <th className="py-3 px-3">Format</th>
-                    <th className="py-3 px-3">Status</th>
-                    <th className="py-3 px-3">PIC</th>
-                    <th className="py-3 px-3">Jadwal WIB</th>
-                    <th className="py-3 px-4 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-                  {contents.map(c => (
-                    <tr key={c.id} className="hover:bg-slate-50 transition">
-                      <td className="py-3 px-4 font-semibold text-slate-900 max-w-[200px] truncate">{c.title}</td>
-                      <td className="py-3 px-3">
-                        <div className="flex gap-1">
-                          {c.platforms.map(p => (
-                            <span key={p} className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${PLATFORMS[p]?.badgeClass}`}>{p}</span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-3 px-3">{c.format}</td>
-                      <td className="py-3 px-3">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${STATUSES[c.status]?.bg}`}>{c.status}</span>
-                      </td>
-                      <td className="py-3 px-3">{c.assignee}</td>
-                      <td className="py-3 px-3 whitespace-nowrap">{formatWIB(c.scheduledAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5 text-slate-400">
-                          <button onClick={() => onOpenDetail(c)} className="p-1 hover:text-indigo-600"><Icon name="eye" className="w-4 h-4" /></button>
-                          <button onClick={() => onOpenEdit(c)} className="p-1 hover:text-indigo-600"><Icon name="edit" className="w-4 h-4" /></button>
-                          <button onClick={() => onDelete(c.id)} className="p-1 hover:text-rose-600"><Icon name="trash" className="w-4 h-4" /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      );
-    }
+                )}
 
-    // ==========================================
-    // 3. KALENDER KONTEN VIEW COMPONENT
-    // ==========================================
-    function CalendarView({ contents, onOpenDetail, onDateClick }) {
-      const [currentDate, setCurrentDate] = React.useState(new Date());
-
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-
-      const firstDayIndex = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-      const monthNames = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-      ];
-
-      return (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Kalender Konten</h2>
-              <p className="text-xs text-slate-500">Jadwal posting interaktif (WIB). Klik tanggal untuk membuat jadwal.</p>
-            </div>
-
-            <div className="flex items-center gap-2 self-start">
-              <button
-                onClick={() => setCurrentDate(new Date())}
-                className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-xs"
-              >
-                Hari Ini
-              </button>
-              <div className="flex items-center bg-white rounded-xl border border-slate-200 shadow-xs">
-                <button
-                  onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
-                  className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-l-xl"
-                >
-                  <Icon name="chevronLeft" className="w-4 h-4" />
-                </button>
-                <span className="text-xs font-bold px-3 text-slate-800">
-                  {monthNames[month]} {year}
-                </span>
-                <button
-                  onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
-                  className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-r-xl"
-                >
-                  <Icon name="chevronRight" className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center py-2.5 text-xs font-bold text-slate-600">
-              <span className="text-rose-600">Min</span>
-              <span>Sen</span>
-              <span>Sel</span>
-              <span>Rab</span>
-              <span>Kam</span>
-              <span>Jum</span>
-              <span>Sab</span>
-            </div>
-
-            <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100 min-h-[500px]">
-              {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-slate-50/50 p-1.5 min-h-[90px]"></div>
-              ))}
-
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
-
-                const dayContents = contents.filter(c => {
-                  if (!c.scheduledAt) return false;
-                  const d = new Date(c.scheduledAt);
-                  return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
-                });
-
-                return (
-                  <div
-                    key={day}
-                    onClick={() => onDateClick(dateStr)}
-                    className={`p-1.5 min-h-[90px] hover:bg-indigo-50/20 cursor-pointer flex flex-col justify-between ${
-                      isToday ? 'bg-indigo-50/40' : ''
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-[11px] mb-1">
-                      <span className={`w-5 h-5 flex items-center justify-center rounded-full font-bold ${
-                        isToday ? 'bg-indigo-600 text-white' : 'text-slate-700'
-                      }`}>
-                        {day}
-                      </span>
+                {/* TAB 2: CONTENT PLANNER */}
+                {currentTab === 'planner' && (
+                  <div className="space-y-4">
+                    {/* Filter & Pencarian */}
+                    <div className="flex flex-wrap gap-2 items-center justify-between bg-white p-3.5 rounded-2xl border border-slate-200">
+                      <input
+                        type="text"
+                        placeholder="Cari judul konten atau caption..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="text-xs border border-slate-200 rounded-xl px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <select
+                          value={filterPlatform}
+                          onChange={(e) => setFilterPlatform(e.target.value)}
+                          className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-white font-medium"
+                        >
+                          <option value="ALL">Semua Platform</option>
+                          <option value="TikTok">TikTok</option>
+                          <option value="Instagram">Instagram</option>
+                          <option value="Facebook">Facebook</option>
+                        </select>
+                        <select
+                          value={filterStatus}
+                          onChange={(e) => setFilterStatus(e.target.value)}
+                          className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-white font-medium"
+                        >
+                          <option value="ALL">Semua Status</option>
+                          {STATUS_LIST.map(st => <option key={st} value={st}>{st}</option>)}
+                        </select>
+                      </div>
                     </div>
 
-                    <div className="space-y-1 overflow-y-auto max-h-[75px]">
-                      {dayContents.map(c => (
-                        <div
-                          key={c.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenDetail(c);
-                          }}
-                          className="p-1 rounded bg-slate-50 hover:bg-white border border-slate-200 text-[9px] font-semibold truncate flex items-center gap-1 shadow-2xs"
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            c.status === 'Published' ? 'bg-emerald-500' : 'bg-indigo-500'
-                          }`} />
-                          <span className="truncate">{c.title}</span>
+                    {/* List Planner Card */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {filteredContents.map(item => (
+                        <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow transition flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${PLATFORMS[item.platform.toUpperCase()]?.bg || 'bg-slate-900 text-white'}`}>
+                                {item.platform}
+                              </span>
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                                {item.status}
+                              </span>
+                            </div>
+                            <h3 className="font-extrabold text-sm text-slate-900 mb-1">{item.title}</h3>
+                            <p className="text-xs text-slate-500 line-clamp-2 mb-3">{item.caption || 'Belum ada caption.'}</p>
+                            
+                            {/* Tags URL */}
+                            <div className="flex flex-wrap gap-1.5 mb-3 text-[10px]">
+                              {item.referenceUrl && (
+                                <a href={item.referenceUrl} target="_blank" rel="noreferrer" className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-semibold hover:underline">
+                                  🔗 Referensi
+                                </a>
+                              )}
+                              {item.assetUrl && (
+                                <a href={item.assetUrl} target="_blank" rel="noreferrer" className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold hover:underline">
+                                  📁 File Materi
+                                </a>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                            <span>📅 {item.scheduledDate} ({item.scheduledTime})</span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleDuplicateContent(item)}
+                                className="text-slate-600 hover:text-indigo-600 p-1"
+                                title="Duplikasi"
+                              >
+                                📋
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingContent(item);
+                                  setFormData(item);
+                                  setShowContentModal(true);
+                                }}
+                                className="text-slate-600 hover:text-indigo-600 p-1"
+                                title="Edit"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteContent(item.id)}
+                                className="text-slate-400 hover:text-rose-600 p-1"
+                                title="Hapus"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      );
-    }
+                )}
 
-    // ==========================================
-    // 4. DATABASE KONTEN VIEW COMPONENT
-    // ==========================================
-    function DatabaseView({ contents, onOpenDetail, onOpenEdit, onDelete, onDuplicate, onExportCSV }) {
-      return (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Database Konten Master</h2>
-              <p className="text-xs text-slate-500">Arsip terpusat materi, aset, dan riwayat status postingan.</p>
-            </div>
-            <button
-              onClick={onExportCSV}
-              className="bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center gap-1.5 self-start"
-            >
-              <Icon name="download" className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
-          </div>
+                {/* TAB 3: KALENDER KONTEN */}
+                {currentTab === 'calendar' && (
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-slate-900 text-sm">Kalender Posting Konten (WIB)</h3>
+                      <button
+                        onClick={() => {
+                          setEditingContent(null);
+                          setShowContentModal(true);
+                        }}
+                        className="text-xs bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-100"
+                      >
+                        + Jadwal Baru
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      {contents.sort((a,b) => new Date(a.scheduledDate) - new Date(b.scheduledDate)).map(item => (
+                        <div key={item.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50">
+                          <div className="flex items-center gap-3">
+                            <div className="text-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-xs">
+                              <span className="block text-[10px] font-bold text-slate-400 uppercase">{item.scheduledDate.split('-')[1]}</span>
+                              <span className="block text-sm font-black text-slate-800 leading-none">{item.scheduledDate.split('-')[2]}</span>
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-bold text-slate-900">{item.title}</h4>
+                              <p className="text-[10px] text-slate-500">{item.platform} • Jam {item.scheduledTime} WIB • <span className="font-semibold text-indigo-600">{item.status}</span></p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => { setEditingContent(item); setFormData(item); setShowContentModal(true); }}
+                            className="text-xs text-indigo-600 font-semibold px-2 py-1 rounded hover:bg-indigo-50"
+                          >
+                            Atur Jam
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px]">
-                <tr>
-                  <th className="py-3 px-4">Judul & Brief</th>
-                  <th className="py-3 px-3">Platform</th>
-                  <th className="py-3 px-3">Pilar</th>
-                  <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3">Aset</th>
-                  <th className="py-3 px-3">Jadwal WIB</th>
-                  <th className="py-3 px-4 text-center">Kelola</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-                {contents.map(c => (
-                  <tr key={c.id} className="hover:bg-slate-50 transition">
-                    <td className="py-3 px-4 max-w-xs">
-                      <div className="font-bold text-slate-900 truncate">{c.title}</div>
-                      <div className="text-[10px] text-slate-400 truncate">{c.description || '-'}</div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex gap-1">
-                        {c.platforms.map(p => (
-                          <span key={p} className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${PLATFORMS[p]?.badgeClass}`}>{p}</span>
-                        ))}
+                {/* TAB 4: DATABASE MASTER */}
+                {currentTab === 'database' && (
+                  <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+                    <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+                      <h3 className="font-extrabold text-slate-900 text-sm">Database Konten Master</h3>
+                      <button onClick={handleExportCSV} className="text-xs bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-emerald-700">
+                        📥 Download CSV
+                      </button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs text-slate-600">
+                        <thead className="bg-slate-50 text-[10px] text-slate-400 uppercase font-bold">
+                          <tr>
+                            <th className="px-4 py-3">Judul Konten</th>
+                            <th className="px-4 py-3">Platform</th>
+                            <th className="px-4 py-3">Pillar</th>
+                            <th className="px-4 py-3">Jadwal</th>
+                            <th className="px-4 py-3">Status</th>
+                            <th className="px-4 py-3 text-right">Views</th>
+                            <th className="px-4 py-3 text-center">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {contents.map(c => (
+                            <tr key={c.id} className="hover:bg-slate-50/80 transition">
+                              <td className="px-4 py-3 font-bold text-slate-900 max-w-xs truncate">{c.title}</td>
+                              <td className="px-4 py-3">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${PLATFORMS[c.platform.toUpperCase()]?.bg || 'bg-slate-800 text-white'}`}>
+                                  {c.platform}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">{c.pillar}</td>
+                              <td className="px-4 py-3 whitespace-nowrap">{c.scheduledDate}</td>
+                              <td className="px-4 py-3">
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-800">
+                                  {c.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right font-extrabold text-slate-800">{Number(c.views).toLocaleString('id-ID')}</td>
+                              <td className="px-4 py-3 text-center">
+                                <button
+                                  onClick={() => { setEditingContent(c); setFormData(c); setShowContentModal(true); }}
+                                  className="text-indigo-600 font-bold hover:underline"
+                                >
+                                  Edit Metrik
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 5: REKAP & LAPORAN */}
+                {currentTab === 'analytics' && (
+                  <div className="space-y-4" id="printable-report">
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <h3 className="font-extrabold text-slate-900 text-base">Rekap Laporan Performa Konten</h3>
+                        <p className="text-xs text-slate-500">Ringkasan matang metrik TikTok, Instagram, & Facebook.</p>
                       </div>
-                    </td>
-                    <td className="py-3 px-3">{c.contentPillar}</td>
-                    <td className="py-3 px-3">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${STATUSES[c.status]?.bg}`}>{c.status}</span>
-                    </td>
-                    <td className="py-3 px-3">
-                      {c.assetUrl ? (
-                        <a href={c.assetUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1 font-semibold text-[10px]">
-                          <Icon name="external" className="w-3 h-3" />
-                          <span>Link File</span>
-                        </a>
-                      ) : <span className="text-slate-400 text-[10px]">-</span>}
-                    </td>
-                    <td className="py-3 px-3 whitespace-nowrap">{formatWIB(c.scheduledAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5 text-slate-400">
-                        <button onClick={() => onOpenDetail(c)} className="p-1 hover:text-indigo-600"><Icon name="eye" className="w-4 h-4" /></button>
-                        <button onClick={() => onOpenEdit(c)} className="p-1 hover:text-indigo-600"><Icon name="edit" className="w-4 h-4" /></button>
-                        <button onClick={() => onDuplicate(c)} className="p-1 hover:text-slate-800"><Icon name="copy" className="w-4 h-4" /></button>
-                        <button onClick={() => onDelete(c.id)} className="p-1 hover:text-rose-600"><Icon name="trash" className="w-4 h-4" /></button>
+                      <div className="flex gap-2">
+                        <button onClick={handleExportCSV} className="text-xs bg-emerald-600 text-white font-bold px-3 py-2 rounded-xl hover:bg-emerald-700">
+                          Unduh CSV
+                        </button>
+                        <button onClick={() => window.print()} className="text-xs bg-slate-900 text-white font-bold px-3 py-2 rounded-xl hover:bg-slate-800">
+                          Cetak / Simpan PDF
+                        </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      );
-    }
+                    </div>
 
-    // ==========================================
-    // 5. ANALYTICS & REKAP VIEW COMPONENT
-    // ==========================================
-    function AnalyticsView({ contents, onExportCSV, onPrint }) {
-      return (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Analytics & Rekap Performa</h2>
-              <p className="text-xs text-slate-500">Laporan evaluasi efektivitas publikasi konten media sosial.</p>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={onPrint} className="bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-1">
-                <Icon name="print" className="w-3.5 h-3.5" />
-                <span>Cetak PDF</span>
-              </button>
-              <button onClick={onExportCSV} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1">
-                <Icon name="download" className="w-3.5 h-3.5" />
-                <span>Download CSV</span>
-              </button>
-            </div>
-          </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-white p-4 rounded-xl border border-slate-200">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Total Views</span>
+                        <p className="text-xl font-black text-slate-900 mt-1">{metrics.totalViews.toLocaleString('id-ID')}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-xl border border-slate-200">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Total Reach</span>
+                        <p className="text-xl font-black text-slate-900 mt-1">{metrics.totalReach.toLocaleString('id-ID')}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-xl border border-slate-200">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Total Interaksi</span>
+                        <p className="text-xl font-black text-slate-900 mt-1">{metrics.totalEngagement.toLocaleString('id-ID')}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-xl border border-slate-200">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Avg. Engagement Rate</span>
+                        <p className="text-xl font-black text-indigo-600 mt-1">{metrics.avgER}%</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                <Icon name="sparkles" className="w-4 h-4 text-emerald-600" />
-                <span>Postingan Terbaik</span>
-              </h3>
-              <p className="text-xs text-slate-500">Rasio interaksi tertinggi dicapai oleh video edukatif dengan hook visual 3 detik awal.</p>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                <Icon name="alert" className="w-4 h-4 text-amber-600" />
-                <span>Rekomendasi Optimasi</span>
-              </h3>
-              <p className="text-xs text-slate-500">Tingkatkan postingan berformat Carousel pada akhir pekan untuk mendongkrak jumlah Bookmark dan Share.</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
+                {/* TAB 6: BANK IDE KONTEN (Lengkap dengan Link Referensi & File Aset) */}
+                {currentTab === 'ideas' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-xl font-black text-slate-900">Bank Ide Konten</h2>
+                      <p className="text-xs text-slate-500">Catat ide spontan beserta referensi & link aset, lalu ubah 1-klik menjadi rencana konten riil.</p>
+                    </div>
 
-    // ==========================================
-    // 6. BANK IDE KONTEN COMPONENT (V2.4.0 UPDATE)
-    // ==========================================
-    function IdeaBankView({ ideas, setIdeas, onConvertToPlan, showToast }) {
-      const [title, setTitle] = React.useState('');
-      const [desc, setDesc] = React.useState('');
-      const [platform, setPlatform] = React.useState('tiktok');
-      const [pillar, setPillar] = React.useState('Edukasi');
-      const [refUrl, setRefUrl] = React.useState('');
-      const [assetUrl, setAssetUrl] = React.useState('');
+                    {/* Form Tambah Ide Spontan */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm">
+                      <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase block mb-3">TAMBAH IDE SPONTAN</span>
+                      <form onSubmit={handleSaveIdea} className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <input
+                            type="text"
+                            required
+                            placeholder="Judul ide konten..."
+                            value={ideaForm.title}
+                            onChange={(e) => setIdeaForm({ ...ideaForm, title: e.target.value })}
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          />
+                          <select
+                            value={ideaForm.platform}
+                            onChange={(e) => setIdeaForm({ ...ideaForm, platform: e.target.value })}
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                          >
+                            <option value="TikTok">TikTok</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Facebook">Facebook</option>
+                          </select>
+                          <select
+                            value={ideaForm.pillar}
+                            onChange={(e) => setIdeaForm({ ...ideaForm, pillar: e.target.value })}
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                          >
+                            {PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
 
-      const handleAdd = (e) => {
-        e.preventDefault();
-        if (!title.trim()) return;
-        const newIdea = {
-          id: 'id-' + Date.now(),
-          title,
-          description: desc,
-          platform,
-          pillar,
-          priority: 'Normal',
-          status: 'Draft',
-          referenceUrl: refUrl,
-          assetUrl: assetUrl
-        };
-        setIdeas([newIdea, ...ideas]);
-        setTitle('');
-        setDesc('');
-        setRefUrl('');
-        setAssetUrl('');
-        showToast('Ide baru beserta link referensi berhasil disimpan!');
-      };
+                        {/* Input Link Referensi & File Aset (Sesuai Permintaan) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <input
+                            type="url"
+                            placeholder="🔗 Link referensi (TikTok / Reels / YouTube URL)..."
+                            value={ideaForm.referenceUrl}
+                            onChange={(e) => setIdeaForm({ ...ideaForm, referenceUrl: e.target.value })}
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          />
+                          <input
+                            type="url"
+                            placeholder="📁 Link file / aset materi (Google Drive / Cloud)..."
+                            value={ideaForm.assetUrl}
+                            onChange={(e) => setIdeaForm({ ...ideaForm, assetUrl: e.target.value })}
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          />
+                        </div>
 
-      return (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Bank Ide Konten</h2>
-                <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
-                  {APP_VERSION}
-                </span>
+                        <textarea
+                          rows="2"
+                          placeholder="Catatan brief / hook gagasan / poin penting konten..."
+                          value={ideaForm.description}
+                          onChange={(e) => setIdeaForm({ ...ideaForm, description: e.target.value })}
+                          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        ></textarea>
+
+                        <button
+                          type="submit"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 transition"
+                        >
+                          + Simpan Ide
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Grid Kartu Bank Ide */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {ideas.map(item => (
+                        <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${PLATFORMS[item.platform.toUpperCase()]?.bg || 'bg-slate-900 text-white'}`}>
+                                {item.platform}
+                              </span>
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                                {item.status}
+                              </span>
+                            </div>
+                            <h3 className="font-extrabold text-sm text-slate-900 mb-1">{item.title}</h3>
+                            <p className="text-xs text-slate-500 mb-3">{item.description || 'Tidak ada catatan detail.'}</p>
+
+                            {/* Badge Link Referensi & Aset */}
+                            <div className="flex flex-wrap gap-2 mb-3 text-[10px]">
+                              {item.referenceUrl && (
+                                <a href={item.referenceUrl} target="_blank" rel="noreferrer" className="text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md font-semibold hover:underline">
+                                  🔗 Lihat Referensi
+                                </a>
+                              )}
+                              {item.assetUrl && (
+                                <a href={item.assetUrl} target="_blank" rel="noreferrer" className="text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md font-semibold hover:underline">
+                                  📁 Buka Aset Materi
+                                </a>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <button
+                              onClick={() => handlePromoteIdea(item)}
+                              className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
+                            >
+                              <span>✨</span> Jadikan Rencana
+                            </button>
+                            <button
+                              onClick={() => handleDeleteIdea(item.id)}
+                              className="text-slate-400 hover:text-rose-600 p-1.5 transition"
+                              title="Hapus Ide"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 7: PENGATURAN & CLOUD */}
+                {currentTab === 'settings' && (
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
+                    <div>
+                      <h3 className="font-extrabold text-slate-900 text-base">Status Integrasi Cloud Firebase (V2.4.1)</h3>
+                      <p className="text-xs text-slate-500">Database Firestore Anda aktif permanen seumur hidup tanpa masa kedaluwarsa 30 hari.</p>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto space-y-1">
+                      <p className="text-slate-400">// Project Firebase Terhubung:</p>
+                      <p>Project ID: <span className="text-emerald-400">socialflow-planner-analytics</span></p>
+                      <p>Auth Domain: <span className="text-indigo-300">socialflow-planner-analytics.firebaseapp.com</span></p>
+                      <p>Database: <span className="text-emerald-400">Cloud Firestore (Multi-Platform Active)</span></p>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={() => {
+                          if (confirm("Reset ulang data ke contoh awal?")) {
+                            setContents(INITIAL_CONTENTS);
+                            setIdeas(INITIAL_IDEAS);
+                            showToastMessage("Data demo berhasil dimuat ulang!");
+                          }
+                        }}
+                        className="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl hover:bg-slate-200"
+                      >
+                        Muat Data Demo Awal
+                      </button>
+                    </div>
+                  </div>
+                )}
+
               </div>
-              <p className="text-xs text-slate-500">Catat ide spontan, simpan link referensi & materi konten, lalu ubah 1-klik menjadi rencana publikasi.</p>
+            </main>
+
+            {/* BOTTOM NAV BAR (Khusus Smartphone / HP Mode) */}
+            <div className={`lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 flex justify-around items-center z-40 ${deviceMode === 'hp' ? 'absolute rounded-b-[32px]' : ''}`}>
+              {[
+                { id: 'dashboard', label: 'Home', icon: '📊' },
+                { id: 'planner', label: 'Planner', icon: '📝' },
+                { id: 'calendar', label: 'Kalender', icon: '📅' },
+                { id: 'ideas', label: 'Ide', icon: '💡' },
+                { id: 'database', label: 'Data', icon: '🗄️' }
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentTab(item.id)}
+                  className={`flex flex-col items-center py-1 px-2 rounded-lg text-[10px] font-bold ${
+                    currentTab === item.id ? 'text-indigo-600' : 'text-slate-400'
+                  }`}
+                >
+                  <span className="text-base">{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
             </div>
-            <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-xl self-start font-medium">
-              {ideas.length} Ide Tersimpan
-            </span>
+
           </div>
 
-          {/* Form Tambah Ide Spontan dengan Link Referensi & File Aset */}
-          <form onSubmit={handleAdd} className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3.5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                <Icon name="bulb" className="w-3.5 h-3.5 text-amber-500" />
-                <span>TAMBAH IDE SPONTAN</span>
-              </h3>
-              <span className="text-[11px] text-slate-400 font-medium">Lengkap dengan Tautan Bahan</span>
-            </div>
+          {/* MODAL FORM TAMBAH / EDIT KONTEN */}
+          {showContentModal && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl my-8 border border-slate-100">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-base font-extrabold text-slate-900">
+                    {editingContent ? 'Edit Konten' : 'Tambah Rencana Konten'}
+                  </h3>
+                  <button onClick={() => setShowContentModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input
-                type="text"
-                placeholder="Judul ide konten..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:col-span-1 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
-              />
-              <select
-                value={platform}
-                onChange={(e) => setPlatform(e.target.value)}
-                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium"
-              >
-                <option value="tiktok">TikTok</option>
-                <option value="instagram">Instagram</option>
-                <option value="facebook">Facebook</option>
-              </select>
-              <select
-                value={pillar}
-                onChange={(e) => setPillar(e.target.value)}
-                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium"
-              >
-                {CONTENT_PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-
-            <textarea
-              placeholder="Catatan brief / hook gagasan..."
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              rows={2}
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
-            />
-
-            {/* Inputs Baru V2.4.0: Link Referensi & Link File/Aset */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
-                  <span>🔗 Link Referensi Konten (Tiktok / Reels / YT)</span>
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://tiktok.com/@... atau instagram.com/reel/..."
-                  value={refUrl}
-                  onChange={(e) => setRefUrl(e.target.value)}
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
-                  <span>📁 Link File / Materi Aset (Google Drive / Cloud)</span>
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://drive.google.com/drive/folders/..."
-                  value={assetUrl}
-                  onChange={(e) => setAssetUrl(e.target.value)}
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-1">
-              <button
-                type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm"
-              >
-                <Icon name="plus" className="w-3.5 h-3.5" />
-                <span>+ Simpan Ide</span>
-              </button>
-            </div>
-          </form>
-
-          {/* Grid Kartu Ide Konten */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ideas.map(item => (
-              <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3 hover:shadow-md transition">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${PLATFORMS[item.platform]?.badgeClass}`}>
-                      {item.platform}
-                    </span>
-                    <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
-                      {item.status || 'Draft'}
-                    </span>
+                <form onSubmit={handleSaveContent} className="space-y-3.5 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Judul Konten / Hook</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: 3 Tips Outfit Minimalis 2026"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
                   </div>
 
-                  <h4 className="font-bold text-xs text-slate-900 leading-snug">{item.title}</h4>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-3">{item.description || 'Tidak ada catatan brief.'}</p>
-                  
-                  {/* Badge Tautan Referensi & Aset V2.4.0 */}
-                  {(item.referenceUrl || item.assetUrl) && (
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap gap-1.5">
-                      {item.referenceUrl && (
-                        <a
-                          href={item.referenceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg transition"
-                        >
-                          <Icon name="external" className="w-3 h-3" />
-                          <span>Link Referensi</span>
-                        </a>
-                      )}
-                      {item.assetUrl && (
-                        <a
-                          href={item.assetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg transition"
-                        >
-                          <Icon name="external" className="w-3 h-3" />
-                          <span>File Materi</span>
-                        </a>
-                      )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Platform</label>
+                      <select
+                        value={formData.platform}
+                        onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white"
+                      >
+                        <option value="Instagram">Instagram</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="Facebook">Facebook</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Format</label>
+                      <select
+                        value={formData.format}
+                        onChange={(e) => setFormData({ ...formData, format: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white"
+                      >
+                        {FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Pillar Konten</label>
+                      <select
+                        value={formData.pillar}
+                        onChange={(e) => setFormData({ ...formData, pillar: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white"
+                      >
+                        {PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Status Produksi</label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white"
+                      >
+                        {STATUS_LIST.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Jadwal Tanggal</label>
+                      <input
+                        type="date"
+                        value={formData.scheduledDate}
+                        onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Jam Posting (WIB)</label>
+                      <input
+                        type="time"
+                        value={formData.scheduledTime}
+                        onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Input Link Referensi & File Aset */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Link Referensi</label>
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        value={formData.referenceUrl}
+                        onChange={(e) => setFormData({ ...formData, referenceUrl: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Link File / Aset</label>
+                      <input
+                        type="url"
+                        placeholder="Google Drive link..."
+                        value={formData.assetUrl}
+                        onChange={(e) => setFormData({ ...formData, assetUrl: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Caption</label>
+                    <textarea
+                      rows="2"
+                      placeholder="Tulis caption dan call-to-action..."
+                      value={formData.caption}
+                      onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                    ></textarea>
+                  </div>
+
+                  {/* Metrik Hasil (Jika Sudah Publish) */}
+                  {formData.status === 'Published' && (
+                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                      <span className="font-bold text-slate-800 text-[11px] block">Pencatatan Metrik Performa:</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[10px] text-slate-500 font-semibold">Views</label>
+                          <input
+                            type="number"
+                            value={formData.views}
+                            onChange={(e) => setFormData({ ...formData, views: e.target.value })}
+                            className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-500 font-semibold">Reach</label>
+                          <input
+                            type="number"
+                            value={formData.reach}
+                            onChange={(e) => setFormData({ ...formData, reach: e.target.value })}
+                            className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-500 font-semibold">Likes</label>
+                          <input
+                            type="number"
+                            value={formData.likes}
+                            onChange={(e) => setFormData({ ...formData, likes: e.target.value })}
+                            className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs"
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
-                </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <button
-                    onClick={() => onConvertToPlan(item)}
-                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl flex items-center gap-1 transition"
-                  >
-                    <Icon name="sparkles" className="w-3.5 h-3.5" />
-                    <span>Jadikan Rencana</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIdeas(ideas.filter(i => i.id !== item.id));
-                      showToast('Ide berhasil dihapus.');
-                    }}
-                    className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition"
-                  >
-                    <Icon name="trash" className="w-4 h-4" />
-                  </button>
-                </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowContentModal(false)}
+                      className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-semibold hover:bg-slate-50"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-md shadow-indigo-600/30 hover:bg-indigo-700"
+                    >
+                      Simpan Konten
+                    </button>
+                  </div>
+                </form>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+
         </div>
       );
     }
 
-    // ==========================================
-    // 7. PENGATURAN & SETUP FIREBASE COMPONENT
-    // ==========================================
-    function SettingsView({ showToast }) {
-      return (
-        <div className="space-y-6 max-w-4xl">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Pengaturan & Integrasi Firebase</h2>
-            <p className="text-xs text-slate-500">Panduan konfigurasi Cloud Firestore permanen dan deployment GitHub Pages.</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs">
-            <h3 className="font-bold text-slate-900 text-sm">Status Database Aktif</h3>
-            <p className="text-slate-600">
-              Saat ini data tersimpan di penyimpanan browser lokal (<b>LocalStorage</b>) sehingga aman dari batas kedaluwarsa 30 hari. 
-              Untuk menghubungkan langsung ke Firebase Firestore Anda:
-            </p>
-
-            <div className="p-4 bg-slate-900 text-slate-200 rounded-xl font-mono text-[11px] overflow-x-auto space-y-2">
-              <p className="text-indigo-400">// Salin aturan keamanan firestore.rules di Firebase Console:</p>
-              <pre>{`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}`}</pre>
-            </div>
-
-            <div className="pt-2 text-slate-500">
-              <p><b>Tips:</b> Dengan aturan di atas, database Firebase Anda akan aktif permanen seumur hidup tanpa masa kedaluwarsa 30 hari karena mode testing otomatis diganti dengan aturan otentikasi UID terisolasi.</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ==========================================
-    // MODALS: FORM, DETAIL, & INPUT METRIK
-    // ==========================================
-    function ContentFormModal({ item, onClose, onSave }) {
-      const [formData, setFormData] = React.useState({
-        id: item?.id || '',
-        title: item?.title || '',
-        description: item?.description || '',
-        platforms: item?.platforms || ['tiktok'],
-        format: item?.format || 'Reels',
-        contentPillar: item?.contentPillar || 'Edukasi',
-        campaign: item?.campaign || '',
-        targetAudiens: item?.targetAudiens || '',
-        objective: item?.objective || 'Engagement',
-        caption: item?.caption || '',
-        hashtags: item?.hashtags || '',
-        referenceUrl: item?.referenceUrl || '',
-        assetUrl: item?.assetUrl || '',
-        scheduledAt: item?.scheduledAt || new Date().toISOString().slice(0, 16),
-        deadlineAt: item?.deadlineAt || new Date().toISOString().slice(0, 16),
-        assignee: item?.assignee || 'Boby PIC',
-        priority: item?.priority || 'Normal',
-        status: item?.status || 'Ide',
-        internalNotes: item?.internalNotes || ''
-      });
-
-      const togglePlatform = (p) => {
-        if (formData.platforms.includes(p)) {
-          if (formData.platforms.length === 1) return;
-          setFormData({ ...formData, platforms: formData.platforms.filter(x => x !== p) });
-        } else {
-          setFormData({ ...formData, platforms: [...formData.platforms, p] });
-        }
-      };
-
-      return (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-100 my-8 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-base text-slate-900">{formData.id ? 'Edit Rencana Konten' : 'Buat Rencana Baru'}</h3>
-              <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-700">
-                <Icon name="close" className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-6 overflow-y-auto space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Judul Konten *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Contoh: 5 Alasan Kenapa Bisnis Butuh Video Singkat"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">Platform Target *</label>
-                <div className="flex gap-2">
-                  {['tiktok', 'instagram', 'facebook'].map(p => {
-                    const active = formData.platforms.includes(p);
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => togglePlatform(p)}
-                        className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold uppercase transition flex items-center gap-1 ${
-                          active ? PLATFORMS[p]?.badgeClass + ' border-transparent' : 'bg-slate-50 text-slate-500 border-slate-200'
-                        }`}
-                      >
-                        {active && <Icon name="check" className="w-3.5 h-3.5" />}
-                        <span>{p}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Format</label>
-                  <select
-                    value={formData.format}
-                    onChange={(e) => setFormData({ ...formData, format: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
-                  >
-                    {CONTENT_FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Pilar Konten</label>
-                  <select
-                    value={formData.contentPillar}
-                    onChange={(e) => setFormData({ ...formData, contentPillar: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
-                  >
-                    {CONTENT_PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Prioritas</label>
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
-                  >
-                    <option value="Rendah">Rendah</option>
-                    <option value="Normal">Normal</option>
-                    <option value="Tinggi">Tinggi</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Jadwal Publikasi (WIB)</label>
-                  <input
-                    type="datetime-local"
-                    value={formData.scheduledAt}
-                    onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Deadline Produksi</label>
-                  <input
-                    type="datetime-local"
-                    value={formData.deadlineAt}
-                    onChange={(e) => setFormData({ ...formData, deadlineAt: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Draft Caption</label>
-                <textarea
-                  rows={2}
-                  value={formData.caption}
-                  onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
-                  placeholder="Tulis draf caption..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs"
-                >
-                  Simpan Konten
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      );
-    }
-
-    function ContentDetailModal({ item, onClose, onEdit, onInputMetric }) {
-      return (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl border border-slate-100 p-6 space-y-4 text-xs">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${STATUSES[item.status]?.bg}`}>
-                {item.status}
-              </span>
-              <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-                <Icon name="close" className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div>
-              <h3 className="text-base font-bold text-slate-900">{item.title}</h3>
-              <p className="text-slate-500 mt-1">{item.description || 'Tidak ada deskripsi singkat.'}</p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-slate-50 rounded-xl text-slate-700">
-              <div><span className="text-slate-400 block text-[10px]">Format:</span><b>{item.format}</b></div>
-              <div><span className="text-slate-400 block text-[10px]">Pilar:</span><b>{item.contentPillar}</b></div>
-              <div><span className="text-slate-400 block text-[10px]">PIC:</span><b>{item.assignee}</b></div>
-              <div><span className="text-slate-400 block text-[10px]">Prioritas:</span><b>{item.priority}</b></div>
-            </div>
-
-            {item.caption && (
-              <div className="space-y-1">
-                <span className="font-bold text-slate-700">Caption:</span>
-                <div className="p-3 bg-slate-50 rounded-xl whitespace-pre-wrap">{item.caption}</div>
-              </div>
-            )}
-
-            <div className="flex justify-between items-center pt-3 border-t border-slate-100">
-              {item.status === 'Published' && (
-                <button onClick={onInputMetric} className="bg-emerald-600 text-white font-semibold px-3 py-1.5 rounded-xl">
-                  + Catat Metrik
-                </button>
-              )}
-              <div className="flex gap-2 ml-auto">
-                <button onClick={onEdit} className="border border-slate-200 px-3 py-1.5 rounded-xl font-semibold text-slate-700">Edit</button>
-                <button onClick={onClose} className="bg-slate-900 text-white px-3 py-1.5 rounded-xl font-semibold">Tutup</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    function MetricModal({ item, onClose, onSave }) {
-      const [platform, setPlatform] = React.useState(item.platforms[0] || 'tiktok');
-      const cur = item.platformMetrics?.[platform] || {};
-
-      const [views, setViews] = React.useState(cur.views || 0);
-      const [reach, setReach] = React.useState(cur.reach || 0);
-      const [likes, setLikes] = React.useState(cur.likes || 0);
-      const [comments, setComments] = React.useState(cur.comments || 0);
-      const [shares, setShares] = React.useState(cur.shares || 0);
-      const [saves, setSaves] = React.useState(cur.saves || 0);
-
-      const er = calcER(likes, comments, shares, saves, reach);
-
-      const handleSubmit = (e) => {
-        e.preventDefault();
-        const updated = {
-          ...item,
-          status: 'Published',
-          platformMetrics: {
-            ...(item.platformMetrics || {}),
-            [platform]: {
-              views: Number(views),
-              reach: Number(reach),
-              likes: Number(likes),
-              comments: Number(comments),
-              shares: Number(shares),
-              saves: Number(saves),
-              updatedAt: new Date().toISOString()
-            }
-          }
-        };
-        onSave(updated);
-      };
-
-      return (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-100 p-6 space-y-4 text-xs">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-              <h3 className="font-bold text-sm text-slate-900">Catat Metrik: {item.title}</h3>
-              <button onClick={onClose}><Icon name="close" className="w-5 h-5 text-slate-400" /></button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="flex gap-2">
-                {item.platforms.map(p => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => {
-                      setPlatform(p);
-                      const m = item.platformMetrics?.[p] || {};
-                      setViews(m.views || 0);
-                      setReach(m.reach || 0);
-                      setLikes(m.likes || 0);
-                      setComments(m.comments || 0);
-                      setShares(m.shares || 0);
-                      setSaves(m.saves || 0);
-                    }}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold uppercase ${
-                      platform === p ? PLATFORMS[p]?.badgeClass : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Views</label>
-                  <input type="number" min="0" value={views} onChange={e => setViews(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Reach</label>
-                  <input type="number" min="0" value={reach} onChange={e => setReach(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Likes</label>
-                  <input type="number" min="0" value={likes} onChange={e => setLikes(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Comments</label>
-                  <input type="number" min="0" value={comments} onChange={e => setComments(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Shares</label>
-                  <input type="number" min="0" value={shares} onChange={e => setShares(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Saves</label>
-                  <input type="number" min="0" value={saves} onChange={e => setSaves(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
-                </div>
-              </div>
-
-              <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex justify-between items-center">
-                <span className="font-semibold text-indigo-900">Engagement Rate:</span>
-                <span className="font-bold text-indigo-600 text-sm">{er}%</span>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-200 rounded-xl">Batal</button>
-                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Simpan Metrik</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      );
-    }
-
-    // Render App ke Root Element
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
