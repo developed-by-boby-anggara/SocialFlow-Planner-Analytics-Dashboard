@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocialFlow Planner & Analytics Dashboard (V2.4.2)</title>
+  <title>SocialFlow Planner & Analytics Dashboard (V2.4.3)</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,10 +12,10 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   
-  <!-- Babel untuk membaca JSX di browser -->
+  <!-- Babel Standalone untuk membaca JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Firebase App & Firestore SDK (Compat) -->
+  <!-- Firebase App & Firestore SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -36,7 +36,7 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // --- INISIALISASI FIREBASE (V2.4.2) ---
+    // --- INISIALISASI FIREBASE ---
     const firebaseConfig = {
       apiKey: "AIzaSyCEJGbd7A3SqqzvyiY1aP9sqeeHKnzyfqI",
       authDomain: "socialflow-planner-analytics.firebaseapp.com",
@@ -56,21 +56,20 @@
       console.warn("Firestore fallback:", err);
     }
 
-    // --- KONSTANTA PLATFORM & STATUS ---
+    // --- KONSTANTA SISTEM ---
     const PLATFORMS = {
-      TIKTOK: { name: 'TikTok', bg: 'bg-black text-white', border: 'border-black' },
-      INSTAGRAM: { name: 'Instagram', bg: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white', border: 'border-pink-500' },
-      FACEBOOK: { name: 'Facebook', bg: 'bg-blue-600 text-white', border: 'border-blue-600' }
+      TIKTOK: { name: 'TikTok', bg: 'bg-black text-white' },
+      INSTAGRAM: { name: 'Instagram', bg: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' },
+      FACEBOOK: { name: 'Facebook', bg: 'bg-blue-600 text-white' }
     };
 
     const STATUS_LIST = ['Ide', 'Brief', 'Produksi', 'Editing', 'Siap Posting', 'Terjadwal', 'Published', 'Cancelled'];
     const PILLARS = ['Edukasi', 'Hiburan', 'Promosi', 'Testimoni', 'Behind the Scenes', 'Tips & Trik', 'Inspirasi'];
     const FORMATS = ['Reels', 'TikTok Video', 'Story', 'Carousel', 'Foto', 'Facebook Video', 'Live'];
 
-    // --- DATA AWAL (DEFAULT) ---
     const INITIAL_CONTENTS = [
       {
-        id: "demo-1",
+        id: "cnt-1",
         title: "5 Tips Optimasi Reels & Algoritma 2026",
         platform: "Instagram",
         format: "Carousel",
@@ -78,19 +77,14 @@
         status: "Published",
         scheduledDate: "2026-10-27",
         scheduledTime: "19:00",
-        caption: "Mau jangkauan akunmu naik 300%? Terapkan pola hook 3 detik ini! 🚀 #tipsreels #marketing",
-        hashtags: "#tipsreels #marketing #contentstrategy",
+        caption: "Mau jangkauan akunmu naik 300%? Terapkan hook 3 detik ini! 🚀",
+        hashtags: "#tipsreels #marketing",
         referenceUrl: "https://instagram.com",
         assetUrl: "https://drive.google.com",
-        views: 18400,
-        reach: 14200,
-        likes: 1120,
-        comments: 84,
-        shares: 145,
-        saves: 430
+        views: 18400, reach: 14200, likes: 1120, comments: 84, shares: 145, saves: 430
       },
       {
-        id: "demo-2",
+        id: "cnt-2",
         title: "POV: Kerja di Agensi pas Hari Jumat Sore",
         platform: "TikTok",
         format: "TikTok Video",
@@ -98,19 +92,14 @@
         status: "Published",
         scheduledDate: "2026-10-26",
         scheduledTime: "17:00",
-        caption: "Ketika revisi masuk pas jam 16.59... Siapa yang pernah ngalamin? 😂 #agencylife",
-        hashtags: "#agencylife #funny #creator",
+        caption: "Ketika revisi masuk pas jam 16.59... 😂 #agencylife",
+        hashtags: "#agencylife #creator",
         referenceUrl: "https://tiktok.com",
         assetUrl: "",
-        views: 65200,
-        reach: 49000,
-        likes: 5800,
-        comments: 420,
-        shares: 1250,
-        saves: 310
+        views: 65200, reach: 49000, likes: 5800, comments: 420, shares: 1250, saves: 310
       },
       {
-        id: "demo-3",
+        id: "cnt-3",
         title: "Promo Flash Sale Payday Akhir Bulan",
         platform: "Facebook",
         format: "Carousel",
@@ -122,12 +111,7 @@
         hashtags: "#promopayday #diskon",
         referenceUrl: "",
         assetUrl: "https://drive.google.com",
-        views: 0,
-        reach: 0,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        saves: 0
+        views: 0, reach: 0, likes: 0, comments: 0, shares: 0, saves: 0
       }
     ];
 
@@ -138,9 +122,9 @@
         platform: "TikTok",
         pillar: "Edukasi",
         status: "Disetujui",
-        description: "Blind test perbandingan hasil video tanpa edit untuk mengedukasi pemula.",
-        referenceUrl: "https://tiktok.com/@contoh/video/1",
-        assetUrl: "https://drive.google.com/drive/folders/materi-hp"
+        description: "Blind test hasil video tanpa edit untuk mengedukasi pemula.",
+        referenceUrl: "https://tiktok.com",
+        assetUrl: "https://drive.google.com"
       },
       {
         id: "idea-2",
@@ -148,8 +132,8 @@
         platform: "Instagram",
         pillar: "Edukasi",
         status: "Dipertimbangkan",
-        description: "Bongkar mitos pembatasan akun berdasarkan klarifikasi resmi Meta.",
-        referenceUrl: "https://instagram.com/p/referensi",
+        description: "Bongkar mitos pembatasan akun berdasarkan pembaruan Meta.",
+        referenceUrl: "https://instagram.com",
         assetUrl: ""
       }
     ];
@@ -157,39 +141,54 @@
     function App() {
       const [currentTab, setCurrentTab] = useState('dashboard');
       const [deviceMode, setDeviceMode] = useState('web');
-      const [calendarViewMode, setCalendarViewMode] = useState('spreadsheet'); // 'spreadsheet', 'grid', 'list'
+      const [calendarViewMode, setCalendarViewMode] = useState('spreadsheet');
       const [toast, setToast] = useState(null);
 
-      // --- JAM REALTIME (WIB - ASIA/JAKARTA) ---
+      // --- WAKTU REAL-TIME & SIMULASI TANGGAL (V2.4.3) ---
       const [currentTime, setCurrentTime] = useState(new Date());
+      const [useManualDate, setUseManualDate] = useState(false);
+      const [manualDate, setManualDate] = useState(new Date().toISOString().split('T')[0]);
 
       useEffect(() => {
-        const timer = setInterval(() => {
-          setCurrentTime(new Date());
-        }, 1000);
-        return () => clearInterval(timer);
-      }, []);
+        if (!useManualDate) {
+          const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+          return () => clearInterval(timer);
+        }
+      }, [useManualDate]);
 
       const formattedClock = useMemo(() => {
         return currentTime.toLocaleTimeString('id-ID', {
           timeZone: 'Asia/Jakarta',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
+          hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
       }, [currentTime]);
 
       const formattedDateHeader = useMemo(() => {
-        return currentTime.toLocaleDateString('id-ID', {
+        const targetDate = useManualDate ? new Date(manualDate) : currentTime;
+        return targetDate.toLocaleDateString('id-ID', {
           timeZone: 'Asia/Jakarta',
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
         });
-      }, [currentTime]);
+      }, [currentTime, useManualDate, manualDate]);
 
-      // --- DATA KONTEN & IDE ---
+      // --- TARGET PLAN MINGGUAN & BULANAN (V2.4.3) ---
+      const [weeklyTarget, setWeeklyTarget] = useState(() => {
+        return Number(localStorage.getItem('sf_target_weekly')) || 5;
+      });
+      const [monthlyCampaign, setMonthlyCampaign] = useState(() => {
+        return localStorage.getItem('sf_target_campaign') || "Campaign Brand & Penjualan Q4";
+      });
+      const [monthlyGoalPosts, setMonthlyGoalPosts] = useState(() => {
+        return Number(localStorage.getItem('sf_target_monthly_posts')) || 20;
+      });
+
+      useEffect(() => {
+        localStorage.setItem('sf_target_weekly', weeklyTarget);
+        localStorage.setItem('sf_target_campaign', monthlyCampaign);
+        localStorage.setItem('sf_target_monthly_posts', monthlyGoalPosts);
+      }, [weeklyTarget, monthlyCampaign, monthlyGoalPosts]);
+
+      // --- STATE UTAMA DATA KONTEN & IDE ---
       const [contents, setContents] = useState(() => {
         const saved = localStorage.getItem('sf_contents');
         return saved ? JSON.parse(saved) : INITIAL_CONTENTS;
@@ -200,44 +199,24 @@
         return saved ? JSON.parse(saved) : INITIAL_IDEAS;
       });
 
-      // Filter & Search
+      // Filter & Pencarian
       const [searchQuery, setSearchQuery] = useState('');
       const [filterPlatform, setFilterPlatform] = useState('ALL');
       const [filterStatus, setFilterStatus] = useState('ALL');
 
-      // Modals
+      // Modals & Forms
       const [showContentModal, setShowContentModal] = useState(false);
       const [editingContent, setEditingContent] = useState(null);
 
-      // Form Konten
       const [formData, setFormData] = useState({
-        title: '',
-        platform: 'Instagram',
-        format: 'Reels',
-        pillar: 'Edukasi',
-        status: 'Ide',
-        scheduledDate: new Date().toISOString().split('T')[0],
-        scheduledTime: '18:00',
-        caption: '',
-        hashtags: '',
-        referenceUrl: '',
-        assetUrl: '',
-        views: 0,
-        reach: 0,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        saves: 0
+        title: '', platform: 'Instagram', format: 'Reels', pillar: 'Edukasi', status: 'Ide',
+        scheduledDate: new Date().toISOString().split('T')[0], scheduledTime: '18:00',
+        caption: '', hashtags: '', referenceUrl: '', assetUrl: '',
+        views: 0, reach: 0, likes: 0, comments: 0, shares: 0, saves: 0
       });
 
-      // Form Ide Spontan
       const [ideaForm, setIdeaForm] = useState({
-        title: '',
-        platform: 'TikTok',
-        pillar: 'Edukasi',
-        description: '',
-        referenceUrl: '',
-        assetUrl: ''
+        title: '', platform: 'TikTok', pillar: 'Edukasi', description: '', referenceUrl: '', assetUrl: ''
       });
 
       const showToastMessage = (msg) => {
@@ -245,7 +224,7 @@
         setTimeout(() => setToast(null), 3000);
       };
 
-      // Simpan LocalStorage & Sync Firestore
+      // Simpan LocalStorage & Firebase Sync
       useEffect(() => {
         localStorage.setItem('sf_contents', JSON.stringify(contents));
       }, [contents]);
@@ -265,7 +244,7 @@
         return () => unsubscribe();
       }, []);
 
-      // CRUD HANDLERS
+      // CRUD HANDLER
       const handleSaveContent = async (e) => {
         e.preventDefault();
         if (!formData.title.trim()) return;
@@ -295,7 +274,7 @@
           if (firestoreDb) {
             try { await firestoreDb.collection("contents").doc(newId).set(toAdd); } catch (err) {}
           }
-          showToastMessage("Rencana konten baru berhasil dibuat!");
+          showToastMessage("Rencana konten baru berhasil disimpan!");
         }
         setShowContentModal(false);
         setEditingContent(null);
@@ -318,6 +297,21 @@
           try { firestoreDb.collection("contents").doc(dupId).set(dup); } catch (err) {}
         }
         showToastMessage("Konten diduplikasi ke Bank Ide!");
+      };
+
+      // BATCH RESCHEDULE (V2.4.3 Fitur Canggih: Geser Jadwal yang Tertunda)
+      const handleShiftPendingDays = (days) => {
+        const updated = contents.map(c => {
+          if (['Ide', 'Brief', 'Produksi', 'Editing', 'Siap Posting', 'Terjadwal'].includes(c.status)) {
+            const d = new Date(c.scheduledDate);
+            d.setDate(d.getDate() + days);
+            const newDateStr = d.toISOString().split('T')[0];
+            return { ...c, scheduledDate: newDateStr };
+          }
+          return c;
+        });
+        setContents(updated);
+        showToastMessage(`Seluruh jadwal konten yang belum tayang digeser +${days} hari!`);
       };
 
       // IDE HANDLERS
@@ -366,8 +360,12 @@
         const totalEngagement = contents.reduce((acc, c) => acc + (Number(c.likes)||0) + (Number(c.comments)||0) + (Number(c.shares)||0) + (Number(c.saves)||0), 0);
         const avgER = totalReach > 0 ? ((totalEngagement / totalReach) * 100).toFixed(2) : "0.00";
 
-        return { total, published, inProgress, scheduled, totalViews, totalReach, totalEngagement, avgER };
-      }, [contents]);
+        // Perhitungan Pencapaian Target Mingguan & Bulanan
+        const weeklyProgress = Math.min(Math.round((total / weeklyTarget) * 100), 100);
+        const monthlyProgress = Math.min(Math.round((total / monthlyGoalPosts) * 100), 100);
+
+        return { total, published, inProgress, scheduled, totalViews, totalReach, totalEngagement, avgER, weeklyProgress, monthlyProgress };
+      }, [contents, weeklyTarget, monthlyGoalPosts]);
 
       const filteredContents = useMemo(() => {
         return contents.filter(c => {
@@ -379,7 +377,6 @@
         });
       }, [contents, searchQuery, filterPlatform, filterStatus]);
 
-      // Ekspor CSV
       const handleExportCSV = () => {
         const headers = ["ID", "Judul", "Platform", "Format", "Pillar", "Status", "Tanggal", "Jam", "Views", "Reach", "Likes", "Comments", "Shares", "Saves", "Referensi", "Aset"];
         const rows = contents.map(c => [
@@ -419,7 +416,7 @@
                       <h1 className="font-extrabold text-base tracking-tight leading-none text-white">SocialFlow</h1>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                          V2.4.2
+                          V2.4.3
                         </span>
                       </div>
                     </div>
@@ -433,7 +430,7 @@
                       { id: 'database', label: 'Database Master', icon: '🗄️' },
                       { id: 'analytics', label: 'Rekap & Laporan', icon: '📈' },
                       { id: 'ideas', label: 'Bank Ide Konten', icon: '💡' },
-                      { id: 'settings', label: 'Pengaturan & Cloud', icon: '⚙️' }
+                      { id: 'settings', label: 'Plan & Pengaturan', icon: '🎯' }
                     ].map(item => (
                       <button
                         key={item.id}
@@ -451,10 +448,12 @@
                   </nav>
                 </div>
 
-                {/* JAM REALTIME WIB & STATUS FIREBASE */}
+                {/* JAM REALTIME & STATUS FIREBASE */}
                 <div className="pt-4 border-t border-slate-800/80 text-xs text-slate-400 space-y-2.5">
                   <div className="bg-slate-800/70 p-3 rounded-xl border border-slate-700/60">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Waktu Real-time</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
+                      {useManualDate ? 'Waktu Simulasi' : 'Waktu Real-time'}
+                    </span>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                       <span className="text-lg font-black text-white font-mono">{formattedClock}</span>
                       <span className="text-[10px] font-bold text-indigo-400">WIB</span>
@@ -481,7 +480,7 @@
                   )}
                   <div>
                     <h2 className="font-extrabold text-slate-900 text-lg leading-tight capitalize">
-                      {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab === 'calendar' ? 'Kalender & Spreadsheet' : currentTab}
+                      {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab === 'calendar' ? 'Kalender & Spreadsheet' : currentTab === 'settings' ? 'Plan Mingguan, Bulanan & Waktu' : currentTab}
                     </h2>
                     <p className="text-xs text-slate-500 hidden sm:block">Perencanaan & Analisis Konten Multi-Platform</p>
                   </div>
@@ -521,19 +520,42 @@
                 </div>
               </header>
 
-              {/* TOAST NOTIFIKASI */}
               {toast && (
                 <div className="fixed top-16 right-6 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700">
                   <span className="text-emerald-400">✓</span> {toast}
                 </div>
               )}
 
-              {/* ROUTING TAB VIEW */}
               <div className="p-4 sm:p-6 space-y-6">
 
                 {/* TAB 1: DASHBOARD */}
                 {currentTab === 'dashboard' && (
                   <div className="space-y-6">
+                    {/* Ringkasan Target Plan (Fitur Baru Terhubung) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 rounded-2xl text-white shadow-md">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-bold text-indigo-100 uppercase">Target Mingguan</span>
+                          <span className="text-xs font-black bg-white/20 px-2 py-0.5 rounded-full">{metrics.total} / {weeklyTarget} Konten</span>
+                        </div>
+                        <h4 className="font-extrabold text-lg">{metrics.weeklyProgress}% Tercapai</h4>
+                        <div className="w-full bg-black/20 h-2 rounded-full mt-2 overflow-hidden">
+                          <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: `${metrics.weeklyProgress}%` }}></div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 rounded-2xl text-white shadow-md">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-bold text-emerald-100 uppercase">Target Bulanan: {monthlyCampaign}</span>
+                          <span className="text-xs font-black bg-white/20 px-2 py-0.5 rounded-full">{metrics.total} / {monthlyGoalPosts} Konten</span>
+                        </div>
+                        <h4 className="font-extrabold text-lg">{metrics.monthlyProgress}% Selesai</h4>
+                        <div className="w-full bg-black/20 h-2 rounded-full mt-2 overflow-hidden">
+                          <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: `${metrics.monthlyProgress}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Konten</span>
@@ -543,7 +565,7 @@
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sudah Publish</span>
                         <p className="text-2xl font-black text-emerald-600 mt-1">{metrics.published}</p>
-                        <p className="text-[11px] text-slate-500 mt-1">Live di feed / shorts</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Live di saluran</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sedang Produksi</span>
@@ -557,14 +579,14 @@
                       </div>
 
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Tayangan</span>
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Views</span>
                         <p className="text-2xl font-black text-slate-900 mt-1">{metrics.totalViews.toLocaleString('id-ID')}</p>
-                        <p className="text-[11px] text-purple-600 font-semibold mt-1">Akumulasi views</p>
+                        <p className="text-[11px] text-purple-600 font-semibold mt-1">Akumulasi tayangan</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Reach</span>
                         <p className="text-2xl font-black text-slate-900 mt-1">{metrics.totalReach.toLocaleString('id-ID')}</p>
-                        <p className="text-[11px] text-slate-500 mt-1">Akun unik terjangkau</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Akun unik</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Interaksi</span>
@@ -574,7 +596,7 @@
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Avg. ER by Reach</span>
                         <p className="text-2xl font-black text-indigo-600 mt-1">{metrics.avgER}%</p>
-                        <p className="text-[11px] text-emerald-600 font-semibold mt-1">Rasio interaksi sehat</p>
+                        <p className="text-[11px] text-emerald-600 font-semibold mt-1">Engagement rate sehat</p>
                       </div>
                     </div>
 
@@ -684,10 +706,9 @@
                   </div>
                 )}
 
-                {/* TAB 3: KALENDER KONTEN (SPREADSHEET + GRID + LIST) */}
+                {/* TAB 3: KALENDER KONTEN */}
                 {currentTab === 'calendar' && (
                   <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
-                    {/* Switcher Tampilan Kalender */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
                       <div>
                         <h3 className="font-extrabold text-slate-900 text-sm">Kalender & Matrix Rencana Posting</h3>
@@ -731,7 +752,7 @@
                       </div>
                     </div>
 
-                    {/* MODE 1: SPREADSHEET MATRIX (BARU) */}
+                    {/* SPREADSHEET MATRIX */}
                     {calendarViewMode === 'spreadsheet' && (
                       <div className="overflow-x-auto rounded-xl border border-slate-200">
                         <table className="w-full text-left text-xs text-slate-700">
@@ -800,7 +821,7 @@
                       </div>
                     )}
 
-                    {/* MODE 2: GRID KALENDER BULANAN (BARU) */}
+                    {/* GRID KALENDER */}
                     {calendarViewMode === 'grid' && (
                       <div className="border border-slate-200 rounded-2xl overflow-hidden">
                         <div className="grid grid-cols-7 bg-slate-100 text-center text-[10px] font-black text-slate-500 uppercase py-2.5 border-b border-slate-200">
@@ -836,7 +857,7 @@
                       </div>
                     )}
 
-                    {/* MODE 3: LIST AGENDA (Bawaan Lama yang Dipertahankan) */}
+                    {/* LIST VIEW */}
                     {calendarViewMode === 'list' && (
                       <div className="space-y-3">
                         {contents.sort((a,b) => new Date(a.scheduledDate) - new Date(b.scheduledDate)).map(item => (
@@ -863,7 +884,6 @@
                         ))}
                       </div>
                     )}
-
                   </div>
                 )}
 
@@ -1083,49 +1103,159 @@
                   </div>
                 )}
 
-                {/* TAB 7: PENGATURAN */}
+                {/* TAB 7: PLAN MINGGUAN, BULANAN & PENGATUR WAKTU (V2.4.3 BARU, BERGUNA & BERSIH) */}
                 {currentTab === 'settings' && (
-                  <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
+                  <div className="space-y-6">
                     <div>
-                      <h3 className="font-extrabold text-slate-900 text-base">Status Integrasi Cloud Firebase (V2.4.2)</h3>
-                      <p className="text-xs text-slate-500">Database Firestore Anda aktif permanen seumur hidup tanpa batas kedaluwarsa.</p>
+                      <h3 className="font-extrabold text-slate-900 text-lg">Manajemen Target & Pengaturan Jadwal</h3>
+                      <p className="text-xs text-slate-500">Atur target ritme posting mingguan, kampanye bulanan, serta sinkronisasi waktu simulasi.</p>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto space-y-1">
-                      <p className="text-slate-400">// Project Firebase Terhubung:</p>
-                      <p>Project ID: <span className="text-emerald-400">socialflow-planner-analytics</span></p>
-                      <p>Auth Domain: <span className="text-indigo-300">socialflow-planner-analytics.firebaseapp.com</span></p>
-                      <p>Database: <span className="text-emerald-400">Cloud Firestore (Active)</span></p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      
+                      {/* CARD 1: PUSAT TARGET PLAN MINGGUAN & BULANAN */}
+                      <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
+                        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                          <span className="text-lg">🎯</span>
+                          <h4 className="font-bold text-slate-900 text-sm">Target Ritme & Campaign</h4>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Target Posting per Minggu</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="number"
+                              min="1"
+                              max="50"
+                              value={weeklyTarget}
+                              onChange={(e) => setWeeklyTarget(Number(e.target.value))}
+                              className="border border-slate-200 rounded-xl px-3 py-2 text-xs w-28 font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            />
+                            <span className="text-xs text-slate-500 font-medium">konten / minggu (Saat ini: {metrics.total} dibuat)</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Nama Campaign / Tema Bulan Ini</label>
+                          <input
+                            type="text"
+                            value={monthlyCampaign}
+                            onChange={(e) => setMonthlyCampaign(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            placeholder="Contoh: Ramadan Big Sale / Awareness Launch"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Target Total Konten Sebulan</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="200"
+                            value={monthlyGoalPosts}
+                            onChange={(e) => setMonthlyGoalPosts(Number(e.target.value))}
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs w-28 font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          />
+                          <span className="text-xs text-slate-500 font-medium ml-3">konten / bulan</span>
+                        </div>
+                      </div>
+
+                      {/* CARD 2: PENGATUR WAKTU & TANGGAL (REALTIME vs MANUAL SIMULASI) */}
+                      <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
+                        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                          <span className="text-lg">⏰</span>
+                          <h4 className="font-bold text-slate-900 text-sm">Mode Waktu & Tanggal Acuan</h4>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                          <div>
+                            <p className="text-xs font-bold text-slate-900">Gunakan Waktu Simulasi Manual</p>
+                            <p className="text-[11px] text-slate-500">Ubah tanggal acuan kalender untuk simulasi bulan depan / lalu.</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={useManualDate}
+                            onChange={(e) => {
+                              setUseManualDate(e.target.checked);
+                              showToastMessage(e.target.checked ? "Mode tanggal simulasi aktif!" : "Kembali ke waktu realtime.");
+                            }}
+                            className="w-5 h-5 text-indigo-600 rounded cursor-pointer accent-indigo-600"
+                          />
+                        </div>
+
+                        {useManualDate && (
+                          <div className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100 space-y-2">
+                            <label className="block text-xs font-bold text-indigo-900">Pilih Tanggal Acuan Simulasi:</label>
+                            <input
+                              type="date"
+                              value={manualDate}
+                              onChange={(e) => setManualDate(e.target.value)}
+                              className="border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none w-full"
+                            />
+                            <p className="text-[10px] text-indigo-600">Jam di sidebar akan menampilkan waktu acuan yang Anda tetapkan.</p>
+                          </div>
+                        )}
+
+                        {/* FITUR GESER JADWAL TERTUNDA */}
+                        <div className="pt-2">
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">⚡ Geser Cepat Semua Konten Belum Tayang:</label>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleShiftPendingDays(1)}
+                              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-2 rounded-xl transition"
+                            >
+                              +1 Hari Besok
+                            </button>
+                            <button
+                              onClick={() => handleShiftPendingDays(7)}
+                              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-2 rounded-xl transition"
+                            >
+                              +7 Hari (Minggu Depan)
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+
                     </div>
 
-                    <div className="flex gap-2 pt-2">
+                    {/* STATUS DATABASE RINGKAS & BERSIH */}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center">✓</div>
+                        <div>
+                          <h4 className="font-extrabold text-xs text-slate-900">Database Firestore Aktif & Permanen</h4>
+                          <p className="text-[11px] text-slate-500">Tersinkronisasi otomatis dengan project `socialflow-planner-analytics`.</p>
+                        </div>
+                      </div>
                       <button
                         onClick={() => {
-                          if (confirm("Reset ulang data ke contoh awal?")) {
+                          if (confirm("Muat ulang contoh data awal?")) {
                             setContents(INITIAL_CONTENTS);
                             setIdeas(INITIAL_IDEAS);
                             showToastMessage("Data demo berhasil dimuat ulang!");
                           }
                         }}
-                        className="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl hover:bg-slate-200"
+                        className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition"
                       >
-                        Muat Data Demo Awal
+                        Reset Data Demo
                       </button>
                     </div>
+
                   </div>
                 )}
 
               </div>
             </main>
 
-            {/* BOTTOM NAV BAR (Mode Smartphone) */}
+            {/* BOTTOM NAV BAR (Mode HP) */}
             <div className={`lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 flex justify-around items-center z-40 ${deviceMode === 'hp' ? 'absolute rounded-b-[32px]' : ''}`}>
               {[
                 { id: 'dashboard', label: 'Home', icon: '📊' },
                 { id: 'planner', label: 'Planner', icon: '📝' },
                 { id: 'calendar', label: 'Kalender', icon: '📅' },
                 { id: 'ideas', label: 'Ide', icon: '💡' },
-                { id: 'database', label: 'Data', icon: '🗄️' }
+                { id: 'settings', label: 'Plan', icon: '🎯' }
               ].map(item => (
                 <button
                   key={item.id}
