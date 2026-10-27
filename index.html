@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocialFlow Planner & Analytics Dashboard V2.2.22</title>
+  <title>SocialFlow Planner & Analytics Dashboard V2.4.0</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -155,7 +155,7 @@
     // ==========================================
     // DATA SEED & MODEL ENUM
     // ==========================================
-    const APP_VERSION = "V2.2.22";
+    const APP_VERSION = "V2.4.0";
 
     const PLATFORMS = {
       tiktok: { id: 'tiktok', name: 'TikTok', color: '#000000', badgeClass: 'bg-black text-white' },
@@ -279,7 +279,9 @@
         platform: 'tiktok',
         pillar: 'Edukasi',
         priority: 'Tinggi',
-        status: 'Disetujui'
+        status: 'Disetujui',
+        referenceUrl: 'https://vt.tiktok.com/ZSjDemoSample/',
+        assetUrl: 'https://drive.google.com/drive/folders/sample-asset-1'
       },
       {
         id: 'id-2',
@@ -288,7 +290,9 @@
         platform: 'instagram',
         pillar: 'Tips & Trik',
         priority: 'Normal',
-        status: 'Dipertimbangkan'
+        status: 'Dipertimbangkan',
+        referenceUrl: 'https://www.instagram.com/reels/sample-myth/',
+        assetUrl: ''
       }
     ];
 
@@ -298,6 +302,7 @@
     function App() {
       const [currentMenu, setCurrentMenu] = React.useState('dashboard');
       const [sidebarOpen, setSidebarOpen] = React.useState(false);
+      const [viewMode, setViewMode] = React.useState('auto'); // 'auto', 'desktop', 'mobile'
 
       // Data Persistence State
       const [contents, setContents] = React.useState(() => {
@@ -440,14 +445,14 @@
           objective: 'Engagement',
           caption: '',
           hashtags: '',
-          referenceUrl: '',
-          assetUrl: '',
+          referenceUrl: idea.referenceUrl || '',
+          assetUrl: idea.assetUrl || '',
           scheduledAt: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
           deadlineAt: new Date(Date.now() + 86400000 * 1).toISOString().slice(0, 16),
           assignee: 'Boby PIC',
           priority: idea.priority || 'Normal',
           status: 'Brief',
-          internalNotes: 'Dikonversi dari Bank Ide'
+          internalNotes: 'Dikonversi dari Bank Ide V2.4.0'
         };
         setEditingItem(plan);
         setIsModalOpen(true);
@@ -493,19 +498,28 @@
       };
 
       return (
-        <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
+        <div className={`min-h-screen bg-slate-900 flex items-center justify-center transition-all ${
+          viewMode === 'mobile' ? 'p-2 sm:p-6 bg-slate-800' : 'bg-slate-50'
+        }`}>
+          {/* Main App Container (with Mobile Simulator Wrapper if in mobile mode) */}
+          <div className={`w-full bg-slate-50 font-sans flex h-screen overflow-hidden transition-all duration-300 ${
+            viewMode === 'mobile' 
+              ? 'max-w-[420px] max-h-[880px] rounded-[38px] shadow-2xl border-[8px] border-slate-900 relative ring-1 ring-slate-700/50' 
+              : 'w-full'
+          }`}>
+          
           {/* Toast Notification */}
           {toast && (
-            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl border border-slate-700">
+            <div className="fixed bottom-16 md:bottom-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl border border-slate-700">
               <Icon name={toast.type === 'info' ? 'alert' : 'check'} className="w-4 h-4 text-emerald-400" />
               <span>{toast.message}</span>
             </div>
           )}
 
-          {/* Sidebar */}
-          <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between transition-transform duration-200 md:static md:translate-x-0 ${
-            sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
-          } print-hidden`}>
+          {/* Sidebar (Hidden on Mobile View Mode or on mobile viewport) */}
+          <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between transition-transform duration-200 ${
+            viewMode === 'mobile' ? 'hidden' : 'md:static'
+          } ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'} print-hidden`}>
             <div>
               {/* Brand Header */}
               <div className="p-5 border-b border-slate-800 flex items-center justify-between">
@@ -564,6 +578,10 @@
             {/* Sidebar Footer Info */}
             <div className="p-4 border-t border-slate-800 m-3 rounded-2xl bg-slate-800/40 text-[11px] text-slate-400 space-y-1">
               <div className="flex items-center justify-between text-slate-300 font-medium">
+                <span>Versi Aktif:</span>
+                <span className="text-indigo-400 font-bold">{APP_VERSION}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300 font-medium">
                 <span>Zona Waktu:</span>
                 <span className="text-emerald-400 font-bold">WIB (Jakarta)</span>
               </div>
@@ -575,29 +593,51 @@
           </aside>
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden relative">
             {/* Top Navbar */}
-            <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-3 flex items-center justify-between shadow-xs print-hidden">
-              <div className="flex items-center gap-3">
+            <header className="bg-white border-b border-slate-200 px-3 md:px-6 py-2.5 flex items-center justify-between shadow-xs print-hidden gap-2">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                  className={`p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg ${viewMode === 'mobile' ? 'hidden' : 'md:hidden'}`}
                 >
                   <Icon name="layout" className="w-5 h-5" />
                 </button>
-                <div className="relative hidden sm:block w-64 lg:w-80">
-                  <Icon name="search" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <div className="relative hidden sm:block w-48 md:w-64 lg:w-72">
+                  <Icon name="search" className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     placeholder="Cari judul, kampanye, atau PIC..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-100/80 border border-slate-200 text-xs rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+                    className="w-full bg-slate-100/80 border border-slate-200 text-xs rounded-xl pl-8 pr-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
+                {/* View Mode Toggle (Desktop / Mobile Preview) */}
+                <div className="bg-slate-100 p-0.5 rounded-xl border border-slate-200 flex items-center text-[10px] font-semibold text-slate-600">
+                  <button
+                    onClick={() => setViewMode(viewMode === 'mobile' ? 'auto' : 'mobile')}
+                    className={`px-2 py-1 rounded-lg flex items-center gap-1 transition ${
+                      viewMode === 'mobile' ? 'bg-indigo-600 text-white shadow-xs' : 'hover:text-slate-900'
+                    }`}
+                    title="Ubah ke Mode Layar HP (Mobile Simulator)"
+                  >
+                    <span>📱 HP</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('auto')}
+                    className={`px-2 py-1 rounded-lg flex items-center gap-1 transition ${
+                      viewMode === 'auto' ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
+                    }`}
+                    title="Mode Tampilan Penuh / Desktop Web"
+                  >
+                    <span>💻 Web</span>
+                  </button>
+                </div>
+
                 {/* Reset/Clear Demo Button */}
                 {contents.some(c => c.isDemo) ? (
                   <button
@@ -605,10 +645,11 @@
                       setContents(contents.filter(c => !c.isDemo));
                       showToast('Data demo dihapus. Database bersih.');
                     }}
-                    className="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1.5 rounded-xl font-medium hover:bg-amber-100 transition flex items-center gap-1.5"
+                    className="text-[10px] sm:text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2 py-1 rounded-xl font-medium hover:bg-amber-100 transition flex items-center gap-1"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span>Hapus Demo</span>
+                    <span className="hidden sm:inline">Hapus Demo</span>
+                    <span className="sm:hidden">Demo</span>
                   </button>
                 ) : (
                   <button
@@ -616,9 +657,9 @@
                       setContents(initialDemoContents);
                       showToast('Demo data berhasil dimuat kembali.');
                     }}
-                    className="text-xs bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-1.5 rounded-xl font-medium hover:bg-slate-200 transition"
+                    className="text-[10px] sm:text-xs bg-slate-100 text-slate-600 border border-slate-200 px-2 py-1 rounded-xl font-medium hover:bg-slate-200 transition"
                   >
-                    + Muat Demo
+                    + Demo
                   </button>
                 )}
 
@@ -648,16 +689,17 @@
                     });
                     setIsModalOpen(true);
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-sm shadow-indigo-300 flex items-center gap-1.5 transition"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1 transition"
                 >
-                  <Icon name="plus" className="w-4 h-4" />
+                  <Icon name="plus" className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Rencana Konten</span>
+                  <span className="sm:hidden">Rencana</span>
                 </button>
               </div>
             </header>
 
             {/* Scrollable View Content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50">
+            <main className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-8 bg-slate-50 pb-20 md:pb-8">
               {/* VIEW: DASHBOARD */}
               {currentMenu === 'dashboard' && (
                 <DashboardView
@@ -790,13 +832,39 @@
                 <SettingsView showToast={showToast} />
               )}
             </main>
+
+            {/* Mobile Bottom Navigation Bar (Active on mobile view mode or small screens) */}
+            <div className={`fixed md:hidden bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 flex items-center justify-around z-30 shadow-lg ${
+              viewMode === 'mobile' ? 'absolute !flex' : ''
+            }`}>
+              {[
+                { id: 'dashboard', label: 'Home', icon: 'layout' },
+                { id: 'planner', label: 'Planner', icon: 'table' },
+                { id: 'calendar', label: 'Kalender', icon: 'calendar' },
+                { id: 'database', label: 'Database', icon: 'chart' },
+                { id: 'ideas', label: 'Ide', icon: 'bulb' },
+                { id: 'settings', label: 'Setup', icon: 'settings' }
+              ].map((b) => {
+                const active = currentMenu === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => setCurrentMenu(b.id)}
+                    className={`flex flex-col items-center justify-center p-1 rounded-xl transition ${
+                      active ? 'text-indigo-600 font-bold' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <Icon name={b.icon} className={`w-4 h-4 ${active ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    <span className="text-[9px] mt-0.5">{b.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+          </div>
           </div>
 
-          {/* ========================================================
-              MODALS & OVERLAYS
-          ======================================================== */}
-
-          {/* Modal Form Tambah & Edit */}
+          {/* Global Modals */}
           {isModalOpen && (
             <ContentFormModal
               item={editingItem}
@@ -808,7 +876,6 @@
             />
           )}
 
-          {/* Modal Detail View */}
           {viewingItem && (
             <ContentDetailModal
               item={viewingItem}
@@ -820,35 +887,32 @@
               }}
               onInputMetric={() => {
                 setMetricModalItem(viewingItem);
+                setViewingItem(null);
               }}
             />
           )}
 
-          {/* Modal Input Metrik Snapshot */}
           {metricModalItem && (
             <MetricModal
               item={metricModalItem}
               onClose={() => setMetricModalItem(null)}
               onSave={(updated) => {
-                setContents(prev => prev.map(c => c.id === updated.id ? updated : c));
-                if (viewingItem?.id === updated.id) setViewingItem(updated);
+                handleSaveContent(updated);
                 setMetricModalItem(null);
-                showToast('Metrik performa berhasil disimpan!');
               }}
             />
           )}
 
-          {/* Modal Konfirmasi Hapus */}
           {deleteConfirmId && (
             <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 text-center">
-                <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
-                  <Icon name="alert" className="w-6 h-6" />
+              <div className="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl border border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+                  <Icon name="alert" className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 mb-1">Hapus Konten Ini?</h3>
-                <p className="text-xs text-slate-500 mb-6">
-                  Rencana konten dan catatan metriknya akan dihapus permanen dari memori dashboard.
-                </p>
+                <div className="text-center">
+                  <h4 className="font-bold text-sm text-slate-900">Hapus Konten Ini?</h4>
+                  <p className="text-xs text-slate-500 mt-1">Tindakan ini tidak bisa dibatalkan dan akan menghapus metrik terkait.</p>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setDeleteConfirmId(null)}
@@ -858,9 +922,9 @@
                   </button>
                   <button
                     onClick={() => handleDeleteContent(deleteConfirmId)}
-                    className="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs"
+                    className="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
                   >
-                    Hapus
+                    Ya, Hapus
                   </button>
                 </div>
               </div>
@@ -874,15 +938,22 @@
     // 1. DASHBOARD VIEW COMPONENT
     // ==========================================
     function DashboardView({ contents, filteredContents, periodFilter, setPeriodFilter, onOpenDetail, onOpenEdit, onOpenMetric }) {
-      // Perhitungan KPI
       const kpis = React.useMemo(() => {
-        let planned = 0, published = 0, inProgress = 0, upcoming = 0;
-        let views = 0, reach = 0, likes = 0, comments = 0, shares = 0, saves = 0;
+        let planned = 0;
+        let published = 0;
+        let inProgress = 0;
+        let upcoming = 0;
+        let views = 0;
+        let reach = 0;
+        let likes = 0;
+        let comments = 0;
+        let shares = 0;
+        let saves = 0;
 
         filteredContents.forEach(c => {
           planned++;
           if (c.status === 'Published') published++;
-          else if (['Produksi', 'Editing', 'Siap Posting'].includes(c.status)) inProgress++;
+          else if (['Brief', 'Produksi', 'Editing', 'Siap Posting'].includes(c.status)) inProgress++;
           else if (c.status === 'Terjadwal') upcoming++;
 
           if (c.platformMetrics) {
@@ -907,7 +978,9 @@
       const platformDist = React.useMemo(() => {
         const counts = { tiktok: 0, instagram: 0, facebook: 0 };
         filteredContents.forEach(c => {
-          c.platforms.forEach(p => { if (counts[p] !== undefined) counts[p]++; });
+          c.platforms.forEach(p => {
+            if (counts[p] !== undefined) counts[p]++;
+          });
         });
         const total = counts.tiktok + counts.instagram + counts.facebook || 1;
         return [
@@ -917,38 +990,44 @@
         ];
       }, [filteredContents]);
 
-      // Platform Views Comparison
+      // Platform Views
       const platformViews = React.useMemo(() => {
-        const res = { tiktok: 0, instagram: 0, facebook: 0 };
+        const pViews = { tiktok: 0, instagram: 0, facebook: 0 };
         filteredContents.forEach(c => {
           if (c.platformMetrics) {
             Object.entries(c.platformMetrics).forEach(([p, m]) => {
-              if (res[p] !== undefined) res[p] += Number(m.views || 0);
+              if (pViews[p] !== undefined) pViews[p] += Number(m.views || 0);
             });
           }
         });
-        return res;
+        return pViews;
       }, [filteredContents]);
 
       return (
         <div className="space-y-6">
           {/* Header Dashboard & Periode Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Executive Dashboard</h2>
-              <p className="text-xs text-slate-500">Ringkasan operasional dan analisis performa lintas channel media sosial.</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Executive Dashboard</h2>
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
+                  {APP_VERSION}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">Ringkasan multi-channel TikTok, Instagram, dan Facebook.</p>
             </div>
-            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs self-start">
-              <Icon name="calendar" className="w-4 h-4 text-slate-400" />
+
+            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-xs self-start">
+              <Icon name="calendar" className="w-3.5 h-3.5 text-slate-400 ml-2" />
               <select
                 value={periodFilter}
                 onChange={(e) => setPeriodFilter(e.target.value)}
-                className="text-xs font-semibold text-slate-700 bg-transparent focus:outline-none"
+                className="text-xs font-semibold text-slate-700 bg-transparent pr-3 py-1 focus:outline-none"
               >
-                <option value="all">Semua Waktu</option>
                 <option value="today">Hari Ini</option>
                 <option value="7_days">7 Hari Terakhir</option>
                 <option value="30_days">30 Hari Terakhir</option>
+                <option value="all">Semua Waktu</option>
               </select>
             </div>
           </div>
@@ -1088,31 +1167,69 @@
     }
 
     // ==========================================
-    // 2. CONTENT PLANNER COMPONENT
+    // 2. CONTENT PLANNER VIEW COMPONENT
     // ==========================================
-    function PlannerView({ contents, filterPlatform, setFilterPlatform, filterStatus, setFilterStatus, filterPillar, setFilterPillar, onOpenCreate, onOpenEdit, onOpenDetail, onDuplicate, onDelete, onOpenMetric }) {
+    function PlannerView({
+      contents,
+      filterPlatform,
+      setFilterPlatform,
+      filterStatus,
+      setFilterStatus,
+      filterPillar,
+      setFilterPillar,
+      onOpenCreate,
+      onOpenEdit,
+      onOpenDetail,
+      onDuplicate,
+      onDelete,
+      onOpenMetric
+    }) {
+      const [viewMode, setViewMode] = React.useState('board');
+
       return (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Content Planner</h2>
-              <p className="text-xs text-slate-500">Susun pipeline produksi dari ide hingga siap terbit di media sosial.</p>
+              <p className="text-xs text-slate-500">Pipeline produksi multi-platform dan monitoring jadwal.</p>
             </div>
-            <button
-              onClick={onOpenCreate}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-1.5 self-start"
-            >
-              <Icon name="plus" className="w-4 h-4" />
-              <span>Tambah Konten</span>
-            </button>
+
+            <div className="flex items-center gap-2">
+              <div className="bg-slate-200/80 p-0.5 rounded-xl text-xs font-semibold flex">
+                <button
+                  onClick={() => setViewMode('board')}
+                  className={`px-3 py-1.5 rounded-lg transition ${
+                    viewMode === 'board' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Kanban
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1.5 rounded-lg transition ${
+                    viewMode === 'list' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Tabel
+                </button>
+              </div>
+
+              <button
+                onClick={onOpenCreate}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition"
+              >
+                <Icon name="plus" className="w-3.5 h-3.5" />
+                <span>Tambah Konten</span>
+              </button>
+            </div>
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-2.5 items-center">
+          <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-2.5">
             <select
               value={filterPlatform}
               onChange={(e) => setFilterPlatform(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-2 font-medium"
+              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-medium"
             >
               <option value="all">Semua Platform</option>
               <option value="tiktok">TikTok</option>
@@ -1123,7 +1240,7 @@
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-2 font-medium"
+              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-medium"
             >
               <option value="all">Semua Status</option>
               {Object.keys(STATUSES).map(s => <option key={s} value={s}>{s}</option>)}
@@ -1132,110 +1249,145 @@
             <select
               value={filterPillar}
               onChange={(e) => setFilterPillar(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-2 font-medium"
+              className="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 font-medium"
             >
-              <option value="all">Semua Pilar Konten</option>
+              <option value="all">Semua Pilar</option>
               {CONTENT_PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
 
-          {/* Kanban / Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
-            {['Ide', 'Produksi', 'Siap Posting', 'Published'].map(col => {
-              const items = contents.filter(c => {
-                if (col === 'Produksi') return ['Brief', 'Produksi', 'Editing'].includes(c.status);
-                if (col === 'Siap Posting') return ['Siap Posting', 'Terjadwal'].includes(c.status);
-                return c.status === col;
-              });
+          {/* Kanban / Tabel */}
+          {viewMode === 'board' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+              {['Ide', 'Produksi', 'Siap Posting', 'Published'].map(col => {
+                const list = contents.filter(c => {
+                  if (col === 'Produksi') return ['Brief', 'Produksi', 'Editing'].includes(c.status);
+                  if (col === 'Siap Posting') return ['Siap Posting', 'Terjadwal'].includes(c.status);
+                  return c.status === col;
+                });
 
-              return (
-                <div key={col} className="bg-slate-100/90 rounded-2xl p-3.5 border border-slate-200/80">
-                  <div className="flex items-center justify-between mb-3 px-1">
-                    <span className="text-xs font-bold uppercase text-slate-700 tracking-wider">
-                      {col === 'Produksi' ? 'Dalam Proses' : col}
-                    </span>
-                    <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
-                      {items.length}
-                    </span>
-                  </div>
+                return (
+                  <div key={col} className="bg-slate-100/90 rounded-2xl p-3 border border-slate-200/80">
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <span className="font-bold text-xs uppercase text-slate-700 tracking-wider">
+                        {col === 'Produksi' ? 'Dalam Proses' : col}
+                      </span>
+                      <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                        {list.length}
+                      </span>
+                    </div>
 
-                  <div className="space-y-3 min-h-[260px]">
-                    {items.length === 0 ? (
-                      <div className="h-24 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-xs">
-                        Kosong
-                      </div>
-                    ) : (
-                      items.map(item => {
-                        const isOverdue = item.status !== 'Published' && item.deadlineAt && new Date(item.deadlineAt) < new Date();
-                        return (
-                          <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs hover:shadow-md transition space-y-2.5">
-                            <div className="flex items-center justify-between gap-1">
-                              <div className="flex gap-1 flex-wrap">
-                                {item.platforms.map(p => (
-                                  <span key={p} className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${PLATFORMS[p]?.badgeClass}`}>
-                                    {p}
-                                  </span>
-                                ))}
-                              </div>
-                              <span className="text-[9px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                                {item.format}
-                              </span>
-                            </div>
-
-                            <h4
-                              onClick={() => onOpenDetail(item)}
-                              className="font-bold text-xs text-slate-900 cursor-pointer hover:text-indigo-600 transition line-clamp-2 leading-snug"
-                            >
-                              {item.title}
-                            </h4>
-
-                            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-100">
-                              <span>PIC: <b className="text-slate-700">{item.assignee}</b></span>
-                              <span>{formatWIB(item.scheduledAt, { month: 'short', day: 'numeric' })}</span>
-                            </div>
-
-                            {isOverdue && (
-                              <div className="bg-rose-50 text-rose-600 text-[9px] font-bold px-2 py-1 rounded flex items-center gap-1">
-                                <Icon name="alert" className="w-3 h-3" />
-                                <span>Deadline Terlewat</span>
-                              </div>
-                            )}
-
-                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                              {item.status === 'Published' ? (
-                                <button
-                                  onClick={() => onOpenMetric(item)}
-                                  className="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded transition"
-                                >
-                                  + Input Metrik
-                                </button>
-                              ) : (
-                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${STATUSES[item.status]?.bg}`}>
-                                  {item.status}
+                    <div className="space-y-3 min-h-[200px]">
+                      {list.length === 0 ? (
+                        <div className="h-24 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-xs">
+                          Kosong
+                        </div>
+                      ) : (
+                        list.map(c => {
+                          const isOverdue = c.status !== 'Published' && c.deadlineAt && new Date(c.deadlineAt) < new Date();
+                          return (
+                            <div key={c.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs space-y-2 hover:shadow-md transition">
+                              <div className="flex items-center justify-between gap-1">
+                                <div className="flex gap-1 flex-wrap">
+                                  {c.platforms.map(p => (
+                                    <span key={p} className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${PLATFORMS[p]?.badgeClass}`}>
+                                      {p}
+                                    </span>
+                                  ))}
+                                </div>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                  c.priority === 'Tinggi' ? 'text-rose-600 bg-rose-50' : 'text-slate-500 bg-slate-50'
+                                }`}>
+                                  {c.priority}
                                 </span>
+                              </div>
+
+                              <h4 onClick={() => onOpenDetail(c)} className="font-bold text-xs text-slate-900 cursor-pointer hover:text-indigo-600 line-clamp-2">
+                                {c.title}
+                              </h4>
+
+                              <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100">
+                                <span>{formatWIB(c.scheduledAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                <span className="font-medium text-slate-700">{c.assignee}</span>
+                              </div>
+
+                              {isOverdue && (
+                                <div className="text-[9px] bg-rose-50 text-rose-600 border border-rose-200 px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
+                                  <Icon name="alert" className="w-3 h-3" />
+                                  <span>Lewat Deadline</span>
+                                </div>
                               )}
 
-                              <div className="flex items-center gap-1 text-slate-400">
-                                <button onClick={() => onOpenEdit(item)} className="p-1 hover:text-indigo-600">
-                                  <Icon name="edit" className="w-3.5 h-3.5" />
-                                </button>
-                                <button onClick={() => onDuplicate(item)} className="p-1 hover:text-slate-800">
-                                  <Icon name="copy" className="w-3.5 h-3.5" />
-                                </button>
-                                <button onClick={() => onDelete(item.id)} className="p-1 hover:text-rose-600">
-                                  <Icon name="trash" className="w-3.5 h-3.5" />
-                                </button>
+                              <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-slate-400">
+                                {c.status === 'Published' ? (
+                                  <button onClick={() => onOpenMetric(c)} className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                                    Metrik
+                                  </button>
+                                ) : (
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${STATUSES[c.status]?.bg}`}>
+                                    {c.status}
+                                  </span>
+                                )}
+
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => onOpenEdit(c)} className="p-1 hover:text-indigo-600"><Icon name="edit" className="w-3.5 h-3.5" /></button>
+                                  <button onClick={() => onDuplicate(c)} className="p-1 hover:text-slate-700"><Icon name="copy" className="w-3.5 h-3.5" /></button>
+                                  <button onClick={() => onDelete(c.id)} className="p-1 hover:text-rose-600"><Icon name="trash" className="w-3.5 h-3.5" /></button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })
-                    )}
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px]">
+                  <tr>
+                    <th className="py-3 px-4">Judul</th>
+                    <th className="py-3 px-3">Platform</th>
+                    <th className="py-3 px-3">Format</th>
+                    <th className="py-3 px-3">Status</th>
+                    <th className="py-3 px-3">PIC</th>
+                    <th className="py-3 px-3">Jadwal WIB</th>
+                    <th className="py-3 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                  {contents.map(c => (
+                    <tr key={c.id} className="hover:bg-slate-50 transition">
+                      <td className="py-3 px-4 font-semibold text-slate-900 max-w-[200px] truncate">{c.title}</td>
+                      <td className="py-3 px-3">
+                        <div className="flex gap-1">
+                          {c.platforms.map(p => (
+                            <span key={p} className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${PLATFORMS[p]?.badgeClass}`}>{p}</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">{c.format}</td>
+                      <td className="py-3 px-3">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${STATUSES[c.status]?.bg}`}>{c.status}</span>
+                      </td>
+                      <td className="py-3 px-3">{c.assignee}</td>
+                      <td className="py-3 px-3 whitespace-nowrap">{formatWIB(c.scheduledAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5 text-slate-400">
+                          <button onClick={() => onOpenDetail(c)} className="p-1 hover:text-indigo-600"><Icon name="eye" className="w-4 h-4" /></button>
+                          <button onClick={() => onOpenEdit(c)} className="p-1 hover:text-indigo-600"><Icon name="edit" className="w-4 h-4" /></button>
+                          <button onClick={() => onDelete(c.id)} className="p-1 hover:text-rose-600"><Icon name="trash" className="w-4 h-4" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       );
     }
@@ -1249,8 +1401,8 @@
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
 
-      const firstDay = new Date(year, month, 1).getDay();
-      const totalDays = new Date(year, month + 1, 0).getDate();
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
 
       const monthNames = [
         'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -1259,12 +1411,13 @@
 
       return (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Kalender Posting</h2>
-              <p className="text-xs text-slate-500">Visualisasi jadwal penerbitan konten (WIB / Asia-Jakarta).</p>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Kalender Konten</h2>
+              <p className="text-xs text-slate-500">Jadwal posting interaktif (WIB). Klik tanggal untuk membuat jadwal.</p>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center gap-2 self-start">
               <button
                 onClick={() => setCurrentDate(new Date())}
                 className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-xs"
@@ -1293,49 +1446,48 @@
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center py-2.5 text-xs font-bold text-slate-600">
-              <span className="text-rose-500">Minggu</span>
-              <span>Senin</span>
-              <span>Selasa</span>
-              <span>Rabu</span>
-              <span>Kamis</span>
-              <span>Jumat</span>
-              <span>Sabtu</span>
+              <span className="text-rose-600">Min</span>
+              <span>Sen</span>
+              <span>Sel</span>
+              <span>Rab</span>
+              <span>Kam</span>
+              <span>Jum</span>
+              <span>Sab</span>
             </div>
 
-            <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 min-h-[500px]">
-              {Array.from({ length: firstDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-slate-50/40 p-2"></div>
+            <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100 min-h-[500px]">
+              {Array.from({ length: firstDayIndex }).map((_, i) => (
+                <div key={`empty-${i}`} className="bg-slate-50/50 p-1.5 min-h-[90px]"></div>
               ))}
 
-              {Array.from({ length: totalDays }).map((_, i) => {
+              {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
 
                 const dayContents = contents.filter(c => {
                   if (!c.scheduledAt) return false;
-                  const cd = new Date(c.scheduledAt);
-                  return cd.getFullYear() === year && cd.getMonth() === month && cd.getDate() === day;
+                  const d = new Date(c.scheduledAt);
+                  return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
                 });
 
                 return (
                   <div
                     key={day}
                     onClick={() => onDateClick(dateStr)}
-                    className={`p-2 min-h-[95px] hover:bg-indigo-50/30 cursor-pointer transition flex flex-col justify-between group ${
-                      isToday ? 'bg-indigo-50/20' : ''
+                    className={`p-1.5 min-h-[90px] hover:bg-indigo-50/20 cursor-pointer flex flex-col justify-between ${
+                      isToday ? 'bg-indigo-50/40' : ''
                     }`}
                   >
-                    <div className="flex justify-between items-center">
-                      <span className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${
+                    <div className="flex items-center justify-between text-[11px] mb-1">
+                      <span className={`w-5 h-5 flex items-center justify-center rounded-full font-bold ${
                         isToday ? 'bg-indigo-600 text-white' : 'text-slate-700'
                       }`}>
                         {day}
                       </span>
-                      <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition">+ Rencana</span>
                     </div>
 
-                    <div className="space-y-1 overflow-y-auto max-h-[60px] my-1">
+                    <div className="space-y-1 overflow-y-auto max-h-[75px]">
                       {dayContents.map(c => (
                         <div
                           key={c.id}
@@ -1343,12 +1495,12 @@
                             e.stopPropagation();
                             onOpenDetail(c);
                           }}
-                          className="text-[10px] p-1 bg-white border border-slate-200 rounded font-medium truncate flex items-center gap-1 shadow-2xs"
+                          className="p-1 rounded bg-slate-50 hover:bg-white border border-slate-200 text-[9px] font-semibold truncate flex items-center gap-1 shadow-2xs"
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full ${
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                             c.status === 'Published' ? 'bg-emerald-500' : 'bg-indigo-500'
-                          }`}></span>
-                          <span className="truncate text-slate-800">{c.title}</span>
+                          }`} />
+                          <span className="truncate">{c.title}</span>
                         </div>
                       ))}
                     </div>
@@ -1362,82 +1514,77 @@
     }
 
     // ==========================================
-    // 4. DATABASE KONTEN MASTER COMPONENT
+    // 4. DATABASE KONTEN VIEW COMPONENT
     // ==========================================
     function DatabaseView({ contents, onOpenDetail, onOpenEdit, onDelete, onDuplicate, onExportCSV }) {
       return (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Database Master</h2>
-              <p className="text-xs text-slate-500">Arsip terpusat seluruh aset konten, link referensi, dan riwayat tayang.</p>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Database Konten Master</h2>
+              <p className="text-xs text-slate-500">Arsip terpusat materi, aset, dan riwayat status postingan.</p>
             </div>
             <button
               onClick={onExportCSV}
               className="bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center gap-1.5 self-start"
             >
-              <Icon name="download" className="w-4 h-4 text-slate-500" />
+              <Icon name="download" className="w-3.5 h-3.5" />
               <span>Export CSV</span>
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold text-[10px]">
-                  <tr>
-                    <th className="py-3 px-4">Judul Konten</th>
-                    <th className="py-3 px-3">Platform</th>
-                    <th className="py-3 px-3">Format</th>
-                    <th className="py-3 px-3">Pilar</th>
-                    <th className="py-3 px-3">Status</th>
-                    <th className="py-3 px-3">Jadwal (WIB)</th>
-                    <th className="py-3 px-3">File Aset</th>
-                    <th className="py-3 px-4 text-center">Aksi</th>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px]">
+                <tr>
+                  <th className="py-3 px-4">Judul & Brief</th>
+                  <th className="py-3 px-3">Platform</th>
+                  <th className="py-3 px-3">Pilar</th>
+                  <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3">Aset</th>
+                  <th className="py-3 px-3">Jadwal WIB</th>
+                  <th className="py-3 px-4 text-center">Kelola</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                {contents.map(c => (
+                  <tr key={c.id} className="hover:bg-slate-50 transition">
+                    <td className="py-3 px-4 max-w-xs">
+                      <div className="font-bold text-slate-900 truncate">{c.title}</div>
+                      <div className="text-[10px] text-slate-400 truncate">{c.description || '-'}</div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex gap-1">
+                        {c.platforms.map(p => (
+                          <span key={p} className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${PLATFORMS[p]?.badgeClass}`}>{p}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-3 px-3">{c.contentPillar}</td>
+                    <td className="py-3 px-3">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${STATUSES[c.status]?.bg}`}>{c.status}</span>
+                    </td>
+                    <td className="py-3 px-3">
+                      {c.assetUrl ? (
+                        <a href={c.assetUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1 font-semibold text-[10px]">
+                          <Icon name="external" className="w-3 h-3" />
+                          <span>Link File</span>
+                        </a>
+                      ) : <span className="text-slate-400 text-[10px]">-</span>}
+                    </td>
+                    <td className="py-3 px-3 whitespace-nowrap">{formatWIB(c.scheduledAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5 text-slate-400">
+                        <button onClick={() => onOpenDetail(c)} className="p-1 hover:text-indigo-600"><Icon name="eye" className="w-4 h-4" /></button>
+                        <button onClick={() => onOpenEdit(c)} className="p-1 hover:text-indigo-600"><Icon name="edit" className="w-4 h-4" /></button>
+                        <button onClick={() => onDuplicate(c)} className="p-1 hover:text-slate-800"><Icon name="copy" className="w-4 h-4" /></button>
+                        <button onClick={() => onDelete(c.id)} className="p-1 hover:text-rose-600"><Icon name="trash" className="w-4 h-4" /></button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {contents.map(item => (
-                    <tr key={item.id} className="hover:bg-slate-50 transition">
-                      <td className="py-3.5 px-4 font-bold text-slate-900 max-w-xs truncate">{item.title}</td>
-                      <td className="py-3.5 px-3">
-                        <div className="flex gap-1">
-                          {item.platforms.map(p => (
-                            <span key={p} className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${PLATFORMS[p]?.badgeClass}`}>
-                              {p}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-3">{item.format}</td>
-                      <td className="py-3.5 px-3">{item.contentPillar}</td>
-                      <td className="py-3.5 px-3">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${STATUSES[item.status]?.bg}`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-3 whitespace-nowrap">{formatWIB(item.scheduledAt, { dateStyle: 'short', timeStyle: 'short' })}</td>
-                      <td className="py-3.5 px-3">
-                        {item.assetUrl ? (
-                          <a href={item.assetUrl} target="_blank" className="text-indigo-600 font-bold hover:underline flex items-center gap-1">
-                            <Icon name="external" className="w-3 h-3" />
-                            <span>Buka</span>
-                          </a>
-                        ) : '-'}
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5 text-slate-400">
-                          <button onClick={() => onOpenDetail(item)} className="p-1 hover:text-indigo-600"><Icon name="eye" className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => onOpenEdit(item)} className="p-1 hover:text-indigo-600"><Icon name="edit" className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => onDuplicate(item)} className="p-1 hover:text-slate-800"><Icon name="copy" className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => onDelete(item.id)} className="p-1 hover:text-rose-600"><Icon name="trash" className="w-3.5 h-3.5" /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       );
@@ -1447,99 +1594,39 @@
     // 5. ANALYTICS & REKAP VIEW COMPONENT
     // ==========================================
     function AnalyticsView({ contents, onExportCSV, onPrint }) {
-      const summary = React.useMemo(() => {
-        let totalViews = 0, totalReach = 0, totalLikes = 0, totalComments = 0, totalShares = 0, totalSaves = 0;
-        contents.forEach(c => {
-          if (c.platformMetrics) {
-            Object.values(c.platformMetrics).forEach(m => {
-              totalViews += Number(m.views || 0);
-              totalReach += Number(m.reach || 0);
-              totalLikes += Number(m.likes || 0);
-              totalComments += Number(m.comments || 0);
-              totalShares += Number(m.shares || 0);
-              totalSaves += Number(m.saves || 0);
-            });
-          }
-        });
-        const totalEng = totalLikes + totalComments + totalShares + totalSaves;
-        const avgEr = calcER(totalLikes, totalComments, totalShares, totalSaves, totalReach);
-        return { totalViews, totalReach, totalEng, avgEr };
-      }, [contents]);
-
       return (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Rekap & Laporan Performa</h2>
-              <p className="text-xs text-slate-500">Laporan evaluasi efektivitas kampanye konten media sosial.</p>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Analytics & Rekap Performa</h2>
+              <p className="text-xs text-slate-500">Laporan evaluasi efektivitas publikasi konten media sosial.</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onPrint}
-                className="bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-200 shadow-xs flex items-center gap-1.5"
-              >
-                <Icon name="print" className="w-4 h-4 text-slate-500" />
+            <div className="flex gap-2">
+              <button onClick={onPrint} className="bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-1">
+                <Icon name="print" className="w-3.5 h-3.5" />
                 <span>Cetak PDF</span>
               </button>
-              <button
-                onClick={onExportCSV}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5"
-              >
-                <Icon name="download" className="w-4 h-4" />
-                <span>Unduh CSV</span>
+              <button onClick={onExportCSV} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1">
+                <Icon name="download" className="w-3.5 h-3.5" />
+                <span>Download CSV</span>
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Total Views</span>
-              <p className="text-2xl font-bold text-slate-900 mt-1">{formatNum(summary.totalViews)}</p>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Total Reach</span>
-              <p className="text-2xl font-bold text-indigo-600 mt-1">{formatNum(summary.totalReach)}</p>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Total Interaksi</span>
-              <p className="text-2xl font-bold text-rose-600 mt-1">{formatNum(summary.totalEng)}</p>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-xs text-slate-400 font-semibold uppercase">Engagement Rate</span>
-              <p className="text-2xl font-bold text-teal-600 mt-1">{summary.avgEr}%</p>
-            </div>
-          </div>
-
-          {/* Evaluasi Komparasi */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <Icon name="sparkles" className="w-4 h-4 text-emerald-500" />
-                <span>Konten Terunggul (Top Performance)</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                <Icon name="sparkles" className="w-4 h-4 text-emerald-600" />
+                <span>Postingan Terbaik</span>
               </h3>
-              <div className="space-y-3">
-                {contents.filter(c => c.status === 'Published').slice(0, 3).map(c => (
-                  <div key={c.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
-                    <p className="font-bold text-slate-900">{c.title}</p>
-                    <p className="text-slate-500 text-[10px] mt-0.5">{c.format} • {c.contentPillar}</p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-slate-500">Rasio interaksi tertinggi dicapai oleh video edukatif dengan hook visual 3 detik awal.</p>
             </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <Icon name="alert" className="w-4 h-4 text-amber-500" />
-                <span>Rekomendasi & Optimasi</span>
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                <Icon name="alert" className="w-4 h-4 text-amber-600" />
+                <span>Rekomendasi Optimasi</span>
               </h3>
-              <div className="space-y-2.5 text-xs text-slate-600">
-                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl">
-                  <b className="text-amber-900">Hook 3 Detik:</b> Format Reels & TikTok membutuhkan pembuka dinamis agar audiens tidak langsung scrolling.
-                </div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <b className="text-slate-800">Prime Time Posting:</b> Publikasikan konsisten pada rentang waktu istirahat siang (12:00 WIB) atau malam (19:30 WIB).
-                </div>
-              </div>
+              <p className="text-xs text-slate-500">Tingkatkan postingan berformat Carousel pada akhir pekan untuk mendongkrak jumlah Bookmark dan Share.</p>
             </div>
           </div>
         </div>
@@ -1547,13 +1634,15 @@
     }
 
     // ==========================================
-    // 6. BANK IDE KONTEN COMPONENT
+    // 6. BANK IDE KONTEN COMPONENT (V2.4.0 UPDATE)
     // ==========================================
     function IdeaBankView({ ideas, setIdeas, onConvertToPlan, showToast }) {
       const [title, setTitle] = React.useState('');
       const [desc, setDesc] = React.useState('');
       const [platform, setPlatform] = React.useState('tiktok');
       const [pillar, setPillar] = React.useState('Edukasi');
+      const [refUrl, setRefUrl] = React.useState('');
+      const [assetUrl, setAssetUrl] = React.useState('');
 
       const handleAdd = (e) => {
         e.preventDefault();
@@ -1565,23 +1654,45 @@
           platform,
           pillar,
           priority: 'Normal',
-          status: 'Draft'
+          status: 'Draft',
+          referenceUrl: refUrl,
+          assetUrl: assetUrl
         };
         setIdeas([newIdea, ...ideas]);
         setTitle('');
         setDesc('');
-        showToast('Ide baru tersimpan di Bank Ide!');
+        setRefUrl('');
+        setAssetUrl('');
+        showToast('Ide baru beserta link referensi berhasil disimpan!');
       };
 
       return (
         <div className="space-y-6">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Bank Ide Konten</h2>
-            <p className="text-xs text-slate-500">Catat ide spontan, lalu ubah 1-klik menjadi rencana konten riil.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Bank Ide Konten</h2>
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
+                  {APP_VERSION}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">Catat ide spontan, simpan link referensi & materi konten, lalu ubah 1-klik menjadi rencana publikasi.</p>
+            </div>
+            <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-xl self-start font-medium">
+              {ideas.length} Ide Tersimpan
+            </span>
           </div>
 
-          <form onSubmit={handleAdd} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-            <h3 className="text-xs font-bold uppercase text-slate-400">Tambah Ide Spontan</h3>
+          {/* Form Tambah Ide Spontan dengan Link Referensi & File Aset */}
+          <form onSubmit={handleAdd} className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                <Icon name="bulb" className="w-3.5 h-3.5 text-amber-500" />
+                <span>TAMBAH IDE SPONTAN</span>
+              </h3>
+              <span className="text-[11px] text-slate-400 font-medium">Lengkap dengan Tautan Bahan</span>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <input
                 type="text"
@@ -1589,12 +1700,12 @@
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:col-span-1 focus:outline-none focus:bg-white"
+                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:col-span-1 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
               />
               <select
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value)}
-                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium"
               >
                 <option value="tiktok">TikTok</option>
                 <option value="instagram">Instagram</option>
@@ -1603,46 +1714,110 @@
               <select
                 value={pillar}
                 onChange={(e) => setPillar(e.target.value)}
-                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
+                className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium"
               >
                 {CONTENT_PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
+
             <textarea
               placeholder="Catatan brief / hook gagasan..."
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               rows={2}
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:bg-white"
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
             />
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
-            >
-              + Simpan Ide
-            </button>
+
+            {/* Inputs Baru V2.4.0: Link Referensi & Link File/Aset */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                  <span>🔗 Link Referensi Konten (Tiktok / Reels / YT)</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://tiktok.com/@... atau instagram.com/reel/..."
+                  value={refUrl}
+                  onChange={(e) => setRefUrl(e.target.value)}
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                  <span>📁 Link File / Materi Aset (Google Drive / Cloud)</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/drive/folders/..."
+                  value={assetUrl}
+                  onChange={(e) => setAssetUrl(e.target.value)}
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm"
+              >
+                <Icon name="plus" className="w-3.5 h-3.5" />
+                <span>+ Simpan Ide</span>
+              </button>
+            </div>
           </form>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Grid Kartu Ide Konten */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {ideas.map(item => (
-              <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3">
+              <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3 hover:shadow-md transition">
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${PLATFORMS[item.platform]?.badgeClass}`}>
                       {item.platform}
                     </span>
                     <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
-                      {item.status}
+                      {item.status || 'Draft'}
                     </span>
                   </div>
-                  <h4 className="font-bold text-xs text-slate-900">{item.title}</h4>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-3">{item.description || 'Tidak ada catatan.'}</p>
+
+                  <h4 className="font-bold text-xs text-slate-900 leading-snug">{item.title}</h4>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-3">{item.description || 'Tidak ada catatan brief.'}</p>
+                  
+                  {/* Badge Tautan Referensi & Aset V2.4.0 */}
+                  {(item.referenceUrl || item.assetUrl) && (
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap gap-1.5">
+                      {item.referenceUrl && (
+                        <a
+                          href={item.referenceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg transition"
+                        >
+                          <Icon name="external" className="w-3 h-3" />
+                          <span>Link Referensi</span>
+                        </a>
+                      )}
+                      {item.assetUrl && (
+                        <a
+                          href={item.assetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg transition"
+                        >
+                          <Icon name="external" className="w-3 h-3" />
+                          <span>File Materi</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                   <button
                     onClick={() => onConvertToPlan(item)}
-                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-xl flex items-center gap-1 transition"
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl flex items-center gap-1 transition"
                   >
                     <Icon name="sparkles" className="w-3.5 h-3.5" />
                     <span>Jadikan Rencana</span>
@@ -1652,7 +1827,7 @@
                       setIdeas(ideas.filter(i => i.id !== item.id));
                       showToast('Ide berhasil dihapus.');
                     }}
-                    className="text-slate-400 hover:text-rose-600 p-1"
+                    className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition"
                   >
                     <Icon name="trash" className="w-4 h-4" />
                   </button>
