@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Boby Anggara Dashboard - SocialFlow Planner (V2.4.7 PRO)</title>
+  <title>Boby Anggara Dashboard - SocialFlow Planner (V2.4.8 PRO)</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -56,11 +56,26 @@
       console.warn("Firestore fallback:", err);
     }
 
-    // --- KONSTANTA SISTEM & FORMAT KONTEN ---
+    // --- WARNA & IDENTITAS PLATFORM RESMI ---
     const PLATFORMS = {
-      TIKTOK: { name: 'TikTok', bg: 'bg-black text-white' },
-      INSTAGRAM: { name: 'Instagram', bg: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' },
-      FACEBOOK: { name: 'Facebook', bg: 'bg-blue-600 text-white' }
+      TIKTOK: { 
+        name: 'TikTok', 
+        bg: 'bg-black text-white', 
+        badge: 'bg-black text-white border-slate-900',
+        card: 'border-slate-800 hover:border-black'
+      },
+      INSTAGRAM: { 
+        name: 'Instagram', 
+        bg: 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white', 
+        badge: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-pink-500',
+        card: 'border-pink-200 hover:border-pink-400'
+      },
+      FACEBOOK: { 
+        name: 'Facebook', 
+        bg: 'bg-blue-600 text-white', 
+        badge: 'bg-blue-600 text-white border-blue-600',
+        card: 'border-blue-200 hover:border-blue-500'
+      }
     };
 
     const STATUS_LIST = ['Ide', 'Brief', 'Produksi', 'Editing', 'Siap Posting', 'Terjadwal', 'Published', 'Cancelled'];
@@ -99,15 +114,11 @@
 
       // --- JAM DIGITAL 24 JAM (WIB) ---
       const [currentTime, setCurrentTime] = useState(new Date());
-      const [useManualDate, setUseManualDate] = useState(false);
-      const [manualDate, setManualDate] = useState(new Date().toISOString().split('T')[0]);
 
       useEffect(() => {
-        if (!useManualDate) {
-          const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-          return () => clearInterval(timer);
-        }
-      }, [useManualDate]);
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+      }, []);
 
       const formattedClock = useMemo(() => {
         const h = String(currentTime.getHours()).padStart(2, '0');
@@ -117,40 +128,46 @@
       }, [currentTime]);
 
       const formattedDateHeader = useMemo(() => {
-        const targetDate = useManualDate ? new Date(manualDate) : currentTime;
-        return targetDate.toLocaleDateString('id-ID', {
+        return currentTime.toLocaleDateString('id-ID', {
           timeZone: 'Asia/Jakarta',
           weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
         });
-      }, [currentTime, useManualDate, manualDate]);
+      }, [currentTime]);
 
-      // --- TARGET PLAN & RITME KONTEN ---
+      // --- TARGET FORMAT KONTEN MINGGUAN ---
       const [targetReels, setTargetReels] = useState(() => Number(localStorage.getItem('sf_target_reels')) || 10);
       const [targetGrafis, setTargetGrafis] = useState(() => Number(localStorage.getItem('sf_target_grafis')) || 5);
       const [targetFoto, setTargetFoto] = useState(() => Number(localStorage.getItem('sf_target_foto')) || 1);
       const [targetStory, setTargetStory] = useState(() => Number(localStorage.getItem('sf_target_story')) || 10);
 
-      const calculatedSum = useMemo(() => {
+      // --- TARGET DISTRIBUSI PLATFORM MEDSOS (V2.4.8 PRO BARU) ---
+      const [targetTikTok, setTargetTikTok] = useState(() => Number(localStorage.getItem('sf_target_tiktok')) || 10);
+      const [targetInstagram, setTargetInstagram] = useState(() => Number(localStorage.getItem('sf_target_instagram')) || 12);
+      const [targetFacebook, setTargetFacebook] = useState(() => Number(localStorage.getItem('sf_target_facebook')) || 4);
+
+      const calculatedFormatSum = useMemo(() => {
         return (Number(targetReels) || 0) + (Number(targetGrafis) || 0) + (Number(targetFoto) || 0) + (Number(targetStory) || 0);
       }, [targetReels, targetGrafis, targetFoto, targetStory]);
+
+      const calculatedPlatformSum = useMemo(() => {
+        return (Number(targetTikTok) || 0) + (Number(targetInstagram) || 0) + (Number(targetFacebook) || 0);
+      }, [targetTikTok, targetInstagram, targetFacebook]);
 
       const [weeklyTarget, setWeeklyTarget] = useState(() => {
         const saved = localStorage.getItem('sf_target_weekly');
         return saved ? Number(saved) : (10 + 5 + 1 + 10);
       });
 
-      const [monthlyCampaign, setMonthlyCampaign] = useState(() => localStorage.getItem('sf_target_campaign') || "Campaign Marketing & Sales");
-      const [monthlyGoalPosts, setMonthlyGoalPosts] = useState(() => Number(localStorage.getItem('sf_target_monthly_posts')) || 30);
-
       useEffect(() => {
         localStorage.setItem('sf_target_weekly', weeklyTarget);
-        localStorage.setItem('sf_target_campaign', monthlyCampaign);
-        localStorage.setItem('sf_target_monthly_posts', monthlyGoalPosts);
         localStorage.setItem('sf_target_reels', targetReels);
         localStorage.setItem('sf_target_grafis', targetGrafis);
         localStorage.setItem('sf_target_foto', targetFoto);
         localStorage.setItem('sf_target_story', targetStory);
-      }, [weeklyTarget, monthlyCampaign, monthlyGoalPosts, targetReels, targetGrafis, targetFoto, targetStory]);
+        localStorage.setItem('sf_target_tiktok', targetTikTok);
+        localStorage.setItem('sf_target_instagram', targetInstagram);
+        localStorage.setItem('sf_target_facebook', targetFacebook);
+      }, [weeklyTarget, targetReels, targetGrafis, targetFoto, targetStory, targetTikTok, targetInstagram, targetFacebook]);
 
       // --- DATA KONTEN & IDE ---
       const [contents, setContents] = useState(() => {
@@ -171,7 +188,7 @@
       const [showContentModal, setShowContentModal] = useState(false);
       const [editingContent, setEditingContent] = useState(null);
 
-      // State Selector Jam Digital
+      // State Selector Jam Digital 24 Jam
       const [schedHour, setSchedHour] = useState('18');
       const [schedMinute, setSchedMinute] = useState('00');
 
@@ -341,6 +358,7 @@
         showToastMessage("Ide dihapus.");
       };
 
+      // METRIK SUMMARY & REALTIME COUNTERS
       const metrics = useMemo(() => {
         const total = contents.length;
         const published = contents.filter(c => c.status === 'Published').length;
@@ -352,19 +370,25 @@
         const totalEngagement = contents.reduce((acc, c) => acc + (Number(c.likes)||0) + (Number(c.comments)||0) + (Number(c.shares)||0) + (Number(c.saves)||0), 0);
         const avgER = totalReach > 0 ? ((totalEngagement / totalReach) * 100).toFixed(2) : "0.00";
 
+        // Counter per Format
         const countReels = contents.filter(c => c.format === 'Video Reels').length;
         const countGrafis = contents.filter(c => c.format === 'Desain Grafis').length;
         const countFoto = contents.filter(c => c.format === 'Postingan Foto').length;
         const countStory = contents.filter(c => c.format === 'Story').length;
 
+        // Counter per Platform Medsos (V2.4.8 PRO)
+        const countTikTok = contents.filter(c => c.platform === 'TikTok').length;
+        const countInstagram = contents.filter(c => c.platform === 'Instagram').length;
+        const countFacebook = contents.filter(c => c.platform === 'Facebook').length;
+
         const weeklyProgress = weeklyTarget > 0 ? Math.min(Math.round((total / weeklyTarget) * 100), 100) : 0;
-        const monthlyProgress = monthlyGoalPosts > 0 ? Math.min(Math.round((total / monthlyGoalPosts) * 100), 100) : 0;
 
         return {
           total, published, inProgress, scheduled, totalViews, totalReach, totalEngagement, avgER,
-          weeklyProgress, monthlyProgress, countReels, countGrafis, countFoto, countStory
+          weeklyProgress, countReels, countGrafis, countFoto, countStory,
+          countTikTok, countInstagram, countFacebook
         };
-      }, [contents, weeklyTarget, monthlyGoalPosts]);
+      }, [contents, weeklyTarget]);
 
       const filteredContents = useMemo(() => {
         return contents.filter(c => {
@@ -416,7 +440,7 @@
                       <h1 className="font-extrabold text-base tracking-tight leading-none text-white">SocialFlow</h1>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/30 to-amber-500/30 text-amber-300 border border-amber-500/40 tracking-wider">
-                          V2.4.7 PRO
+                          V2.4.8 PRO
                         </span>
                       </div>
                     </div>
@@ -451,7 +475,7 @@
                 <div className="pt-4 border-t border-slate-800/80 text-xs text-slate-400 space-y-2.5">
                   <div className="bg-slate-800/70 p-3 rounded-xl border border-slate-700/60">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
-                      {useManualDate ? 'Waktu Simulasi' : 'Waktu Real-time (24 Jam)'}
+                      Waktu Real-time (24 Jam)
                     </span>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                       <span className="text-xl font-black text-white font-mono tracking-wider">{formattedClock}</span>
@@ -489,7 +513,7 @@
                       </div>
                     ) : (
                       <h2 className="font-extrabold text-slate-900 text-lg leading-tight capitalize">
-                        {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab === 'calendar' ? 'Kalender & Spreadsheet' : currentTab === 'settings' ? 'Pusat Plan & Target Ritme' : currentTab}
+                        {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab === 'calendar' ? 'Kalender & Spreadsheet' : currentTab === 'settings' ? 'Pusat Plan & Target Media Sosial' : currentTab}
                       </h2>
                     )}
                     <p className="text-xs text-slate-500 hidden sm:block">Perencanaan & Analisis Konten Multi-Platform</p>
@@ -532,7 +556,10 @@
                 {/* TAB 1: DASHBOARD */}
                 {currentTab === 'dashboard' && (
                   <div className="space-y-6">
+                    {/* Ringkasan Target Plan Mingguan & Distribusi Medsos */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      {/* Kartu Target Jenis Konten */}
                       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 rounded-2xl text-white shadow-md">
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-xs font-bold text-indigo-100 uppercase">Target Mingguan</span>
@@ -551,19 +578,45 @@
                         </div>
                       </div>
 
-                      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 rounded-2xl text-white shadow-md">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs font-bold text-emerald-100 uppercase">Campaign: {monthlyCampaign}</span>
-                          <span className="text-xs font-black bg-white/20 px-2 py-0.5 rounded-full">{metrics.total} / {monthlyGoalPosts} Konten</span>
+                      {/* Kartu Distribusi Medsos Resmi (V2.4.8 PRO) */}
+                      <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-bold text-slate-500 uppercase">Distribusi Media Sosial</span>
+                          <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">3 Saluran Aktif</span>
                         </div>
-                        <h4 className="font-extrabold text-lg">{metrics.monthlyProgress}% Selesai</h4>
-                        <div className="w-full bg-black/20 h-2 rounded-full mt-2 overflow-hidden">
-                          <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: `${metrics.monthlyProgress}%` }}></div>
+                        
+                        <div className="space-y-2">
+                          {/* Bar TikTok */}
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-black flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-black inline-block"></span> TikTok
+                            </span>
+                            <span className="font-black font-mono text-slate-700">{metrics.countTikTok} / {targetTikTok} post</span>
+                          </div>
+                          
+                          {/* Bar Instagram */}
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-pink-600 flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 inline-block"></span> Instagram
+                            </span>
+                            <span className="font-black font-mono text-slate-700">{metrics.countInstagram} / {targetInstagram} post</span>
+                          </div>
+
+                          {/* Bar Facebook */}
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-blue-600 flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span> Facebook
+                            </span>
+                            <span className="font-black font-mono text-slate-700">{metrics.countFacebook} / {targetFacebook} post</span>
+                          </div>
                         </div>
-                        <p className="text-[11px] text-emerald-100 mt-3 pt-2.5 border-t border-white/20">
-                          Format unggulan: <b>Video Reels & Desain Grafis</b>
-                        </p>
+
+                        <div className="pt-2 border-t border-slate-100 mt-2 flex justify-between items-center text-[10px] text-slate-400">
+                          <span>Total Alokasi Terencana:</span>
+                          <b className="text-slate-700 font-bold">{calculatedPlatformSum} Postingan/Minggu</b>
+                        </div>
                       </div>
+
                     </div>
 
                     {/* 8 KARTU KPI UTAMA */}
@@ -631,7 +684,7 @@
                                     <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${PLATFORMS[item.platform.toUpperCase()]?.bg || 'bg-slate-700 text-white'}`}>
                                       {item.platform}
                                     </span>
-                                    <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${FORMAT_BADGES[item.format] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${FORMAT_BADGES[item.format] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
                                       {item.format}
                                     </span>
                                   </div>
@@ -1086,7 +1139,7 @@
                           <select
                             value={ideaForm.platform}
                             onChange={(e) => setIdeaForm({ ...ideaForm, platform: e.target.value })}
-                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none font-medium"
                           >
                             <option value="TikTok">TikTok</option>
                             <option value="Instagram">Instagram</option>
@@ -1095,14 +1148,14 @@
                           <select
                             value={ideaForm.format}
                             onChange={(e) => setIdeaForm({ ...ideaForm, format: e.target.value })}
-                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none font-medium"
                           >
                             {FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
                           </select>
                           <select
                             value={ideaForm.pillar}
                             onChange={(e) => setIdeaForm({ ...ideaForm, pillar: e.target.value })}
-                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none font-medium"
                           >
                             {PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
                           </select>
@@ -1197,73 +1250,76 @@
                   </div>
                 )}
 
-                {/* TAB 7: PUSAT PLAN & TARGET */}
+                {/* TAB 7: PUSAT PLAN & TARGET (V2.4.8 PRO - TARGET JENIS KONTEN & TARGET PLATFORM MEDSOS) */}
                 {currentTab === 'settings' && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="font-extrabold text-slate-900 text-lg">Pusat Plan & Target Jenis Konten</h3>
-                      <p className="text-xs text-slate-500">Atur ritme target Video Reels, Desain Grafis, Foto, Story, serta waktu digital 24 jam.</p>
+                      <h3 className="font-extrabold text-slate-900 text-lg">Pusat Plan & Target Media Sosial</h3>
+                      <p className="text-xs text-slate-500">Atur ritme target Video Reels, Desain Grafis, Foto, Story, serta kuota postingan per platform TikTok, Instagram & Facebook.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       
-                      {/* CARD 1: TARGET RITME FORMAT & TOTAL TARGET MINGGUAN */}
+                      {/* CARD 1: TARGET RITME JENIS KONTEN */}
                       <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
                           <span className="text-lg">🎬</span>
-                          <h4 className="font-bold text-slate-900 text-sm">Target Ritme per Jenis Konten (Mingguan)</h4>
+                          <div>
+                            <h4 className="font-bold text-slate-900 text-sm">Target Ritme per Jenis Konten</h4>
+                            <p className="text-[11px] text-slate-400">Kuota produksi format per minggu</p>
+                          </div>
                         </div>
 
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-rose-800 bg-rose-50 px-2 py-1 rounded-lg">Video Reels</span>
+                          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+                            <span className="text-xs font-bold text-rose-800 bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg">Video Reels</span>
                             <div className="flex items-center gap-2">
                               <input
                                 type="number" min="0" max="100"
                                 value={targetReels}
                                 onChange={(e) => setTargetReels(Number(e.target.value))}
-                                className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-bold"
+                                className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-bold bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
                               />
-                              <span className="text-[11px] text-slate-400">target/mgg (Ada: <b>{metrics.countReels}</b>)</span>
+                              <span className="text-[11px] text-slate-400 w-28 text-right">target/mgg (Ada: <b>{metrics.countReels}</b>)</span>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-indigo-800 bg-indigo-50 px-2 py-1 rounded-lg">Desain Grafis</span>
+                          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+                            <span className="text-xs font-bold text-indigo-800 bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-lg">Desain Grafis</span>
                             <div className="flex items-center gap-2">
                               <input
                                 type="number" min="0" max="100"
                                 value={targetGrafis}
                                 onChange={(e) => setTargetGrafis(Number(e.target.value))}
-                                className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-bold"
+                                className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-bold bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                               />
-                              <span className="text-[11px] text-slate-400">target/mgg (Ada: <b>{metrics.countGrafis}</b>)</span>
+                              <span className="text-[11px] text-slate-400 w-28 text-right">target/mgg (Ada: <b>{metrics.countGrafis}</b>)</span>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-sky-800 bg-sky-50 px-2 py-1 rounded-lg">Postingan Foto</span>
+                          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+                            <span className="text-xs font-bold text-sky-800 bg-sky-100 border border-sky-200 px-2.5 py-1 rounded-lg">Postingan Foto</span>
                             <div className="flex items-center gap-2">
                               <input
                                 type="number" min="0" max="100"
                                 value={targetFoto}
                                 onChange={(e) => setTargetFoto(Number(e.target.value))}
-                                className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-bold"
+                                className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-bold bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none"
                               />
-                              <span className="text-[11px] text-slate-400">target/mgg (Ada: <b>{metrics.countFoto}</b>)</span>
+                              <span className="text-[11px] text-slate-400 w-28 text-right">target/mgg (Ada: <b>{metrics.countFoto}</b>)</span>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-1 rounded-lg">Story</span>
+                          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+                            <span className="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg">Story</span>
                             <div className="flex items-center gap-2">
                               <input
                                 type="number" min="0" max="100"
                                 value={targetStory}
                                 onChange={(e) => setTargetStory(Number(e.target.value))}
-                                className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-bold"
+                                className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-bold bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                               />
-                              <span className="text-[11px] text-slate-400">target/mgg (Ada: <b>{metrics.countStory}</b>)</span>
+                              <span className="text-[11px] text-slate-400 w-28 text-right">target/mgg (Ada: <b>{metrics.countStory}</b>)</span>
                             </div>
                           </div>
                         </div>
@@ -1272,7 +1328,7 @@
                           <div className="flex items-center justify-between">
                             <div>
                               <span className="font-bold text-slate-800 text-xs block">Total Target Mingguan</span>
-                              <span className="text-[10px] text-slate-400">Akumulasi otomatis: {calculatedSum} konten</span>
+                              <span className="text-[10px] text-slate-400">Total rincian: {calculatedFormatSum} konten</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <input
@@ -1290,99 +1346,126 @@
                           <button
                             type="button"
                             onClick={() => {
-                              setWeeklyTarget(calculatedSum);
-                              showToastMessage(`Total target mingguan disinkronkan ke ${calculatedSum} konten!`);
+                              setWeeklyTarget(calculatedFormatSum);
+                              showToastMessage(`Total target mingguan disinkronkan ke ${calculatedFormatSum} konten!`);
                             }}
                             className="w-full text-center text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-1.5 rounded-lg transition"
                           >
-                            🔄 Samakan Total dengan Rincian di Atas ({calculatedSum} Konten)
+                            🔄 Samakan Total dengan Rincian di Atas ({calculatedFormatSum} Konten)
                           </button>
                         </div>
                       </div>
 
-                      {/* CARD 2: CAMPAIGN BULANAN & PENGATUR WAKTU 24 JAM */}
+                      {/* CARD 2: TARGET DISTRIBUSI PER PLATFORM MEDSOS (PENGGANTI KAMPANYE) */}
                       <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                          <span className="text-lg">🎯</span>
-                          <h4 className="font-bold text-slate-900 text-sm">Target Kampanye & Waktu Acuan</h4>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Nama Campaign / Tema Bulan Ini</label>
-                          <input
-                            type="text"
-                            value={monthlyCampaign}
-                            onChange={(e) => setMonthlyCampaign(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Target Total Konten Sebulan</label>
-                          <input
-                            type="number" min="1" max="500"
-                            value={monthlyGoalPosts}
-                            onChange={(e) => setMonthlyGoalPosts(Number(e.target.value))}
-                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs w-28 font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 mt-2">
+                          <span className="text-lg">📱</span>
                           <div>
-                            <p className="text-xs font-bold text-slate-900">Gunakan Tanggal Acuan Simulasi</p>
-                            <p className="text-[10px] text-slate-500">Sesuaikan tanggal acuan jika ingin menyusun jadwal bulan depan.</p>
-                          </div>
-                          <input
-                            type="checkbox"
-                            checked={useManualDate}
-                            onChange={(e) => {
-                              setUseManualDate(e.target.checked);
-                              showToastMessage(e.target.checked ? "Mode tanggal simulasi aktif!" : "Kembali ke waktu realtime.");
-                            }}
-                            className="w-5 h-5 text-indigo-600 rounded cursor-pointer accent-indigo-600"
-                          />
-                        </div>
-
-                        {useManualDate && (
-                          <div className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100">
-                            <input
-                              type="date"
-                              value={manualDate}
-                              onChange={(e) => setManualDate(e.target.value)}
-                              className="border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none w-full"
-                            />
-                          </div>
-                        )}
-
-                        <div className="pt-2">
-                          <label className="block text-xs font-bold text-slate-700 mb-1.5">⚡ Geser Cepat Jadwal yang Tertunda:</label>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleShiftPendingDays(1)}
-                              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-2 rounded-xl transition"
-                            >
-                              +1 Hari Besok
-                            </button>
-                            <button
-                              onClick={() => handleShiftPendingDays(7)}
-                              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-2 rounded-xl transition"
-                            >
-                              +7 Hari (Minggu Depan)
-                            </button>
+                            <h4 className="font-bold text-slate-900 text-sm">Target Distribusi per Platform Medsos</h4>
+                            <p className="text-[11px] text-slate-400">Alokasi kuota postingan per channel tiap minggu</p>
                           </div>
                         </div>
 
+                        <div className="space-y-3">
+                          {/* PLATFORM TIKTOK */}
+                          <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-black text-white shadow-xs">
+                                TikTok
+                              </span>
+                              <span className="text-[11px] text-slate-500 font-semibold">Short Video</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number" min="0" max="100"
+                                value={targetTikTok}
+                                onChange={(e) => setTargetTikTok(Number(e.target.value))}
+                                className="border border-slate-300 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-black bg-white focus:ring-2 focus:ring-black focus:outline-none"
+                              />
+                              <span className="text-[11px] text-slate-500 font-bold w-24 text-right">
+                                Ada: <b className="text-black">{metrics.countTikTok}</b> post
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* PLATFORM INSTAGRAM */}
+                          <div className="flex items-center justify-between p-2.5 rounded-xl border border-pink-100 bg-gradient-to-r from-purple-50/50 via-pink-50/30 to-rose-50/50">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white shadow-xs">
+                                Instagram
+                              </span>
+                              <span className="text-[11px] text-pink-700 font-semibold">Feed, Reels & Story</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number" min="0" max="100"
+                                value={targetInstagram}
+                                onChange={(e) => setTargetInstagram(Number(e.target.value))}
+                                className="border border-pink-300 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-black bg-white focus:ring-2 focus:ring-pink-500 focus:outline-none text-pink-700"
+                              />
+                              <span className="text-[11px] text-pink-800 font-bold w-24 text-right">
+                                Ada: <b className="text-pink-600">{metrics.countInstagram}</b> post
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* PLATFORM FACEBOOK */}
+                          <div className="flex items-center justify-between p-2.5 rounded-xl border border-blue-100 bg-blue-50/50">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-xs">
+                                Facebook
+                              </span>
+                              <span className="text-[11px] text-blue-700 font-semibold">Page & Group</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number" min="0" max="100"
+                                value={targetFacebook}
+                                onChange={(e) => setTargetFacebook(Number(e.target.value))}
+                                className="border border-blue-300 rounded-lg px-2.5 py-1 text-xs w-16 text-center font-black bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none text-blue-700"
+                              />
+                              <span className="text-[11px] text-blue-800 font-bold w-24 text-right">
+                                Ada: <b className="text-blue-600">{metrics.countFacebook}</b> post
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* RINGKASAN TOTAL TARGET PLATFORM */}
+                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                          <span className="font-bold text-slate-700">Total Alokasi Antar Medsos:</span>
+                          <span className="font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-lg">
+                            {calculatedPlatformSum} Konten / Minggu
+                          </span>
+                        </div>
                       </div>
 
                     </div>
 
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between">
+                    {/* ALAT BANTU GESER JADWAL TERTUNDA & STATUS DATABASE */}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center">✓</div>
                         <div>
-                          <h4 className="font-extrabold text-xs text-slate-900">Database Firestore Cloud Aktif & Siap Kerja</h4>
-                          <p className="text-[11px] text-slate-500">Data tersimpan aman di cloud Firebase tanpa masa kedaluwarsa.</p>
+                          <h4 className="font-extrabold text-xs text-slate-900">Database Cloud Firestore Terhubung & Siap Kerja</h4>
+                          <p className="text-[11px] text-slate-500">Jadwal konten dan bank ide tersinkronisasi otomatis secara realtime.</p>
                         </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">⚡ Geser Jadwal Tertunda:</span>
+                        <button
+                          onClick={() => handleShiftPendingDays(1)}
+                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition"
+                        >
+                          +1 Hari
+                        </button>
+                        <button
+                          onClick={() => handleShiftPendingDays(7)}
+                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition"
+                        >
+                          +7 Hari
+                        </button>
                       </div>
                     </div>
 
@@ -1416,7 +1499,7 @@
 
           </div>
 
-          {/* MODAL FORM KONTEN (DIGITAL 24 JAM TANPA AM/PM) */}
+          {/* MODAL FORM KONTEN (DIGITAL 24 JAM TANPA AM/PM & PILIHAN MEDSOS RESMI) */}
           {showContentModal && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
               <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl my-8 border border-slate-100">
@@ -1446,11 +1529,11 @@
                       <select
                         value={formData.platform}
                         onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-medium"
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-bold"
                       >
-                        <option value="Instagram">Instagram</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="Facebook">Facebook</option>
+                        <option value="Instagram">Instagram (Reels, Story, Feed)</option>
+                        <option value="TikTok">TikTok (Short Video)</option>
+                        <option value="Facebook">Facebook (Post, Video)</option>
                       </select>
                     </div>
                     <div>
@@ -1488,7 +1571,7 @@
                     </div>
                   </div>
 
-                  {/* JADWAL TANGGAL & DIGITAL CLOCK 24 JAM */}
+                  {/* JADWAL TANGGAL & DIGITAL CLOCK 24 JAM TANPA AM/PM */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">Jadwal Tanggal</label>
