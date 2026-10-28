@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocialFlow Planner & Analytics Dashboard (V2.4.6)</title>
+  <title>Boby Anggara Dashboard - SocialFlow Planner (V2.4.7 PRO)</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -88,7 +88,6 @@
       'Live Streaming': 'bg-red-100 text-red-700 border-red-300 font-bold'
     };
 
-    // Daftar Angka Jam 00 - 23 & Menit 00 - 59 untuk Selector Digital Murni
     const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
     const MINUTES_60 = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
@@ -98,7 +97,7 @@
       const [calendarViewMode, setCalendarViewMode] = useState('spreadsheet');
       const [toast, setToast] = useState(null);
 
-      // --- JAM REALTIME DIGITAL 24 JAM (WIB) ---
+      // --- JAM DIGITAL 24 JAM (WIB) ---
       const [currentTime, setCurrentTime] = useState(new Date());
       const [useManualDate, setUseManualDate] = useState(false);
       const [manualDate, setManualDate] = useState(new Date().toISOString().split('T')[0]);
@@ -110,7 +109,6 @@
         }
       }, [useManualDate]);
 
-      // Helper waktu 24 jam manual tanpa dependensi bawaan OS
       const formattedClock = useMemo(() => {
         const h = String(currentTime.getHours()).padStart(2, '0');
         const m = String(currentTime.getMinutes()).padStart(2, '0');
@@ -154,7 +152,7 @@
         localStorage.setItem('sf_target_story', targetStory);
       }, [weeklyTarget, monthlyCampaign, monthlyGoalPosts, targetReels, targetGrafis, targetFoto, targetStory]);
 
-      // --- STATE DATA KONTEN & IDE (MURNI DATA KERJA) ---
+      // --- DATA KONTEN & IDE ---
       const [contents, setContents] = useState(() => {
         const saved = localStorage.getItem('sf_contents');
         return saved ? JSON.parse(saved) : [];
@@ -165,17 +163,15 @@
         return saved ? JSON.parse(saved) : [];
       });
 
-      // Filter & Pencarian
       const [searchQuery, setSearchQuery] = useState('');
       const [filterPlatform, setFilterPlatform] = useState('ALL');
       const [filterStatus, setFilterStatus] = useState('ALL');
       const [filterFormat, setFilterFormat] = useState('ALL');
 
-      // Modals & Form
       const [showContentModal, setShowContentModal] = useState(false);
       const [editingContent, setEditingContent] = useState(null);
 
-      // State Jam & Menit Terpisah (Mencegah AM/PM)
+      // State Selector Jam Digital
       const [schedHour, setSchedHour] = useState('18');
       const [schedMinute, setSchedMinute] = useState('00');
 
@@ -195,7 +191,6 @@
         setTimeout(() => setToast(null), 3000);
       };
 
-      // Sinkronisasi LocalStorage & Firebase
       useEffect(() => {
         localStorage.setItem('sf_contents', JSON.stringify(contents));
       }, [contents]);
@@ -215,7 +210,6 @@
         return () => unsubscribe();
       }, []);
 
-      // Buka Modal Form Konten dengan parsing jam 24 jam
       const openContentModal = (contentToEdit = null) => {
         if (contentToEdit) {
           setEditingContent(contentToEdit);
@@ -242,12 +236,10 @@
         setShowContentModal(true);
       };
 
-      // CRUD HANDLER
       const handleSaveContent = async (e) => {
         e.preventDefault();
         if (!formData.title.trim()) return;
 
-        // Merangkai jam 24 jam digital murni (HH:mm)
         const final24HourTime = `${schedHour.padStart(2, '0')}:${schedMinute.padStart(2, '0')}`;
 
         const payload = {
@@ -315,7 +307,6 @@
         showToastMessage(`Seluruh jadwal belum tayang digeser +${days} hari!`);
       };
 
-      // IDE HANDLERS
       const handleSaveIdea = (e) => {
         e.preventDefault();
         if (!ideaForm.title.trim()) return;
@@ -350,7 +341,6 @@
         showToastMessage("Ide dihapus.");
       };
 
-      // METRIK SUMMARY
       const metrics = useMemo(() => {
         const total = contents.length;
         const published = contents.filter(c => c.status === 'Published').length;
@@ -398,7 +388,7 @@
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `SocialFlow_Master_${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute("download", `BobyAnggara_Dashboard_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -414,7 +404,7 @@
               : 'min-h-screen lg:flex-row flex'
           }`}>
 
-            {/* SIDEBAR (Desktop Web Mode) */}
+            {/* SIDEBAR */}
             {deviceMode === 'web' && (
               <aside className="w-64 bg-slate-900 text-slate-100 flex-shrink-0 flex flex-col justify-between p-5 border-r border-slate-800">
                 <div>
@@ -425,8 +415,8 @@
                     <div>
                       <h1 className="font-extrabold text-base tracking-tight leading-none text-white">SocialFlow</h1>
                       <div className="flex items-center gap-1.5 mt-1.5">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          V2.4.6 (24H Digital)
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/30 to-amber-500/30 text-amber-300 border border-amber-500/40 tracking-wider">
+                          V2.4.7 PRO
                         </span>
                       </div>
                     </div>
@@ -458,7 +448,6 @@
                   </nav>
                 </div>
 
-                {/* JAM REALTIME DIGITAL 24 JAM */}
                 <div className="pt-4 border-t border-slate-800/80 text-xs text-slate-400 space-y-2.5">
                   <div className="bg-slate-800/70 p-3 rounded-xl border border-slate-700/60">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
@@ -489,9 +478,20 @@
                     <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center">S</span>
                   )}
                   <div>
-                    <h2 className="font-extrabold text-slate-900 text-lg leading-tight capitalize">
-                      {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab === 'calendar' ? 'Kalender & Spreadsheet' : currentTab === 'settings' ? 'Pusat Plan & Target Ritme' : currentTab}
-                    </h2>
+                    {currentTab === 'dashboard' ? (
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-black text-slate-900 text-lg leading-tight tracking-tight">
+                          Boby Anggara Dashboard
+                        </h2>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
+                          Creator PRO
+                        </span>
+                      </div>
+                    ) : (
+                      <h2 className="font-extrabold text-slate-900 text-lg leading-tight capitalize">
+                        {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab === 'calendar' ? 'Kalender & Spreadsheet' : currentTab === 'settings' ? 'Pusat Plan & Target Ritme' : currentTab}
+                      </h2>
+                    )}
                     <p className="text-xs text-slate-500 hidden sm:block">Perencanaan & Analisis Konten Multi-Platform</p>
                   </div>
                 </div>
@@ -747,7 +747,7 @@
                   </div>
                 )}
 
-                {/* TAB 3: KALENDER KONTEN (FORMAT WAKTU 24 JAM & MATRIX SPREADSHEET) */}
+                {/* TAB 3: KALENDER KONTEN */}
                 {currentTab === 'calendar' && (
                   <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
@@ -1392,7 +1392,7 @@
               </div>
             </main>
 
-            {/* BOTTOM NAV BAR (Mode HP) */}
+            {/* BOTTOM NAV BAR */}
             <div className={`lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 flex justify-around items-center z-40 ${deviceMode === 'hp' ? 'absolute rounded-b-[32px]' : ''}`}>
               {[
                 { id: 'dashboard', label: 'Home', icon: '📊' },
@@ -1416,7 +1416,7 @@
 
           </div>
 
-          {/* MODAL FORM KONTEN (DENGAN DUAL SELECTOR JAM DIGITAL 24 JAM TANPA AM/PM & PRESET TIME) */}
+          {/* MODAL FORM KONTEN (DIGITAL 24 JAM TANPA AM/PM) */}
           {showContentModal && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
               <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl my-8 border border-slate-100">
@@ -1488,7 +1488,7 @@
                     </div>
                   </div>
 
-                  {/* JADWAL TANGGAL & DIGITAL CLOCK 24 JAM MURNI TANPA AM/PM */}
+                  {/* JADWAL TANGGAL & DIGITAL CLOCK 24 JAM */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">Jadwal Tanggal</label>
@@ -1500,7 +1500,6 @@
                       />
                     </div>
 
-                    {/* SELECTOR DIGITAL 24 JAM (00:00 - 23:59) */}
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <label className="block font-bold text-slate-700">Jam Posting (24 Jam WIB)</label>
@@ -1510,7 +1509,6 @@
                       </div>
                       
                       <div className="flex items-center gap-1.5">
-                        {/* Dropdown Jam 00 - 23 */}
                         <div className="flex-1 relative">
                           <select
                             value={schedHour}
@@ -1526,7 +1524,6 @@
 
                         <span className="font-black text-slate-400">:</span>
 
-                        {/* Dropdown Menit 00 - 59 */}
                         <div className="flex-1 relative">
                           <select
                             value={schedMinute}
@@ -1541,7 +1538,6 @@
                         </div>
                       </div>
 
-                      {/* Tombol Preset Waktu Posting Favorit */}
                       <div className="flex gap-1.5 mt-1.5">
                         <button
                           type="button"
