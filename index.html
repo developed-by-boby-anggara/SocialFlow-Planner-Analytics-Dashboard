@@ -815,43 +815,51 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
         );
       };
 
-      const renderPlatformBarChart = () => {
-        const maxViews = Math.max(metrics.viewsTikTok, metrics.viewsInstagram, metrics.viewsFacebook, 100);
-        const pTT = Math.round((metrics.viewsTikTok / maxViews) * 100);
-        const pIG = Math.round((metrics.viewsInstagram / maxViews) * 100);
-        const pFB = Math.round((metrics.viewsFacebook / maxViews) * 100);
+    const renderPlatformBarChart = () => {
+        // Daftar platform lengkap beserta warna dan kuncinya
+        const platformConfigs = [
+          { key: 'tiktok', name: 'TikTok', color: 'bg-black', dot: 'bg-black', views: metrics.viewsTikTok, posts: metrics.ttTotal },
+          { key: 'instagram', name: 'Instagram', color: 'bg-gradient-to-r from-purple-500 to-pink-500', dot: 'bg-pink-500', views: metrics.viewsInstagram, posts: metrics.igTotal },
+          { key: 'facebook', name: 'Facebook', color: 'bg-blue-600', dot: 'bg-blue-600', views: metrics.viewsFacebook, posts: metrics.fbTotal },
+          { key: 'youtube', name: 'YouTube', color: 'bg-red-600', dot: 'bg-red-600', views: contents.filter(c => c.platform === 'YouTube').reduce((acc, c) => acc + (Number(c.views) || 0), 0), posts: contents.filter(c => c.platform === 'YouTube').length },
+          { key: 'shopee', name: 'Shopee', color: 'bg-orange-500', dot: 'bg-orange-500', views: contents.filter(c => c.platform === 'Shopee').reduce((acc, c) => acc + (Number(c.views) || 0), 0), posts: contents.filter(c => c.platform === 'Shopee').length }
+        ];
+
+        // Filter hanya platform yang dicentang aktif di project saat ini
+        const activePlatforms = platformConfigs.filter(p => Boolean(projectAccounts[p.key]));
+
+        if (activePlatforms.length === 0) {
+          return (
+            <p className="text-xs text-slate-400 text-center py-6">
+              Belum ada platform yang diaktifkan untuk project ini.
+            </p>
+          );
+        }
+
+        const maxViews = Math.max(...activePlatforms.map(p => p.views), 100);
 
         return (
           <div className="space-y-4 pt-2">
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-black inline-block"></span> TikTok</span>
-                <span>{metrics.viewsTikTok.toLocaleString('id-ID')} views ({metrics.ttTotal} post)</span>
-              </div>
-              <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                <div className="bg-black h-full rounded-full transition-all duration-500" style={{ width: `${pTT}%` }}></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-pink-500 inline-block"></span> Instagram</span>
-                <span>{metrics.viewsInstagram.toLocaleString('id-ID')} views ({metrics.igTotal} post)</span>
-              </div>
-              <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500" style={{ width: `${pIG}%` }}></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span> Facebook</span>
-                <span>{metrics.viewsFacebook.toLocaleString('id-ID')} views ({metrics.fbTotal} post)</span>
-              </div>
-              <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                <div className="bg-blue-600 h-full rounded-full transition-all duration-500" style={{ width: `${pFB}%` }}></div>
-              </div>
-            </div>
+            {activePlatforms.map(plat => {
+              const pct = Math.round((plat.views / maxViews) * 100);
+              return (
+                <div key={plat.key}>
+                  <div className="flex justify-between text-xs font-bold mb-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className={`w-2.5 h-2.5 rounded-full inline-block ${plat.dot}`}></span>
+                      {plat.name}
+                    </span>
+                    <span>{plat.views.toLocaleString('id-ID')} views ({plat.posts} post)</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${plat.color}`}
+                      style={{ width: `${pct}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       };
@@ -1050,29 +1058,30 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                       {currentTab === 'dashboard' && (
                         <div className="space-y-6">
 
-                          {/* CONTAINER AKUN MEDSOS AGENCY (FULL WIDTH) */}
-                          <div className="w-full bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-                            <div className="flex justify-between items-center mb-3">
-                              <div className="flex items-center gap-2">
-                                <span className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
-                                  Akun Media Sosial Terhubung
-                                </span>
-                                <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">
-                                  {projectsList.find(p => p.id === activeProjectId)?.name || activeProjectId}
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setShowAccountModal(true)}
-                                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1"
-                              >
-                                ✏️ Edit Username
-                              </button>
+                          {/* CONTAINER AKUN MEDSOS AGENCY (HANYA MUNCUL JIKA AKTIF) */}
+                      {(projectAccounts.instagram || projectAccounts.tiktok || projectAccounts.facebook || projectAccounts.youtube || projectAccounts.shopee) && (
+                        <div className="w-full bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs mb-5">
+                          <div className="flex justify-between items-center mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
+                                Akun Media Sosial Terhubung
+                              </span>
+                              <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">
+                                {projectsList.find(p => p.id === activeProjectId)?.name || activeProjectId}
+                              </span>
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowAccountModal(true)}
+                              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1"
+                            >
+                              ⚙️ Pilih Platform Lain
+                            </button>
+                          </div>
 
-                            {/* 5 Kolom Medsos Berjejer Proporsional */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                              {/* INSTAGRAM */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                            {/* INSTAGRAM */}
+                            {Boolean(projectAccounts.instagram) && (
                               <div className="bg-pink-50/40 p-3 rounded-xl border border-pink-200 flex flex-col justify-between">
                                 <div>
                                   <div className="flex justify-between items-center mb-1">
@@ -1080,7 +1089,7 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                     <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Instagram').length} Post</span>
                                   </div>
                                   <p className="font-mono text-xs font-bold text-pink-700 truncate" title={projectAccounts.instagram}>
-                                    {projectAccounts.instagram || '@belum_diatur'}
+                                    {projectAccounts.instagram}
                                   </p>
                                 </div>
                                 <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-pink-100 flex justify-between">
@@ -1088,8 +1097,10 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                   <span>Story: <b>{contents.filter(c => c.platform === 'Instagram' && c.format === 'Story').length}</b></span>
                                 </div>
                               </div>
+                            )}
 
-                              {/* TIKTOK */}
+                            {/* TIKTOK */}
+                            {Boolean(projectAccounts.tiktok) && (
                               <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between">
                                 <div>
                                   <div className="flex justify-between items-center mb-1">
@@ -1097,7 +1108,7 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                     <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'TikTok').length} Post</span>
                                   </div>
                                   <p className="font-mono text-xs font-bold text-slate-800 truncate" title={projectAccounts.tiktok}>
-                                    {projectAccounts.tiktok || '@belum_diatur'}
+                                    {projectAccounts.tiktok}
                                   </p>
                                 </div>
                                 <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-slate-200 flex justify-between">
@@ -1105,8 +1116,10 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                   <span>Story: <b>{contents.filter(c => c.platform === 'TikTok' && c.format === 'Story').length}</b></span>
                                 </div>
                               </div>
+                            )}
 
-                              {/* FACEBOOK */}
+                            {/* FACEBOOK */}
+                            {Boolean(projectAccounts.facebook) && (
                               <div className="bg-blue-50/40 p-3 rounded-xl border border-blue-200 flex flex-col justify-between">
                                 <div>
                                   <div className="flex justify-between items-center mb-1">
@@ -1114,7 +1127,7 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                     <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Facebook').length} Post</span>
                                   </div>
                                   <p className="font-mono text-xs font-bold text-blue-700 truncate" title={projectAccounts.facebook}>
-                                    {projectAccounts.facebook || 'Belum diatur'}
+                                    {projectAccounts.facebook}
                                   </p>
                                 </div>
                                 <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-blue-100 flex justify-between">
@@ -1122,8 +1135,10 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                   <span>Video: <b>{contents.filter(c => c.platform === 'Facebook' && (c.format === 'Facebook Video' || c.format === 'Video Reels')).length}</b></span>
                                 </div>
                               </div>
+                            )}
 
-                              {/* YOUTUBE */}
+                            {/* YOUTUBE */}
+                            {Boolean(projectAccounts.youtube) && (
                               <div className="bg-red-50/40 p-3 rounded-xl border border-red-200 flex flex-col justify-between">
                                 <div>
                                   <div className="flex justify-between items-center mb-1">
@@ -1131,7 +1146,7 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                     <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'YouTube').length} Post</span>
                                   </div>
                                   <p className="font-mono text-xs font-bold text-red-700 truncate" title={projectAccounts.youtube}>
-                                    {projectAccounts.youtube || 'Belum diatur'}
+                                    {projectAccounts.youtube}
                                   </p>
                                 </div>
                                 <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-red-100 flex justify-between">
@@ -1139,8 +1154,10 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                   <span>Shorts: <b>{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Shorts').length}</b></span>
                                 </div>
                               </div>
+                            )}
 
-                              {/* SHOPEE */}
+                            {/* SHOPEE */}
+                            {Boolean(projectAccounts.shopee) && (
                               <div className="bg-orange-50/40 p-3 rounded-xl border border-orange-200 flex flex-col justify-between">
                                 <div>
                                   <div className="flex justify-between items-center mb-1">
@@ -1148,7 +1165,7 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                     <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Shopee').length} Post</span>
                                   </div>
                                   <p className="font-mono text-xs font-bold text-orange-700 truncate" title={projectAccounts.shopee}>
-                                    {projectAccounts.shopee || 'Belum diatur'}
+                                    {projectAccounts.shopee}
                                   </p>
                                 </div>
                                 <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-orange-100 flex justify-between">
@@ -1156,9 +1173,11 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                                   <span>Live: <b>{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Live Feed').length}</b></span>
                                 </div>
                               </div>
-                            </div>
+                            )}
                           </div>
-
+                        </div>
+                      )}
+                          
                     {/* 8 KARTU KPI UTAMA */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
