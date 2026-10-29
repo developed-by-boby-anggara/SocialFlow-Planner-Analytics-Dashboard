@@ -217,7 +217,11 @@
         const saved = localStorage.getItem('sf_contents');
         return saved ? JSON.parse(saved) : [];
       });
-
+const [activeProjectId, setActiveProjectId] = useState(() => {
+    return (window.SocialFlow && window.SocialFlow.Core) 
+      ? (window.SocialFlow.Core.context.get().projectId || 'default-project') 
+      : 'default-project';
+  });
       const [ideas, setIdeas] = useState(() => {
         const saved = localStorage.getItem('sf_ideas');
         return saved ? JSON.parse(saved) : [];
@@ -259,6 +263,16 @@
       }, [ideas]);
 
       useEffect(() => {
+    const handleProjectSwitch = (payload) => {
+      if (payload && payload.projectId) {
+        setActiveProjectId(payload.projectId);
+      }
+    };
+
+    if (window.SocialFlow && window.SocialFlow.Core) {
+      window.SocialFlow.Core.events.on('project:changed', handleProjectSwitch);
+    }
+
         if (!firestoreDb) return;
         const unsubscribe = firestoreDb.collection("contents").onSnapshot((snapshot) => {
           if (!snapshot.empty) {
