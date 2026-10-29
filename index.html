@@ -912,72 +912,74 @@
 
             {/* MAIN AREA */}
             <main className="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar pb-20 lg:pb-6">
-           {/* TOP HEADER */}
-              <header className="bg-white/80 backdrop-blur sticky top-0 z-30 px-5 py-3.5 border-b border-slate-200/80 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  {deviceMode === 'hp' && (
-                    <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center">S</span>
-                  )}
-                  <div>
-                    {currentTab === 'dashboard' ? (
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-black text-slate-900 text-lg leading-tight tracking-tight">
-                          Boby Anggara Dashboard
-                        </h2>
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
-                          Creator PRO
-                        </span>
+        {/* HEADER UTAMA */}
+                    <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3.5 sticky top-0 z-30 shadow-xs">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        
+                        {/* SISI KIRI: JUDUL & PROJECT SWITCHER */}
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight">
+                            Boby Anggara Dashboard
+                          </h2>
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
+                            Creator PRO
+                          </span>
 
-                       {/* DROPDOWN PROJECT SWITCHER V3 */}
-                        <div className="inline-flex items-center gap-1.5 ml-2">
-                          <select
-                            value={activeProjectId}
-                            onChange={(e) => {
-                              if (e.target.value === '__NEW__') {
-                                setShowNewProjectModal(true);
-                              } else {
-                                const newId = e.target.value;
-                                setActiveProjectId(newId);
-                                localStorage.setItem('sf_active_project_id', newId);
-                              }
-                            }}
-                            className="bg-slate-900 text-white border border-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-xl shadow-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
-                          >
-                            <optgroup label="Daftar Agency / Client">
-                              {projectsList.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                  🏢 {p.name} ({p.type})
-                                </option>
-                              ))}
-                            </optgroup>
-                            <option value="__NEW__" className="text-indigo-400 font-bold bg-slate-950">
-                              ➕ + Tambah Agency / Client Baru...
-                            </option>
-                          </select>
+                          {/* DROPDOWN PROJECT SWITCHER DINAMIS */}
+                          <div className="inline-flex items-center gap-1.5 ml-2">
+                            <select
+                              value={activeProjectId}
+                              onChange={(e) => {
+                                if (e.target.value === '__NEW__') {
+                                  setShowNewProjectModal(true);
+                                } else {
+                                  const newId = e.target.value;
+                                  setActiveProjectId(newId);
+                                  localStorage.setItem('sf_active_project_id', newId);
+                                }
+                              }}
+                              className="bg-slate-900 text-white border border-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-xl shadow-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
+                            >
+                              <optgroup label="Daftar Agency / Client">
+                                {projectsList.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    🏢 {p.name} ({p.type})
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <option value="__NEW__" className="text-indigo-400 font-bold bg-slate-950">
+                                ➕ + Tambah Agency / Client Baru...
+                              </option>
+                            </select>
 
-                         <button
-                            type="button"
-                            onClick={() => setShowAccountModal(true)}
-                            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-2.5 py-1.5 rounded-xl transition flex items-center gap-1"
-                            title="Atur Akun Medsos untuk Agency ini"
-                          >
-                            ⚙️ Kelola Akun
-                          </button>
-
-                          {activeProjectId !== 'default-project' && (
                             <button
                               type="button"
-                              onClick={() => {
-                                const currentProj = projectsList.find(p => p.id === activeProjectId);
-                                handleDeleteProject(activeProjectId, currentProj ? currentProj.name : activeProjectId);
-                              }}
-                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold px-2 py-1.5 rounded-xl transition"
-                              title="Hapus Agency yang sedang aktif ini"
+                              onClick={() => setShowAccountModal(true)}
+                              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-2.5 py-1.5 rounded-xl transition flex items-center gap-1"
+                              title="Atur Akun Medsos untuk Agency ini"
                             >
-                             🗑️ Hapus
-                     </button>
-                   )}
-       {/* SELECTOR VIEW HP / WEB */}
+                              ⚙️ Kelola Akun
+                            </button>
+
+                            {activeProjectId !== 'default-project' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentProj = projectsList.find(p => p.id === activeProjectId);
+                                  handleDeleteProject(activeProjectId, currentProj ? currentProj.name : activeProjectId);
+                                }}
+                                className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold px-2 py-1.5 rounded-xl transition"
+                                title="Hapus Agency yang sedang aktif ini"
+                              >
+                                🗑️ Hapus
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* SISI KANAN: VIEW SELECTOR HP/WEB & TOMBOL RENCANA KONTEN */}
+                        <div className="flex items-center gap-2.5">
+                          {/* SELECTOR VIEW HP / WEB */}
                           <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
                             <button
                               type="button"
@@ -1003,136 +1005,140 @@
                             </button>
                           </div>
 
-                  <button
-                    onClick={() => openContentModal(null)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-md shadow-indigo-500/20 transition flex items-center gap-1.5"
-                  >
-                    <span>+</span> Rencana Konten
-                    </button>
-                        </div>
-                      </header>
-
-              {toast && (
-                <div className="fixed top-16 right-6 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700">
-                  <span className="text-emerald-400">✓</span> {toast}
-                </div>
-              )}
-
-              <div className="p-4 sm:p-6 space-y-6">
-
-                {/* TAB 1: DASHBOARD */}
-                {currentTab === 'dashboard' && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      
-{/* CONTAINER AKUN MEDSOS AGENCY (FULL WIDTH) */}
-                      <div className="w-full bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs mb-5">
-                        <div className="flex justify-between items-center mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
-                              Akun Media Sosial Terhubung
-                            </span>
-                            <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">
-                              {projectsList.find(p => p.id === activeProjectId)?.name || activeProjectId}
-                            </span>
-                          </div>
                           <button
                             type="button"
-                            onClick={() => setShowAccountModal(true)}
-                            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1"
+                            onClick={() => openContentModal(null)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-md shadow-indigo-500/20 transition flex items-center gap-1.5"
                           >
-                            ✏️ Edit Username
+                            <span>+</span> Rencana Konten
                           </button>
                         </div>
 
-                        {/* 5 Kolom Medsos Berjejer Lebar & Rapi */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                          {/* INSTAGRAM */}
-                          <div className="bg-pink-50/40 p-3 rounded-xl border border-pink-200 flex flex-col justify-between">
-                            <div>
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-[11px] font-black text-pink-700 flex items-center gap-1">📷 Instagram</span>
-                                <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Instagram').length} Post</span>
-                              </div>
-                              <p className="font-mono text-xs font-bold text-pink-700 truncate" title={projectAccounts.instagram}>
-                                {projectAccounts.instagram || '@belum_diatur'}
-                              </p>
-                            </div>
-                            <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-pink-100 flex justify-between">
-                              <span>Reels: <b>{contents.filter(c => c.platform === 'Instagram' && c.format === 'Video Reels').length}</b></span>
-                              <span>Story: <b>{contents.filter(c => c.platform === 'Instagram' && c.format === 'Story').length}</b></span>
-                            </div>
-                          </div>
-
-                          {/* TIKTOK */}
-                          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between">
-                            <div>
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-[11px] font-black text-slate-900 flex items-center gap-1">🎵 TikTok</span>
-                                <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'TikTok').length} Post</span>
-                              </div>
-                              <p className="font-mono text-xs font-bold text-slate-800 truncate" title={projectAccounts.tiktok}>
-                                {projectAccounts.tiktok || '@belum_diatur'}
-                              </p>
-                            </div>
-                            <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-slate-200 flex justify-between">
-                              <span>Video: <b>{contents.filter(c => c.platform === 'TikTok' && (c.format === 'TikTok Video' || c.format === 'Video Reels')).length}</b></span>
-                              <span>Story: <b>{contents.filter(c => c.platform === 'TikTok' && c.format === 'Story').length}</b></span>
-                            </div>
-                          </div>
-
-                          {/* FACEBOOK */}
-                          <div className="bg-blue-50/40 p-3 rounded-xl border border-blue-200 flex flex-col justify-between">
-                            <div>
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-[11px] font-black text-blue-700 flex items-center gap-1">👥 Facebook</span>
-                                <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Facebook').length} Post</span>
-                              </div>
-                              <p className="font-mono text-xs font-bold text-blue-700 truncate" title={projectAccounts.facebook}>
-                                {projectAccounts.facebook || 'Belum diatur'}
-                              </p>
-                            </div>
-                            <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-blue-100 flex justify-between">
-                              <span>Foto: <b>{contents.filter(c => c.platform === 'Facebook' && c.format === 'Postingan Foto').length}</b></span>
-                              <span>Video: <b>{contents.filter(c => c.platform === 'Facebook' && (c.format === 'Facebook Video' || c.format === 'Video Reels')).length}</b></span>
-                            </div>
-                          </div>
-
-                          {/* YOUTUBE */}
-                          <div className="bg-red-50/40 p-3 rounded-xl border border-red-200 flex flex-col justify-between">
-                            <div>
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-[11px] font-black text-red-700 flex items-center gap-1">▶️ YouTube</span>
-                                <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'YouTube').length} Post</span>
-                              </div>
-                              <p className="font-mono text-xs font-bold text-red-700 truncate" title={projectAccounts.youtube}>
-                                {projectAccounts.youtube || 'Belum diatur'}
-                              </p>
-                            </div>
-                            <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-red-100 flex justify-between">
-                              <span>Long: <b>{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Long Video').length}</b></span>
-                              <span>Shorts: <b>{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Shorts').length}</b></span>
-                            </div>
-                          </div>
-
-                          {/* SHOPEE */}
-                          <div className="bg-orange-50/40 p-3 rounded-xl border border-orange-200 flex flex-col justify-between">
-                            <div>
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-[11px] font-black text-orange-700 flex items-center gap-1">🛍️ Shopee</span>
-                                <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Shopee').length} Post</span>
-                              </div>
-                              <p className="font-mono text-xs font-bold text-orange-700 truncate" title={projectAccounts.shopee}>
-                                {projectAccounts.shopee || 'Belum diatur'}
-                              </p>
-                            </div>
-                            <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-orange-100 flex justify-between">
-                              <span>Video: <b>{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Video').length}</b></span>
-                              <span>Live: <b>{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Live Feed').length}</b></span>
-                            </div>
-                          </div>
-                        </div>
                       </div>
+                    </header>
+
+                    {/* TOAST NOTIFIKASI */}
+                    {toast && (
+                      <div className="fixed top-16 right-6 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700">
+                        <span className="text-emerald-400">✓</span> {toast}
+                      </div>
+                    )}
+
+                    {/* KONTEN UTAMA */}
+                    <div className="p-4 sm:p-6 space-y-6">
+
+                      {/* TAB 1: DASHBOARD */}
+                      {currentTab === 'dashboard' && (
+                        <div className="space-y-6">
+
+                          {/* CONTAINER AKUN MEDSOS AGENCY (FULL WIDTH) */}
+                          <div className="w-full bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div className="flex justify-between items-center mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
+                                  Akun Media Sosial Terhubung
+                                </span>
+                                <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">
+                                  {projectsList.find(p => p.id === activeProjectId)?.name || activeProjectId}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowAccountModal(true)}
+                                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1"
+                              >
+                                ✏️ Edit Username
+                              </button>
+                            </div>
+
+                            {/* 5 Kolom Medsos Berjejer Proporsional */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                              {/* INSTAGRAM */}
+                              <div className="bg-pink-50/40 p-3 rounded-xl border border-pink-200 flex flex-col justify-between">
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[11px] font-black text-pink-700 flex items-center gap-1">📷 Instagram</span>
+                                    <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Instagram').length} Post</span>
+                                  </div>
+                                  <p className="font-mono text-xs font-bold text-pink-700 truncate" title={projectAccounts.instagram}>
+                                    {projectAccounts.instagram || '@belum_diatur'}
+                                  </p>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-pink-100 flex justify-between">
+                                  <span>Reels: <b>{contents.filter(c => c.platform === 'Instagram' && c.format === 'Video Reels').length}</b></span>
+                                  <span>Story: <b>{contents.filter(c => c.platform === 'Instagram' && c.format === 'Story').length}</b></span>
+                                </div>
+                              </div>
+
+                              {/* TIKTOK */}
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between">
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[11px] font-black text-slate-900 flex items-center gap-1">🎵 TikTok</span>
+                                    <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'TikTok').length} Post</span>
+                                  </div>
+                                  <p className="font-mono text-xs font-bold text-slate-800 truncate" title={projectAccounts.tiktok}>
+                                    {projectAccounts.tiktok || '@belum_diatur'}
+                                  </p>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-slate-200 flex justify-between">
+                                  <span>Video: <b>{contents.filter(c => c.platform === 'TikTok' && (c.format === 'TikTok Video' || c.format === 'Video Reels')).length}</b></span>
+                                  <span>Story: <b>{contents.filter(c => c.platform === 'TikTok' && c.format === 'Story').length}</b></span>
+                                </div>
+                              </div>
+
+                              {/* FACEBOOK */}
+                              <div className="bg-blue-50/40 p-3 rounded-xl border border-blue-200 flex flex-col justify-between">
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[11px] font-black text-blue-700 flex items-center gap-1">👥 Facebook</span>
+                                    <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Facebook').length} Post</span>
+                                  </div>
+                                  <p className="font-mono text-xs font-bold text-blue-700 truncate" title={projectAccounts.facebook}>
+                                    {projectAccounts.facebook || 'Belum diatur'}
+                                  </p>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-blue-100 flex justify-between">
+                                  <span>Foto: <b>{contents.filter(c => c.platform === 'Facebook' && c.format === 'Postingan Foto').length}</b></span>
+                                  <span>Video: <b>{contents.filter(c => c.platform === 'Facebook' && (c.format === 'Facebook Video' || c.format === 'Video Reels')).length}</b></span>
+                                </div>
+                              </div>
+
+                              {/* YOUTUBE */}
+                              <div className="bg-red-50/40 p-3 rounded-xl border border-red-200 flex flex-col justify-between">
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[11px] font-black text-red-700 flex items-center gap-1">▶️ YouTube</span>
+                                    <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'YouTube').length} Post</span>
+                                  </div>
+                                  <p className="font-mono text-xs font-bold text-red-700 truncate" title={projectAccounts.youtube}>
+                                    {projectAccounts.youtube || 'Belum diatur'}
+                                  </p>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-red-100 flex justify-between">
+                                  <span>Long: <b>{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Long Video').length}</b></span>
+                                  <span>Shorts: <b>{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Shorts').length}</b></span>
+                                </div>
+                              </div>
+
+                              {/* SHOPEE */}
+                              <div className="bg-orange-50/40 p-3 rounded-xl border border-orange-200 flex flex-col justify-between">
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[11px] font-black text-orange-700 flex items-center gap-1">🛍️ Shopee</span>
+                                    <span className="text-[11px] font-black text-slate-700">{contents.filter(c => c.platform === 'Shopee').length} Post</span>
+                                  </div>
+                                  <p className="font-mono text-xs font-bold text-orange-700 truncate" title={projectAccounts.shopee}>
+                                    {projectAccounts.shopee || 'Belum diatur'}
+                                  </p>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-2 pt-1.5 border-t border-orange-100 flex justify-between">
+                                  <span>Video: <b>{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Video').length}</b></span>
+                                  <span>Live: <b>{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Live Feed').length}</b></span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
 
                     {/* 8 KARTU KPI UTAMA */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
