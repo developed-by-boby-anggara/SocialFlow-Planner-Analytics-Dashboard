@@ -816,14 +816,21 @@
                         <div className="inline-flex items-center ml-2">
                           <select
                             value={activeProjectId}
+                           <select
+                            value={activeProjectId}
                             onChange={(e) => {
                               const newProj = e.target.value;
                               setActiveProjectId(newProj);
                               localStorage.setItem('sf_active_project_id', newProj);
-                              if (window.SocialFlow && window.SocialFlow.Core) {
-                                window.SocialFlow.Core.context.set({ projectId: newProj });
-                                window.SocialFlow.Core.events.emit('project:changed', { projectId: newProj });
+
+                              const sfCore = window.SocialFlow && window.SocialFlow.Core;
+                              if (sfCore && sfCore.context && typeof sfCore.context.set === 'function') {
+                                sfCore.context.set({ projectId: newProj });
                               }
+                              if (sfCore && sfCore.events && typeof sfCore.events.emit === 'function') {
+                                sfCore.events.emit('project:changed', { projectId: newProj });
+                              }
+                              window.dispatchEvent(new CustomEvent('project:changed', { detail: { projectId: newProj } }));
                             }}
                             className="bg-slate-800 text-white border border-slate-700 text-xs font-semibold px-2.5 py-1 rounded-xl shadow-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
                           >
