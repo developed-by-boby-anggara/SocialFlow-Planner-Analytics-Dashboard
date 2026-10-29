@@ -129,15 +129,17 @@
       const [calendarStatusFilter, setCalendarStatusFilter] = useState('ALL');
       const [toast, setToast] = useState(null);
 
-      // State Multi-Project Isolation
+    // State Multi-Project Isolation (Safe Fallback)
       const [activeProjectId, setActiveProjectId] = useState(() => {
         let saved = 'default-project';
         try {
           saved = localStorage.getItem('sf_active_project_id') || 'default-project';
         } catch (e) {}
-        return (window.SocialFlow && window.SocialFlow.Core)
-          ? (window.SocialFlow.Core.context.get().projectId || saved)
-          : saved;
+        const sf = window.SocialFlow;
+        if (sf && sf.Core && sf.Core.context && typeof sf.Core.context.get === 'function') {
+          return sf.Core.context.get().projectId || saved;
+        }
+        return saved;
       });
 
       // Deteksi Layar Otomatis (HP vs Web)
