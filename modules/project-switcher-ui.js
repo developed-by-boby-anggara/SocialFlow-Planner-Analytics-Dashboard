@@ -1,5 +1,5 @@
 /**
- * SocialFlow V3 - Project Switcher UI Module
+ * SocialFlow V3 - Dynamic Project & Agency Switcher Module
  * File: modules/project-switcher-ui.js
  */
 
@@ -9,131 +9,191 @@
   window.SocialFlow = window.SocialFlow || {};
   const SF = window.SocialFlow;
 
-  // Modul SocialFlow V3 didaftarkan sebagai Factory Function yang menerima (core)
   const ProjectSwitcherUIFactory = (core) => {
     return {
+      projects: [],
+
       init: function () {
-        console.log('[SF-INFO][Registry] Modul [project-switcher-ui] berhasil dimuat.');
+        console.log('[SF-INFO][Registry] Modul [project-switcher-ui] dynamic agency aktif.');
+        this.loadProjects();
 
-        let savedProject = 'default-project';
-        try {
-          savedProject = localStorage.getItem('sf_active_project_id') || 'default-project';
-        } catch (e) {
-          console.warn('Gagal membaca localStorage:', e);
-        }
-
+        let activeProj = localStorage.getItem('sf_active_project_id') || 'default-project';
         if (core && core.context && typeof core.context.set === 'function') {
-          core.context.set({ projectId: savedProject });
+          core.context.set({ projectId: activeProj });
         }
 
-        const mount = () => this.mountSwitcher();
+        const mount = () => {
+          this.mountModal();
+          this.syncDropdownOptions();
+        };
+
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', mount);
         } else {
           setTimeout(mount, 300);
         }
 
-        if (core && core.events && typeof core.events.on === 'function') {
-          core.events.on('project:changed', (payload) => {
-            if (payload && payload.projectId) {
-              this.syncSelectUI(payload.projectId);
-            }
-          });
-        }
+        window.addEventListener('project:changed', (e) => {
+          const pid = e.detail?.projectId || e.projectId;
+          if (pid) this.syncSelectValue(pid);
+        });
       },
 
-      mountSwitcher: function () {
-        if (document.getElementById('sf-v3-project-switcher-wrapper')) return;
-
-        const headerTarget = document.querySelector('header .flex.items-center') ||
-                             document.querySelector('header') ||
-                             document.querySelector('nav');
-
-        if (!headerTarget) {
-          setTimeout(() => this.mountSwitcher(), 500);
-          return;
-        }
-
-        let activeProj = 'default-project';
-        if (core && core.context && typeof core.context.get === 'function') {
-          activeProj = core.context.get().projectId || 'default-project';
-        }
-
-        const wrapper = document.createElement('div');
-        wrapper.id = 'sf-v3-project-switcher-wrapper';
-        wrapper.className = 'relative inline-flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1 rounded-lg shadow-sm text-xs text-slate-200 mr-2';
-
-        wrapper.innerHTML = `
-          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Active Project"></span>
-          <span class="hidden sm:inline font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Project:</span>
-          <select id="sf-v3-project-select" class="bg-transparent border-none text-white font-medium text-xs focus:ring-0 focus:outline-none cursor-pointer pr-1">
-            <option value="default-project" class="bg-slate-900 text-white">Default Project</option>
-            <option value="project-alpha" class="bg-slate-900 text-white">Project Alpha</option>
-            <option value="project-beta" class="bg-slate-900 text-white">Project Beta</option>
-          </select>
-        `;
-
-        headerTarget.appendChild(wrapper);
-
-        const selectEl = document.getElementById('sf-v3-project-select');
-        if (selectEl) {
-          selectEl.value = activeProj;
-          selectEl.addEventListener('change', (e) => {
-            this.handleProjectChange(e.target.value);
-          });
-        }
-      },
-
-      handleProjectChange: function (newProjectId) {
-        if (!newProjectId) return;
-        let prev = 'default-project';
-        if (core && core.context && typeof core.context.get === 'function') {
-          prev = core.context.get().projectId || 'default-project';
-        }
-        if (prev === newProjectId) return;
+      loadProjects: function () {
+        const defaultList = [
+          { id: 'default-project', name: 'Main Agency (Default)', type: 'Agency' },
+          { id: 'agency-a', name: 'Agency A (Fashion Brand)', type: 'Agency' },
+          { id: 'klien-b', name: 'Klien B (Personal Creator)', type: 'Personal' }
+        ];
 
         try {
-          localStorage.setItem('sf_active_project_id', newProjectId);
+          const saved = localStorage.getItem('sf_custom_projects');
+          this.projects = saved ? JSON.parse(saved) : defaultList;
         } catch (e) {
-          console.warn('Gagal menyimpan ke localStorage:', e);
-        }
-
-        if (core && core.context && typeof core.context.set === 'function') {
-          core.context.set({ projectId: newProjectId });
-        }
-        if (core && core.events && typeof core.events.emit === 'function') {
-          core.events.emit('project:changed', {
-            projectId: newProjectId,
-            previousProjectId: prev
-          });
+          this.projects = defaultList;
         }
       },
 
-      syncSelectUI: function (projectId) {
-        const selectEl = document.getElementById('sf-v3-project-select');
-        if (selectEl && selectEl.value !== projectId) {
-          let opt = selectEl.querySelector(`option[value="${projectId}"]`);
-          if (!opt) {
-            opt = document.createElement('option');
-            opt.value = projectId;
-            opt.textContent = projectId;
+      saveProjects: function () {
+        localStorage.setItem('sf_custom_projects', JSON.stringify(this.projects));
+        this.syncDropdownOptions();
+      },
+
+      syncDropdownOptions: function () {
+        const selectEls = document.querySelectorAll('select#sf-project-select-dynamic, select[value]');
+        let activeProj = localStorage.getItem('sf_active_project_id') || 'default-project';
+
+        selectEls.forEach((sel) => {
+          // Cari select yang mengelola project
+          if (!sel.innerHTML.includes('Default Project') && sel.id !== 'sf-project-select-dynamic') return;
+
+          sel.id = 'sf-project-select-dynamic';
+          sel.innerHTML = '';
+
+          this.projects.forEach((p) => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `🏢 ${p.name} (${p.type || 'Agency'})`;
             opt.className = 'bg-slate-900 text-white';
-            selectEl.appendChild(opt);
-          }
-          selectEl.value = projectId;
+            sel.appendChild(opt);
+          });
+
+          // Tambah opsi Trigger Modal di baris paling bawah
+          const addOpt = document.createElement('option');
+          addOpt.value = '__CREATE_NEW_AGENCY__';
+          addOpt.textContent = '➕ + Tambah Agency / Project Baru...';
+          addOpt.className = 'bg-indigo-950 text-indigo-300 font-bold';
+          sel.appendChild(addOpt);
+
+          sel.value = activeProj;
+
+          sel.onchange = (e) => {
+            if (e.target.value === '__CREATE_NEW_AGENCY__') {
+              sel.value = activeProj; // kembalikan value agar tidak terpilih
+              this.openModal();
+            } else {
+              activeProj = e.target.value;
+              localStorage.setItem('sf_active_project_id', activeProj);
+
+              if (core && core.context && typeof core.context.set === 'function') {
+                core.context.set({ projectId: activeProj });
+              }
+              if (core && core.events && typeof core.events.emit === 'function') {
+                core.events.emit('project:changed', { projectId: activeProj });
+              }
+              window.dispatchEvent(new CustomEvent('project:changed', { detail: { projectId: activeProj } }));
+            }
+          };
+        });
+      },
+
+      syncSelectValue: function (projectId) {
+        const sel = document.getElementById('sf-project-select-dynamic');
+        if (sel && sel.value !== projectId) {
+          sel.value = projectId;
+        }
+      },
+
+      mountModal: function () {
+        if (document.getElementById('sf-agency-modal-root')) return;
+
+        const modalDiv = document.createElement('div');
+        modalDiv.id = 'sf-agency-modal-root';
+        modalDiv.className = 'fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] hidden items-center justify-center p-4';
+
+        modalDiv.innerHTML = `
+          <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-slate-800">
+            <div class="flex justify-between items-center mb-4">
+              <div>
+                <h3 class="font-extrabold text-base text-slate-900">Tambah Agency / Client Baru</h3>
+                <p class="text-xs text-slate-500">Kelola workspace terpisah untuk setiap klien atau brand.</p>
+              </div>
+              <button id="sf-agency-close-btn" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+            </div>
+            
+            <form id="sf-agency-form" class="space-y-3.5 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nama Agency / Klien</label>
+                <input type="text" id="sf-agency-name-input" required placeholder="Contoh: Agency Wardah, Klien Boby Creator" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Tipe Entitas</label>
+                <select id="sf-agency-type-input" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-semibold focus:outline-none">
+                  <option value="Agency">Agency</option>
+                  <option value="Personal Brand">Personal Brand / Influencer</option>
+                  <option value="Korporat / UMKM">Korporat / Brand UMKM</option>
+                </select>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-3">
+                <button type="button" id="sf-agency-cancel-btn" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-semibold hover:bg-slate-50">Batal</button>
+                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-600/30">Simpan Agency</button>
+              </div>
+            </form>
+          </div>
+        `;
+
+        document.body.appendChild(modalDiv);
+
+        // Event listener close
+        const close = () => modalDiv.classList.replace('flex', 'hidden');
+        document.getElementById('sf-agency-close-btn').onclick = close;
+        document.getElementById('sf-agency-cancel-btn').onclick = close;
+
+        // Submit form
+        document.getElementById('sf-agency-form').onsubmit = (e) => {
+          e.preventDefault();
+          const name = document.getElementById('sf-agency-name-input').value.trim();
+          const type = document.getElementById('sf-agency-type-input').value;
+          if (!name) return;
+
+          const newId = 'proj-' + Date.now();
+          const newProject = { id: newId, name: name, type: type };
+
+          this.projects.push(newProject);
+          this.saveProjects();
+
+          // Otomatis pindah ke agency baru
+          localStorage.setItem('sf_active_project_id', newId);
+          window.dispatchEvent(new CustomEvent('project:changed', { detail: { projectId: newId } }));
+
+          close();
+          document.getElementById('sf-agency-form').reset();
+        };
+      },
+
+      openModal: function () {
+        const modal = document.getElementById('sf-agency-modal-root');
+        if (modal) {
+          modal.classList.replace('hidden', 'flex');
+          document.getElementById('sf-agency-name-input')?.focus();
         }
       }
     };
   };
 
-  // Daftarkan factory function ke Registry
   if (SF.Core && SF.Core.Registry) {
     SF.Core.Registry.register('project-switcher-ui', ProjectSwitcherUIFactory);
-  } else {
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.SocialFlow && window.SocialFlow.Core && window.SocialFlow.Core.Registry) {
-        window.SocialFlow.Core.Registry.register('project-switcher-ui', ProjectSwitcherUIFactory);
-      }
-    });
   }
 })(window);
