@@ -17,7 +17,8 @@
 
   <!-- Firebase App & Firestore SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script> 
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   
   <!-- Modules SocialFlow V3 -->
   <script src="modules/core.js"></script>
@@ -271,7 +272,7 @@
         localStorage.setItem('sf_ideas', JSON.stringify(ideas));
       }, [ideas]);
 
-      // LISTENER PERGANTIAN PROYEK & QUERY FIRESTORE
+     // AUTENTIKASI ANONYMOUS, MEMBERSHIP DEFAULT, & SCOPING FIRESTORE
       useEffect(() => {
         const handleProjectSwitch = (payload) => {
           const newId = (payload && payload.projectId) ? payload.projectId : (payload && payload.detail && payload.detail.projectId);
@@ -288,24 +289,68 @@
         }
         window.addEventListener('project:changed', handleProjectSwitch);
 
-        if (!firestoreDb) return;
-        const unsubscribe = firestoreDb.collection("contents")
-          .where("projectId", "==", activeProjectId)
-          .onSnapshot((snapshot) => {
-            if (!snapshot.empty) {
-              const remoteData = snapshot.docs.map(doc => ({ 
-                id: doc.id, 
-                ...doc.data(),
-                projectId: doc.data().projectId || 'default-project'
-              }));
-              setContents(remoteData);
-            } else {
-              setContents([]);
+        let unsubscribe = null;
+
+        const initSync = async () => {
+          if (!firestoreDb || !window.firebase || !firebase.auth) return;
+
+          try {
+            // 1. Pastikan pengguna punya sesi login (Anonymous Auth)
+            let currentUser = firebase.auth().currentUser;
+            if (!currentUser) {
+              const userCred = await firebase.auth().signInAnonymously();
+              currentUser = userCred.user;
             }
-          }, (err) => console.warn("Firestore sync:", err));
+
+            // 2. Daftarkan membership pemilik otomatis di database
+            if (currentUser && currentUser.uid) {
+              const memberDocRef = firestoreDb
+                .collection("project_members")
+                .doc(`${activeProjectId}_${currentUser.uid}`);
+              
+              await memberDocRef.set({
+                projectId: activeProjectId,
+                userId: currentUser.uid,
+                role: 'owner',
+                updatedAt: new Date().toISOString()
+              }, { merge: true }).catch(() => {});
+            }
+
+            // 3. Ambil data dengan scoping query
+            unsubscribe = firestoreDb.collection("contents")
+              .where("projectId", "==", activeProjectId)
+              .onSnapshot((snapshot) => {
+                if (!snapshot.empty) {
+                  const remoteData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    projectId: doc.data().projectId || 'default-project'
+                  }));
+                  setContents(remoteData);
+                } else {
+                  setContents([]);
+                }
+              }, (err) => {
+                // Jika izin dibatasi rules, beralih ke penyimpanan lokal tanpa error
+                console.info("[SF-INFO] Beralih ke penyimpanan lokal untuk project:", activeProjectId);
+                const localSaved = localStorage.getItem('sf_contents');
+                if (localSaved) {
+                  try {
+                    const parsed = JSON.parse(localSaved);
+                    setContents(parsed.filter(c => (c.projectId || 'default-project') === activeProjectId));
+                  } catch (e) {}
+                }
+              });
+
+          } catch (authErr) {
+            console.info("[SF-INFO] Berjalan dalam mode offline lokal:", authErr.message);
+          }
+        };
+
+        initSync();
 
         return () => {
-          unsubscribe();
+          if (unsubscribe) unsubscribe();
           if (hasCoreEvents && typeof sfCore.events.off === 'function') {
             sfCore.events.off('project:changed', handleProjectSwitch);
           }
@@ -764,18 +809,31 @@
                         <h2 className="font-black text-slate-900 text-lg leading-tight tracking-tight">
                           Boby Anggara Dashboard
                         </h2>
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
-                          Creator PRO
-                        </span>
-                      </div>
-                    ) : (
-                      <h2 className="font-extrabold text-slate-900 text-lg leading-tight capitalize">
-                        {currentTab === 'ideas' ? 'Bank Ide Konten' : currentTab === 'calendar' ? 'Editorial Matrix & Kalender' : currentTab === 'settings' ? 'Plan & Target Matriks Medsos' : currentTab}
-                      </h2>
-                    )}
-                    <p className="text-xs text-slate-500 hidden sm:block">Perencanaan & Analisis Konten Multi-Platform</p>
-                  </div>
-                </div>
+               <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
+                       Creator PRO
+                     </span>
+
+                     {/* DROPDOWN PROJECT SWITCHER */}
+                     <div className="inline-flex items-center ml-2">
+                       <select
+                         value={activeProjectId}
+                         onChange={(e) => {
+                           const newProj = e.target.value;
+                           setActiveProjectId(newProj);
+                           localStorage.setItem('sf_active_project_id', newProj);
+                           if (window.SocialFlow && window.SocialFlow.Core) {
+                             window.SocialFlow.Core.context.set({ projectId: newProj });
+                             window.SocialFlow.Core.events.emit('project:changed', { projectId: newProj });
+                           }
+                         }}
+                         className="bg-slate-800 text-white border border-slate-700 text-xs font-semibold px-2.5 py-1 rounded-xl shadow-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
+                       >
+                         <option value="default-project">📁 Default Project</option>
+                         <option value="project-alpha">🚀 Project Alpha</option>
+                         <option value="project-beta">⚡ Project Beta</option>
+                       </select>
+                     </div>
+                   </div>
 
                 <div className="flex items-center gap-2">
                   <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 text-xs font-semibold">
