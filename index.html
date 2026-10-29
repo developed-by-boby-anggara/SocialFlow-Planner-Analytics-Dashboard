@@ -1288,9 +1288,18 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                   </div>
                 )}
 
-                {/* TAB 2: CONTENT PLANNER */}
+{/* TAB 2: CONTENT PLANNER */}
                 {currentTab === 'planner' && (
-                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2 items-center justify-between bg-white p-3.5 rounded-2xl border border-slate-200">
+                      <input
+                        type="text"
+                        placeholder="Cari judul konten atau caption..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="text-xs border border-slate-200 rounded-xl px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                         <select
                           value={filterPlatform}
                           onChange={(e) => setFilterPlatform(e.target.value)}
@@ -1301,12 +1310,6 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                             <option key={p} value={p}>{p}</option>
                           ))}
                         </select>
-                        <option value="Instagram">Instagram (Reels, Story, Feed)</option>
-                        <option value="TikTok">TikTok (Short Video)</option>
-                        <option value="Facebook">Facebook (Post, Video)</option>
-                        <option value="YouTube">YouTube (Long Video, Shorts)</option>
-                        <option value="Shopee">Shopee (Video, Live Feed)</option>
-                      </select>
                         <select
                           value={filterFormat}
                           onChange={(e) => setFilterFormat(e.target.value)}
