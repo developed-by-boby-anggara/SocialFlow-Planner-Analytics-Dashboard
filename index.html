@@ -220,7 +220,26 @@
         localStorage.setItem(`sf_accounts_${activeProjectId}`, JSON.stringify(updatedAccounts));
         setShowAccountModal(false);
       };
+      
+const handleDeleteProject = (projectIdToDelete, projectName) => {
+        if (projectIdToDelete === 'default-project') {
+          alert('Default Project tidak dapat dihapus.');
+          return;
+        }
 
+        const confirmDelete = window.confirm(`Apakah Anda yakin ingin menghapus "${projectName}"? Seluruh konfigurasi akun lokal untuk agency ini akan dibersihkan.`);
+        if (!confirmDelete) return;
+
+        const updatedList = projectsList.filter(p => p.id !== projectIdToDelete);
+        setProjectsList(updatedList);
+        localStorage.setItem('sf_custom_projects', JSON.stringify(updatedList));
+        localStorage.removeItem(`sf_accounts_${projectIdToDelete}`);
+
+        if (activeProjectId === projectIdToDelete) {
+          setActiveProjectId('default-project');
+          localStorage.setItem('sf_active_project_id', 'default-project');
+        }
+      };
       const handleCreateProject = (e) => {
         e.preventDefault();
         if (!newProjectForm.name.trim()) return;
@@ -2114,15 +2133,26 @@
 
           </div>
 
-              {/* MODAL TAMBAH AGENCY / CLIENT BARU */}
+              {/* MODAL TAMBAH & KELOLA LIST AGENCY */}
         {showNewProjectModal && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 text-slate-800">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-extrabold text-sm text-slate-900">Tambah Agency / Klien Baru</h3>
-                <button type="button" onClick={() => setShowNewProjectModal(false)} className="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-slate-800 flex flex-col max-h-[90vh]">
+              
+              <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900">Tambah Agency / Klien Baru</h3>
+                  <p className="text-[11px] text-slate-500">Kelola workspace agency aktif atau buat profil baru</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowNewProjectModal(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 font-bold transition"
+                >
+                  ✕
+                </button>
               </div>
-              <form onSubmit={handleCreateProject} className="space-y-3 text-xs">
+
+              <form onSubmit={handleCreateProject} className="space-y-3 text-xs mb-4">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Nama Agency / Klien</label>
                   <input
@@ -2135,7 +2165,7 @@
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Tipe</label>
+                  <label className="block font-bold text-slate-700 mb-1">Tipe Project</label>
                   <select
                     value={newProjectForm.type}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, type: e.target.value })}
@@ -2146,50 +2176,63 @@
                     <option value="UMKM">Brand / UMKM</option>
                   </select>
                 </div>
+
                 <div className="flex justify-end gap-2 pt-2">
-                  {/* DAFTAR AGENCY YANG SUDAH ADA & OPSI HAPUS */}
-              <div className="mt-4 pt-3 border-t border-slate-100">
-                <p className="font-bold text-[11px] text-slate-600 mb-2">Daftar Agency / Client Aktif:</p>
-                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                  {projectsList.map((p) => (
-                    <div key={p.id} className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100 text-xs">
-                      <div>
-                        <span className="font-bold text-slate-800">{p.name}</span>
-                        <span className="ml-1 text-[10px] text-slate-400">({p.type})</span>
-                      </div>
-                      {p.id !== 'default-project' && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteProject(p.id, p.name)}
-                          className="text-rose-500 hover:text-rose-700 font-bold px-1.5 py-0.5 rounded-lg hover:bg-rose-50"
-                          title="Hapus Agency ini"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
                   <button
                     type="button"
                     onClick={() => setShowNewProjectModal(false)}
-                    className="px-3.5 py-1.5 border border-slate-200 rounded-xl text-slate-600 font-semibold"
+                    className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition"
                   >
-                    Batal
+                    Tutup
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/20"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/20 transition"
                   >
                     Simpan Agency
                   </button>
                 </div>
               </form>
+
+              <div className="pt-3 border-t border-slate-100 flex flex-col">
+                <span className="font-extrabold text-[11px] text-slate-700 uppercase tracking-wider mb-2">
+                  Daftar Agency / Client Aktif:
+                </span>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {projectsList.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200/70 text-xs"
+                    >
+                      <div className="truncate pr-2">
+                        <p className="font-bold text-slate-800 truncate">{p.name}</p>
+                        <span className="text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                          {p.type}
+                        </span>
+                      </div>
+                      {p.id !== 'default-project' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProject(p.id, p.name)}
+                          className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-2 py-1 rounded-lg text-[11px] font-bold transition shrink-0"
+                          title="Hapus agency ini"
+                        >
+                          🗑️ Hapus
+                        </button>
+                      ) : (
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-200/60 px-2 py-0.5 rounded-lg shrink-0">
+                          Utama
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
           </div>
         )}
-
+          
         {/* MODAL KELOLA AKUN MEDIA SOSIAL PER AGENCY */}
         {showAccountModal && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
