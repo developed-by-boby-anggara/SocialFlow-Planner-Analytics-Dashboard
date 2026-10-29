@@ -1851,257 +1851,182 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                   </div>
                 )}
 
-                {/* TAB 7: PUSAT PLAN & TARGET MATRIKS MEDSOS */}
-                {currentTab === 'settings' && (
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                      <div>
-                        <h3 className="font-extrabold text-slate-900 text-lg">Pusat Plan & Target Matriks Media Sosial</h3>
-                        <p className="text-xs text-slate-500">Atur target total postingan mingguan serta rincian jenis konten spesifik di tiap media sosial.</p>
-                      </div>
-
-                      <div className="bg-indigo-600 text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center gap-3">
-                        <span className="text-xs font-semibold opacity-90 uppercase">Total Target Semua Medsos:</span>
-                        <span className="text-lg font-black font-mono">{grandTotalWeeklyTarget} Konten / Minggu</span>
-                      </div>
+                {/* TAB PLAN & TARGET MATRIKS */}
+              {currentTab === 'targets' && (
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-800">Pusat Plan & Target Matriks Media Sosial</h2>
+                      <p className="text-xs text-slate-500">Platform yang muncul di bawah disesuaikan otomatis dengan medsos aktif project ini.</p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAccountModal(true)}
+                      className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    >
+                      ⚙️ Aktifkan / Sembunyikan Platform
+                    </button>
+                  </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                      
-                      {/* INSTAGRAM */}
-                      <div className="bg-white rounded-3xl border-2 border-pink-200/90 shadow-sm overflow-hidden flex flex-col justify-between">
+                  {/* KARTU TARGET HANYA MUNCUL JIKA AKTIF */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    
+                    {/* 1. INSTAGRAM */}
+                    {Boolean(projectAccounts.instagram) && (
+                      <div className="bg-white rounded-2xl border-2 border-pink-400 p-5 shadow-xs flex flex-col justify-between">
                         <div>
-                          <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 p-4 text-white">
-                            <div className="flex justify-between items-center">
-                              <span className="font-black text-sm tracking-wide flex items-center gap-1.5">
-                                📷 INSTAGRAM
-                              </span>
-                              <span className="text-xs font-black bg-white/25 px-2.5 py-0.5 rounded-full">
-                                {metrics.igTotal} / {totalIgTarget} Post
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-pink-100 mt-1">Target Total: <b>{totalIgTarget} Postingan/Minggu</b></p>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-extrabold text-xs text-pink-700 flex items-center gap-1.5">📷 INSTAGRAM</span>
+                            <span className="text-[10px] font-bold bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full">
+                              {contents.filter(c => c.platform === 'Instagram').length} Post Aktif
+                            </span>
                           </div>
-
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-rose-800 bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-md">
-                                Video Reels
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={igTargets.reels}
-                                  onChange={(e) => setIgTargets({ ...igTargets, reels: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.igReels}</b></span>
-                              </div>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Video Reels</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'Instagram' && c.format === 'Video Reels').length} Post</span>
                             </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-md">
-                                Story Instagram
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={igTargets.story}
-                                  onChange={(e) => setIgTargets({ ...igTargets, story: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.igStory}</b></span>
-                              </div>
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Story Instagram</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'Instagram' && c.format === 'Story').length} Post</span>
                             </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-sky-800 bg-sky-100 border border-sky-200 px-2 py-0.5 rounded-md">
-                                Postingan Foto
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={igTargets.foto}
-                                  onChange={(e) => setIgTargets({ ...igTargets, foto: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.igFoto}</b></span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-indigo-800 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-md">
-                                Desain Grafis
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={igTargets.grafis}
-                                  onChange={(e) => setIgTargets({ ...igTargets, grafis: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.igGrafis}</b></span>
-                              </div>
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Postingan Foto</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'Instagram' && c.format === 'Postingan Foto').length} Post</span>
                             </div>
                           </div>
                         </div>
-
-                        <div className="p-3 bg-pink-50/50 border-t border-pink-100 text-center text-[11px] font-bold text-pink-700">
-                          Total Instagram: {totalIgTarget} Postingan
+                        <div className="text-center pt-4 mt-3 border-t border-pink-100 text-[11px] font-bold text-pink-700">
+                          Total Instagram Terjadwal: {contents.filter(c => c.platform === 'Instagram').length} Konten
                         </div>
                       </div>
+                    )}
 
-                      {/* TIKTOK */}
-                      <div className="bg-white rounded-3xl border-2 border-slate-800 shadow-sm overflow-hidden flex flex-col justify-between">
+                    {/* 2. TIKTOK */}
+                    {Boolean(projectAccounts.tiktok) && (
+                      <div className="bg-white rounded-2xl border-2 border-slate-900 p-5 shadow-xs flex flex-col justify-between">
                         <div>
-                          <div className="bg-black p-4 text-white">
-                            <div className="flex justify-between items-center">
-                              <span className="font-black text-sm tracking-wide flex items-center gap-1.5">
-                                🎵 TIKTOK
-                              </span>
-                              <span className="text-xs font-black bg-white/20 px-2.5 py-0.5 rounded-full">
-                                {metrics.ttTotal} / {totalTtTarget} Post
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-300 mt-1">Target Total: <b>{totalTtTarget} Postingan/Minggu</b></p>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">🎵 TIKTOK</span>
+                            <span className="text-[10px] font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded-full">
+                              {contents.filter(c => c.platform === 'TikTok').length} Post Aktif
+                            </span>
                           </div>
-
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-slate-900 bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-md">
-                                Video Pendek / Reels
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={ttTargets.video}
-                                  onChange={(e) => setTtTargets({ ...ttTargets, video: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-black focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.ttVideo}</b></span>
-                              </div>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Video Pendek / VT</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'TikTok' && (c.format === 'TikTok Video' || c.format === 'Video Reels')).length} Post</span>
                             </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-md">
-                                Story TikTok
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={ttTargets.story}
-                                  onChange={(e) => setTtTargets({ ...ttTargets, story: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-black focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.ttStory}</b></span>
-                              </div>
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Story TikTok</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'TikTok' && c.format === 'Story').length} Post</span>
                             </div>
                           </div>
                         </div>
-
-                        <div className="p-3 bg-slate-100 border-t border-slate-200 text-center text-[11px] font-bold text-slate-800">
-                          Total TikTok: {totalTtTarget} Postingan
+                        <div className="text-center pt-4 mt-3 border-t border-slate-200 text-[11px] font-bold text-slate-900">
+                          Total TikTok Terjadwal: {contents.filter(c => c.platform === 'TikTok').length} Konten
                         </div>
                       </div>
+                    )}
 
-                      {/* FACEBOOK */}
-                      <div className="bg-white rounded-3xl border-2 border-blue-200 shadow-sm overflow-hidden flex flex-col justify-between">
+                    {/* 3. FACEBOOK */}
+                    {Boolean(projectAccounts.facebook) && (
+                      <div className="bg-white rounded-2xl border-2 border-blue-500 p-5 shadow-xs flex flex-col justify-between">
                         <div>
-                          <div className="bg-blue-600 p-4 text-white">
-                            <div className="flex justify-between items-center">
-                              <span className="font-black text-sm tracking-wide flex items-center gap-1.5">
-                                👥 FACEBOOK
-                              </span>
-                              <span className="text-xs font-black bg-white/20 px-2.5 py-0.5 rounded-full">
-                                {metrics.fbTotal} / {totalFbTarget} Post
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-blue-100 mt-1">Target Total: <b>{totalFbTarget} Postingan/Minggu</b></p>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-extrabold text-xs text-blue-700 flex items-center gap-1.5">👥 FACEBOOK</span>
+                            <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                              {contents.filter(c => c.platform === 'Facebook').length} Post Aktif
+                            </span>
                           </div>
-
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-sky-800 bg-sky-100 border border-sky-200 px-2 py-0.5 rounded-md">
-                                Postingan Foto
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={fbTargets.foto}
-                                  onChange={(e) => setFbTargets({ ...fbTargets, foto: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.fbFoto}</b></span>
-                              </div>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Postingan Foto & Status</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'Facebook' && c.format === 'Postingan Foto').length} Post</span>
                             </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-blue-800 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md">
-                                Video FB / Reels
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={fbTargets.video}
-                                  onChange={(e) => setFbTargets({ ...fbTargets, video: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.fbVideo}</b></span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-indigo-800 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-md">
-                                Desain Grafis
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={fbTargets.grafis}
-                                  onChange={(e) => setFbTargets({ ...fbTargets, grafis: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.fbGrafis}</b></span>
-                              </div>
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Video FB / Reels</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'Facebook' && (c.format === 'Facebook Video' || c.format === 'Video Reels')).length} Post</span>
                             </div>
                           </div>
                         </div>
-
-                        <div className="p-3 bg-blue-50/50 border-t border-blue-100 text-center text-[11px] font-bold text-blue-700">
-                          Total Facebook: {totalFbTarget} Postingan
+                        <div className="text-center pt-4 mt-3 border-t border-blue-100 text-[11px] font-bold text-blue-700">
+                          Total Facebook Terjadwal: {contents.filter(c => c.platform === 'Facebook').length} Konten
                         </div>
                       </div>
+                    )}
 
-                    </div>
-
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center">✓</div>
+                    {/* 4. YOUTUBE */}
+                    {Boolean(projectAccounts.youtube) && (
+                      <div className="bg-white rounded-2xl border-2 border-red-500 p-5 shadow-xs flex flex-col justify-between">
                         <div>
-                          <h4 className="font-extrabold text-xs text-slate-900">Database Cloud Firestore Terhubung & Sinkron</h4>
-                          <p className="text-[11px] text-slate-500">Seluruh target matriks otomatis tersambung ke dashboard analitik.</p>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-extrabold text-xs text-red-700 flex items-center gap-1.5">▶️ YOUTUBE</span>
+                            <span className="text-[10px] font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
+                              {contents.filter(c => c.platform === 'YouTube').length} Post Aktif
+                            </span>
+                          </div>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">YouTube Shorts</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Shorts').length} Post</span>
+                            </div>
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Long Video (Landscape)</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Long Video').length} Post</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-center pt-4 mt-3 border-t border-red-100 text-[11px] font-bold text-red-700">
+                          Total YouTube Terjadwal: {contents.filter(c => c.platform === 'YouTube').length} Konten
                         </div>
                       </div>
+                    )}
 
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">⚡ Geser Jadwal Tertunda:</span>
-                        <button
-                          onClick={() => handleShiftPendingDays(1)}
-                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition"
-                        >
-                          +1 Hari
-                        </button>
-                        <button
-                          onClick={() => handleShiftPendingDays(7)}
-                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition"
-                        >
-                          +7 Hari
-                        </button>
+                    {/* 5. SHOPEE */}
+                    {Boolean(projectAccounts.shopee) && (
+                      <div className="bg-white rounded-2xl border-2 border-orange-500 p-5 shadow-xs flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-extrabold text-xs text-orange-700 flex items-center gap-1.5">🛍️ SHOPEE</span>
+                            <span className="text-[10px] font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
+                              {contents.filter(c => c.platform === 'Shopee').length} Post Aktif
+                            </span>
+                          </div>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Shopee Video (Affiliate)</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Video').length} Post</span>
+                            </div>
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <span className="font-semibold text-slate-700">Shopee Live Stream</span>
+                              <span className="font-mono font-bold text-indigo-600">{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Live Feed').length} Post</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-center pt-4 mt-3 border-t border-orange-100 text-[11px] font-bold text-orange-700">
+                          Total Shopee Terjadwal: {contents.filter(c => c.platform === 'Shopee').length} Konten
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                   </div>
-                )}
+
+                  {/* JIKA BELUM ADA MEDSOS YANG DIAKTIFKAN */}
+                  {!projectAccounts.instagram && !projectAccounts.tiktok && !projectAccounts.facebook && !projectAccounts.youtube && !projectAccounts.shopee && (
+                    <div className="p-8 bg-white border border-dashed border-slate-300 rounded-2xl text-center">
+                      <p className="text-xs font-bold text-slate-500 mb-2">Belum ada platform media sosial yang diaktifkan untuk project ini.</p>
+                      <button
+                        type="button"
+                        onClick={() => setShowAccountModal(true)}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
+                      >
+                        Pilih Platform yang Digunakan
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               </div>
             </main>
@@ -2233,53 +2158,89 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
           </div>
         )}
           
-        {/* MODAL KELOLA AKUN MEDIA SOSIAL PER AGENCY */}
+       {/* MODAL KELOLA & AKTIFKAN MEDSOS PER PROJECT */}
         {showAccountModal && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-slate-800">
-              <div className="flex justify-between items-center mb-3">
+              <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-900">Kelola Akun Medsos Agency</h3>
-                  <p className="text-[11px] text-slate-500">Project ID: <b>{activeProjectId}</b></p>
+                  <h3 className="font-extrabold text-base text-slate-900">Pilih & Atur Medsos Project</h3>
+                  <p className="text-[11px] text-slate-500">
+                    Aktifkan hanya platform yang dikelola oleh <b>{projectsList.find(p => p.id === activeProjectId)?.name}</b>
+                  </p>
                 </div>
-                <button type="button" onClick={() => setShowAccountModal(false)} className="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+                <button
+                  type="button"
+                  onClick={() => setShowAccountModal(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 font-bold"
+                >
+                  ✕
+                </button>
               </div>
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleSaveAccounts({
-                    instagram: e.target.ig.value.trim(),
-                    tiktok: e.target.tt.value.trim(),
-                    facebook: e.target.fb.value.trim(),
-                    youtube: e.target.yt.value.trim(),
-                    shopee: e.target.sp.value.trim()
-                  });
+                  const form = e.target;
+                  const updatedAccounts = {
+                    instagram: form.ig_active.checked ? form.ig.value.trim() || '@active' : '',
+                    tiktok: form.tt_active.checked ? form.tt.value.trim() || '@active' : '',
+                    facebook: form.fb_active.checked ? form.fb.value.trim() || 'Active Page' : '',
+                    youtube: form.yt_active.checked ? form.yt.value.trim() || 'Active Channel' : '',
+                    shopee: form.sp_active.checked ? form.sp.value.trim() || 'Active Shop' : ''
+                  };
+                  handleSaveAccounts(updatedAccounts);
                 }}
                 className="space-y-3 text-xs"
               >
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">📷 Akun Instagram</label>
-                  <input name="ig" defaultValue={projectAccounts.instagram} placeholder="@username" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-mono" />
+                {/* INSTAGRAM */}
+                <div className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
+                    <input type="checkbox" name="ig_active" defaultChecked={Boolean(projectAccounts.instagram)} className="rounded text-indigo-600 focus:ring-0 w-4 h-4" />
+                    <span>📷 Instagram</span>
+                  </label>
+                  <input name="ig" defaultValue={projectAccounts.instagram} placeholder="Username @akun (opsional)" className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono bg-white" />
                 </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">🎵 Akun TikTok</label>
-                  <input name="tt" defaultValue={projectAccounts.tiktok} placeholder="@username" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-mono" />
+
+                {/* TIKTOK */}
+                <div className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
+                    <input type="checkbox" name="tt_active" defaultChecked={Boolean(projectAccounts.tiktok)} className="rounded text-indigo-600 focus:ring-0 w-4 h-4" />
+                    <span>🎵 TikTok</span>
+                  </label>
+                  <input name="tt" defaultValue={projectAccounts.tiktok} placeholder="Username @akun (opsional)" className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono bg-white" />
                 </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">👥 Halaman Facebook</label>
-                  <input name="fb" defaultValue={projectAccounts.facebook} placeholder="Nama Halaman" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-mono" />
+
+                {/* FACEBOOK */}
+                <div className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
+                    <input type="checkbox" name="fb_active" defaultChecked={Boolean(projectAccounts.facebook)} className="rounded text-indigo-600 focus:ring-0 w-4 h-4" />
+                    <span>👥 Facebook</span>
+                  </label>
+                  <input name="fb" defaultValue={projectAccounts.facebook} placeholder="Nama Halaman Facebook" className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono bg-white" />
                 </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">▶️ Channel YouTube</label>
-                  <input name="yt" defaultValue={projectAccounts.youtube} placeholder="Nama Channel" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-mono" />
+
+                {/* YOUTUBE */}
+                <div className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
+                    <input type="checkbox" name="yt_active" defaultChecked={Boolean(projectAccounts.youtube)} className="rounded text-indigo-600 focus:ring-0 w-4 h-4" />
+                    <span>▶️ YouTube</span>
+                  </label>
+                  <input name="yt" defaultValue={projectAccounts.youtube} placeholder="Nama Channel YouTube" className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono bg-white" />
                 </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">🛍️ Toko Shopee</label>
-                  <input name="sp" defaultValue={projectAccounts.shopee} placeholder="Nama Toko Shopee" className="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-mono" />
+
+                {/* SHOPEE */}
+                <div className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
+                    <input type="checkbox" name="sp_active" defaultChecked={Boolean(projectAccounts.shopee)} className="rounded text-indigo-600 focus:ring-0 w-4 h-4" />
+                    <span>🛍️ Shopee</span>
+                  </label>
+                  <input name="sp" defaultValue={projectAccounts.shopee} placeholder="Nama Toko Shopee" className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono bg-white" />
                 </div>
-                <div className="flex justify-end gap-2 pt-3">
-                  <button type="button" onClick={() => setShowAccountModal(false)} className="px-3.5 py-1.5 border border-slate-200 rounded-xl text-slate-600 font-semibold">Batal</button>
-                  <button type="submit" className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/20">Simpan Akun</button>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setShowAccountModal(false)} className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-semibold">Batal</button>
+                  <button type="submit" className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/20">Terapkan ke Project Ini</button>
                 </div>
               </form>
             </div>
