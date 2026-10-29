@@ -2169,34 +2169,6 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                             </div>
                             <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
                               <span className="font-semibold text-slate-700">Shopee Live Stream</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-slate-400">Ada: {contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Live Feed').length}</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={matrixTargets.shopee?.live ?? 0}
-                                  onChange={(e) => updateTargetValue('shopee', 'live', e.target.value)}
-                                  className="w-14 text-center font-black bg-white border border-slate-200 rounded-lg py-1 px-1.5 text-xs text-indigo-600 focus:ring-2 focus:ring-indigo-500"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-center pt-3 mt-3 border-t border-orange-100 text-[11px] font-bold text-orange-700">
-                          Total Shopee: {platformTargetTotals.sp} Postingan
-                        </div>
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-              )}
-                      ⚙️ Aktifkan / Sembunyikan Platform
-                    </button>
-                  </div>
-
-                  {/* KARTU TARGET HANYA MUNCUL JIKA AKTIF */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     
                     {/* 1. INSTAGRAM */}
                     {Boolean(projectAccounts.instagram) && (
