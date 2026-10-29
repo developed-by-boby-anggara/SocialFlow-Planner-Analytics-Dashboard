@@ -888,11 +888,14 @@
                       {/* Kartu Ringkas IG */}
                       <div className="bg-white p-4 rounded-2xl border border-pink-200 shadow-xs relative overflow-hidden">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-black text-pink-700 bg-pink-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            📷 Instagram
-                          </span>
-                          <span className="text-xs font-black text-slate-800">{metrics.igTotal} / {totalIgTarget} Post</span>
-                        </div>
+                          <div className="flex items-center gap-2">
+  <span className="text-xs font-black text-pink-700 bg-pink-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+    📷 Instagram
+  </span>
+  <span id="sf-account-ig-badge" className="text-[10px] font-bold text-pink-600 bg-pink-100/60 px-2 py-0.5 rounded-md font-mono">
+    @username
+  </span>
+</div>
                         <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-3">
                           <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all" style={{ width: `${totalIgTarget > 0 ? Math.min(Math.round((metrics.igTotal/totalIgTarget)*100), 100) : 0}%` }}></div>
                         </div>
@@ -906,12 +909,14 @@
 
                       {/* Kartu Ringkas TikTok */}
                       <div className="bg-white p-4 rounded-2xl border border-slate-300 shadow-xs relative overflow-hidden">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-black text-black bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            🎵 TikTok
-                          </span>
-                          <span className="text-xs font-black text-slate-800">{metrics.ttTotal} / {totalTtTarget} Post</span>
-                        </div>
+                        <div className="flex items-center gap-2">
+  <span className="text-xs font-black text-black bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+    🎵 TikTok
+  </span>
+  <span id="sf-account-tt-badge" className="text-[10px] font-bold text-slate-700 bg-slate-200 px-2 py-0.5 rounded-md font-mono">
+    @username
+  </span>
+</div>
                         <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-3">
                           <div className="bg-black h-full rounded-full transition-all" style={{ width: `${totalTtTarget > 0 ? Math.min(Math.round((metrics.ttTotal/totalTtTarget)*100), 100) : 0}%` }}></div>
                         </div>
@@ -922,16 +927,22 @@
                       </div>
 
                       {/* Kartu Ringkas Facebook */}
-                      <div className="bg-white p-4 rounded-2xl border border-blue-200 shadow-xs relative overflow-hidden">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            👥 Facebook
-                          </span>
-                          <span className="text-xs font-black text-slate-800">{metrics.fbTotal} / {totalFbTarget} Post</span>
-                        </div>
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-3">
-                          <div className="bg-blue-600 h-full rounded-full transition-all" style={{ width: `${totalFbTarget > 0 ? Math.min(Math.round((metrics.fbTotal/totalFbTarget)*100), 100) : 0}%` }}></div>
-                        </div>
+                      <div className="flex items-center gap-2">
+  <span className="text-xs font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+    👥 Facebook
+  </span>
+  <span id="sf-account-fb-badge" className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md font-mono">
+    Page Name
+  </span>
+  <button 
+    type="button" 
+    onClick={() => window.SocialFlow?.Core?.Registry?.get('social-account-manager')?.promptEditAccounts()}
+    className="ml-auto text-[10px] text-slate-400 hover:text-indigo-600 font-bold"
+    title="Edit Akun Medsos Agency Ini"
+  >
+    ⚙️ Akun
+  </button>
+</div>
                         <div className="grid grid-cols-3 gap-1 text-[10px] text-slate-600">
                           <div>📸 Foto: <b>{metrics.fbFoto}</b>/{fbTargets.foto}</div>
                           <div>📹 Video: <b>{metrics.fbVideo}</b>/{fbTargets.video}</div>
