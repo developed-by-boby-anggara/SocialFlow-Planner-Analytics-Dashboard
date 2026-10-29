@@ -1761,16 +1761,15 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                             onChange={(e) => setIdeaForm({ ...ideaForm, title: e.target.value })}
                             className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none md:col-span-1"
                           />
-                          <select
-                          <select
-                            value={ideaForm.platform}
-                            onChange={(e) => setIdeaForm({ ...ideaForm, platform: e.target.value })}
-                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none font-medium"
-                          >
-                            {activePlatformList.map(p => (
-                              <option key={p} value={p}>{p}</option>
-                            ))}
-                          </select>
+                      <select
+  value={ideaForm.platform}
+  onChange={(e) => setIdeaForm({ ...ideaForm, platform: e.target.value })}
+  className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none font-medium"
+>
+  {activePlatformList.map(p => (
+    <option key={p} value={p}>{p}</option>
+  ))}
+</select>
                           <select
                             value={ideaForm.format}
                             onChange={(e) => setIdeaForm({ ...ideaForm, format: e.target.value })}
