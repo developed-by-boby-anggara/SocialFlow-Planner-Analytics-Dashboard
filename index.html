@@ -72,7 +72,7 @@
     }
 
     // --- IDENTITAS VISUAL PLATFORM ---
-    const PLATFORMS = {
+   const PLATFORMS = {
       TIKTOK: { 
         name: 'TikTok', 
         bg: 'bg-black text-white', 
@@ -93,6 +93,20 @@
         badge: 'bg-blue-600 text-white border-blue-600',
         border: 'border-blue-300',
         ring: 'focus:ring-blue-600'
+      },
+      YOUTUBE: { 
+        name: 'YouTube', 
+        bg: 'bg-red-600 text-white', 
+        badge: 'bg-red-600 text-white border-red-700',
+        border: 'border-red-300',
+        ring: 'focus:ring-red-600'
+      },
+      SHOPEE: { 
+        name: 'Shopee', 
+        bg: 'bg-orange-500 text-white', 
+        badge: 'bg-orange-500 text-white border-orange-600',
+        border: 'border-orange-300',
+        ring: 'focus:ring-orange-500'
       }
     };
 
@@ -100,6 +114,7 @@
     const PILLARS = ['Edukasi', 'Hiburan', 'Promosi', 'Testimoni', 'Behind the Scenes', 'Tips & Trik', 'Inspirasi'];
     
     const FORMATS = [
+      const FORMATS = [
       'Video Reels',
       'Story',
       'Postingan Foto',
@@ -107,7 +122,12 @@
       'Carousel',
       'TikTok Video',
       'Facebook Video',
+      'YouTube Long Video',
+      'YouTube Shorts',
+      'Shopee Video',
+      'Shopee Live Feed',
       'Live Streaming'
+    ];
     ];
 
     const FORMAT_BADGES = {
@@ -926,6 +946,48 @@
                         </div>
                       </div>
 
+                      {/* Kartu Ringkas YouTube */}
+                      <div className="bg-white p-4 rounded-2xl border border-red-200 shadow-xs relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-black text-red-700 bg-red-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              ▶️ YouTube
+                            </span>
+                            <span id="sf-account-yt-badge" className="text-[10px] font-bold text-red-700 bg-red-100/60 px-2 py-0.5 rounded-md font-mono">
+                              Channel
+                            </span>
+                          </div>
+                          <span className="text-xs font-black text-slate-800">
+                            {contents.filter(c => c.platform === 'YouTube').length} Post
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-600 mt-2 space-y-1">
+                          <div>Long Video: <b>{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Long Video').length}</b></div>
+                          <div>Shorts: <b>{contents.filter(c => c.platform === 'YouTube' && c.format === 'YouTube Shorts').length}</b></div>
+                        </div>
+                      </div>
+
+                      {/* Kartu Ringkas Shopee */}
+                      <div className="bg-white p-4 rounded-2xl border border-orange-200 shadow-xs relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-black text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              🛍️ Shopee
+                            </span>
+                            <span id="sf-account-shopee-badge" className="text-[10px] font-bold text-orange-700 bg-orange-100/60 px-2 py-0.5 rounded-md font-mono">
+                              Toko/Kreator
+                            </span>
+                          </div>
+                          <span className="text-xs font-black text-slate-800">
+                            {contents.filter(c => c.platform === 'Shopee').length} Post
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-600 mt-2 space-y-1">
+                          <div>Shopee Video: <b>{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Video').length}</b></div>
+                          <div>Live Feed: <b>{contents.filter(c => c.platform === 'Shopee' && c.format === 'Shopee Live Feed').length}</b></div>
+                        </div>
+                      </div>
+
                       {/* Kartu Ringkas Facebook */}
                       <div className="flex items-center gap-2">
   <span className="text-xs font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -1068,16 +1130,17 @@
                         className="text-xs border border-slate-200 rounded-xl px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                        <select
-                          value={filterPlatform}
-                          onChange={(e) => setFilterPlatform(e.target.value)}
-                          className="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-white font-medium"
-                        >
-                          <option value="ALL">Semua Platform</option>
-                          <option value="TikTok">TikTok</option>
-                          <option value="Instagram">Instagram</option>
-                          <option value="Facebook">Facebook</option>
-                        </select>
+                       <select
+                        value={formData.platform}
+                        onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-bold"
+                      >
+                        <option value="Instagram">Instagram (Reels, Story, Feed)</option>
+                        <option value="TikTok">TikTok (Short Video)</option>
+                        <option value="Facebook">Facebook (Post, Video)</option>
+                        <option value="YouTube">YouTube (Long Video, Shorts)</option>
+                        <option value="Shopee">Shopee (Video, Live Feed)</option>
+                      </select>
                         <select
                           value={filterFormat}
                           onChange={(e) => setFilterFormat(e.target.value)}
