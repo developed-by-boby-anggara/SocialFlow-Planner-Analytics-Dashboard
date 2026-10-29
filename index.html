@@ -163,10 +163,10 @@
       // State Daftar Agency / Projects Dinamis
       const [projectsList, setProjectsList] = useState(() => {
         const defaultProjects = [
-          { id: 'default-project', name: 'Main Agency (Default)', type: 'Agency' },
-          { id: 'agency-a', name: 'Agency A (Fashion Brand)', type: 'Agency' },
-          { id: 'agency-b', name: 'Agency B (Beauty & Care)', type: 'Agency' },
-          { id: 'agency-c', name: 'Agency C (F&B / Kuliner)', type: 'UMKM' }
+          { id: 'default-project', name: 'Project (Default)', type: 'Agency' },
+          { id: 'agency-a', name: 'Project A (Fashion Brand)', type: 'Agency' },
+          { id: 'agency-b', name: 'Project B (Beauty & Care)', type: 'Agency' },
+          { id: 'agency-c', name: 'Project C (F&B / Kuliner)', type: 'UMKM' }
         ];
         try {
           const saved = localStorage.getItem('sf_custom_projects');
