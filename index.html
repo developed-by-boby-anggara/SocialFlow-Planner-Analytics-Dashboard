@@ -16,22 +16,22 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <!-- Firebase App & Firestore SDK -->
- <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<!-- Modules SocialFlow V3 -->
-<script src="modules/core.js"></script>
-<script src="modules/workspace-manager.js"></script>
-<script src="modules/project-switcher-ui.js"></script>
-<script src="modules/social-account-manager.js"></script>
-<script src="modules/content-ai.js"></script>
-<script src="modules/content-ai-studio-ui.js"></script>
-<script src="modules/production-workflow.js"></script>
-<script src="modules/campaign-asset-manager.js"></script>
-<script src="modules/advanced-analytics.js"></script>
-<script src="modules/team-collaboration.js"></script>
-<script src="modules/smart-scheduler.js"></script>
-<script src="modules/system-operations.js"></script>
-<script src="modules/v3-ui-dock.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <!-- Modules SocialFlow V3 -->
+  <script src="modules/core.js"></script>
+  <script src="modules/workspace-manager.js"></script>
+  <script src="modules/project-switcher-ui.js"></script>
+  <script src="modules/social-account-manager.js"></script>
+  <script src="modules/content-ai.js"></script>
+  <script src="modules/content-ai-studio-ui.js"></script>
+  <script src="modules/production-workflow.js"></script>
+  <script src="modules/campaign-asset-manager.js"></script>
+  <script src="modules/advanced-analytics.js"></script>
+  <script src="modules/team-collaboration.js"></script>
+  <script src="modules/smart-scheduler.js"></script>
+  <script src="modules/system-operations.js"></script>
   
   <style>
     @media print {
@@ -217,11 +217,17 @@
         const saved = localStorage.getItem('sf_contents');
         return saved ? JSON.parse(saved) : [];
       });
-const [activeProjectId, setActiveProjectId] = useState(() => {
-    return (window.SocialFlow && window.SocialFlow.Core) 
-      ? (window.SocialFlow.Core.context.get().projectId || 'default-project') 
-      : 'default-project';
-  });
+
+      const [activeProjectId, setActiveProjectId] = useState(() => {
+        let saved = 'default-project';
+        try {
+          saved = localStorage.getItem('sf_active_project_id') || 'default-project';
+        } catch (e) {}
+        return (window.SocialFlow && window.SocialFlow.Core) 
+          ? (window.SocialFlow.Core.context.get().projectId || saved) 
+          : saved;
+      });
+
       const [ideas, setIdeas] = useState(() => {
         const saved = localStorage.getItem('sf_ideas');
         return saved ? JSON.parse(saved) : [];
@@ -262,26 +268,42 @@ const [activeProjectId, setActiveProjectId] = useState(() => {
         localStorage.setItem('sf_ideas', JSON.stringify(ideas));
       }, [ideas]);
 
+      // SINKRONISASI FIRESTORE SESUAI PROJECT AKTIF
       useEffect(() => {
-    const handleProjectSwitch = (payload) => {
-      if (payload && payload.projectId) {
-        setActiveProjectId(payload.projectId);
-      }
-    };
+        const handleProjectSwitch = (payload) => {
+          if (payload && payload.projectId) {
+            setActiveProjectId(payload.projectId);
+          }
+        };
 
-    if (window.SocialFlow && window.SocialFlow.Core) {
-      window.SocialFlow.Core.events.on('project:changed', handleProjectSwitch);
-    }
+        if (window.SocialFlow && window.SocialFlow.Core) {
+          window.SocialFlow.Core.events.on('project:changed', handleProjectSwitch);
+        }
 
         if (!firestoreDb) return;
-        const unsubscribe = firestoreDb.collection("contents").onSnapshot((snapshot) => {
-          if (!snapshot.empty) {
-            const remoteData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setContents(remoteData);
+
+        const unsubscribe = firestoreDb.collection("contents")
+          .where("projectId", "==", activeProjectId)
+          .onSnapshot((snapshot) => {
+            if (!snapshot.empty) {
+              const remoteData = snapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(),
+                projectId: doc.data().projectId || 'default-project'
+              }));
+              setContents(remoteData);
+            } else {
+              setContents([]);
+            }
+          }, (err) => console.warn("Firestore sync:", err));
+
+        return () => {
+          if (unsubscribe) unsubscribe();
+          if (window.SocialFlow && window.SocialFlow.Core) {
+            window.SocialFlow.Core.events.off('project:changed', handleProjectSwitch);
           }
-        }, (err) => console.warn("Firestore sync:", err));
-        return () => unsubscribe();
-      }, []);
+        };
+      }, [activeProjectId]);
 
       const openContentModal = (contentToEdit = null) => {
         if (contentToEdit) {
@@ -317,6 +339,7 @@ const [activeProjectId, setActiveProjectId] = useState(() => {
 
         const payload = {
           ...formData,
+          projectId: activeProjectId || 'default-project',
           scheduledTime: final24HourTime,
           views: Number(formData.views) || 0,
           reach: Number(formData.reach) || 0,
@@ -358,7 +381,13 @@ const [activeProjectId, setActiveProjectId] = useState(() => {
 
       const handleDuplicateContent = (item) => {
         const dupId = "cnt-" + Date.now();
-        const dup = { ...item, id: dupId, title: item.title + " (Duplikat)", status: "Ide" };
+        const dup = { 
+          ...item, 
+          id: dupId, 
+          projectId: activeProjectId || 'default-project',
+          title: item.title + " (Duplikat)", 
+          status: "Ide" 
+        };
         setContents(prev => [dup, ...prev]);
         if (firestoreDb) {
           try { firestoreDb.collection("contents").doc(dupId).set(dup); } catch (err) {}
@@ -380,7 +409,7 @@ const [activeProjectId, setActiveProjectId] = useState(() => {
         showToastMessage(`Seluruh jadwal belum tayang digeser +${days} hari!`);
       };
 
-      // FITUR BARU: SHARE AGENDA KONTEN KE WHATSAPP SECARA PROFESIONAL
+      // FITUR SHARE AGENDA KONTEN KE WHATSAPP
       const handleShareWhatsAppAgenda = () => {
         if (contents.length === 0) {
           alert("Belum ada agenda konten untuk dibagikan.");
@@ -1665,401 +1694,3 @@ const [activeProjectId, setActiveProjectId] = useState(() => {
                                 Story TikTok
                               </span>
                               <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={ttTargets.story}
-                                  onChange={(e) => setTtTargets({ ...ttTargets, story: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-black focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.ttStory}</b></span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="p-3 bg-slate-100 border-t border-slate-200 text-center text-[11px] font-bold text-slate-800">
-                          Total TikTok: {totalTtTarget} Postingan
-                        </div>
-                      </div>
-
-                      {/* FACEBOOK */}
-                      <div className="bg-white rounded-3xl border-2 border-blue-200 shadow-sm overflow-hidden flex flex-col justify-between">
-                        <div>
-                          <div className="bg-blue-600 p-4 text-white">
-                            <div className="flex justify-between items-center">
-                              <span className="font-black text-sm tracking-wide flex items-center gap-1.5">
-                                👥 FACEBOOK
-                              </span>
-                              <span className="text-xs font-black bg-white/20 px-2.5 py-0.5 rounded-full">
-                                {metrics.fbTotal} / {totalFbTarget} Post
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-blue-100 mt-1">Target Total: <b>{totalFbTarget} Postingan/Minggu</b></p>
-                          </div>
-
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-sky-800 bg-sky-100 border border-sky-200 px-2 py-0.5 rounded-md">
-                                Postingan Foto
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={fbTargets.foto}
-                                  onChange={(e) => setFbTargets({ ...fbTargets, foto: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.fbFoto}</b></span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-blue-800 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md">
-                                Video FB / Reels
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={fbTargets.video}
-                                  onChange={(e) => setFbTargets({ ...fbTargets, video: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.fbVideo}</b></span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-xs font-bold text-indigo-800 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-md">
-                                Desain Grafis
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={fbTargets.grafis}
-                                  onChange={(e) => setFbTargets({ ...fbTargets, grafis: Number(e.target.value) })}
-                                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs w-14 text-center font-bold bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400 w-16 text-right">Ada: <b>{metrics.fbGrafis}</b></span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="p-3 bg-blue-50/50 border-t border-blue-100 text-center text-[11px] font-bold text-blue-700">
-                          Total Facebook: {totalFbTarget} Postingan
-                        </div>
-                      </div>
-
-                    </div>
-
-                    <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center">✓</div>
-                        <div>
-                          <h4 className="font-extrabold text-xs text-slate-900">Database Cloud Firestore Terhubung & Sinkron</h4>
-                          <p className="text-[11px] text-slate-500">Seluruh target matriks otomatis tersambung ke dashboard analitik.</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">⚡ Geser Jadwal Tertunda:</span>
-                        <button
-                          onClick={() => handleShiftPendingDays(1)}
-                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition"
-                        >
-                          +1 Hari
-                        </button>
-                        <button
-                          onClick={() => handleShiftPendingDays(7)}
-                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition"
-                        >
-                          +7 Hari
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-                )}
-
-              </div>
-            </main>
-
-            {/* BOTTOM NAV BAR */}
-            {deviceMode === 'hp' && (
-              <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 flex justify-around items-center z-40 max-w-md mx-auto rounded-b-[32px]">
-                {[
-                  { id: 'dashboard', label: 'Home', icon: '📊' },
-                  { id: 'planner', label: 'Planner', icon: '📝' },
-                  { id: 'calendar', label: 'Kalender', icon: '📅' },
-                  { id: 'analytics', label: 'Grafik', icon: '📈' },
-                  { id: 'ideas', label: 'Ide', icon: '💡' },
-                  { id: 'settings', label: 'Plan', icon: '🎯' }
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => setCurrentTab(item.id)}
-                    className={`flex flex-col items-center py-1 px-2 rounded-lg text-[10px] font-bold ${
-                      currentTab === item.id ? 'text-indigo-600' : 'text-slate-400'
-                    }`}
-                  >
-                    <span className="text-base">{item.icon}</span>
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-          </div>
-
-          {/* MODAL FORM KONTEN (DIGITAL 24 JAM TANPA AM/PM & PILIHAN MEDSOS RESMI) */}
-          {showContentModal && (
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-              <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl my-8 border border-slate-100">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-base font-extrabold text-slate-900">
-                    {editingContent ? 'Edit Rencana Konten' : 'Tambah Rencana Konten Baru'}
-                  </h3>
-                  <button onClick={() => setShowContentModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-                </div>
-
-                <form onSubmit={handleSaveContent} className="space-y-3.5 text-xs">
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Judul Konten / Hook Gagasan</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Contoh: 3 Tips Outfit Minimalis 2026"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Platform Media Sosial</label>
-                      <select
-                        value={formData.platform}
-                        onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-bold"
-                      >
-                        <option value="Instagram">Instagram (Reels, Story, Feed)</option>
-                        <option value="TikTok">TikTok (Short Video)</option>
-                        <option value="Facebook">Facebook (Post, Video)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Jenis / Format Konten</label>
-                      <select
-                        value={formData.format}
-                        onChange={(e) => setFormData({ ...formData, format: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-semibold"
-                      >
-                        {FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Pillar Konten</label>
-                      <select
-                        value={formData.pillar}
-                        onChange={(e) => setFormData({ ...formData, pillar: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white"
-                      >
-                        {PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Status Produksi</label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white"
-                      >
-                        {STATUS_LIST.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Jadwal Tanggal</label>
-                      <input
-                        type="date"
-                        value={formData.scheduledDate}
-                        onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="block font-bold text-slate-700">Jam Posting (24 Jam WIB)</label>
-                        <span className="text-[10px] text-indigo-600 font-black font-mono">
-                          {schedHour.padStart(2, '0')}:{schedMinute.padStart(2, '0')} WIB
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex-1 relative">
-                          <select
-                            value={schedHour}
-                            onChange={(e) => setSchedHour(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-mono font-bold bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none appearance-none text-center cursor-pointer"
-                          >
-                            {HOURS_24.map(h => (
-                              <option key={h} value={h}>{h}</option>
-                            ))}
-                          </select>
-                          <span className="absolute right-2 top-2 text-[10px] text-slate-400 pointer-events-none">j</span>
-                        </div>
-
-                        <span className="font-black text-slate-400">:</span>
-
-                        <div className="flex-1 relative">
-                          <select
-                            value={schedMinute}
-                            onChange={(e) => setSchedMinute(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-mono font-bold bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none appearance-none text-center cursor-pointer"
-                          >
-                            {MINUTES_60.map(m => (
-                              <option key={m} value={m}>{m}</option>
-                            ))}
-                          </select>
-                          <span className="absolute right-2 top-2 text-[10px] text-slate-400 pointer-events-none">m</span>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-1.5 mt-1.5">
-                        <button
-                          type="button"
-                          onClick={() => { setSchedHour('12'); setSchedMinute('00'); }}
-                          className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 transition"
-                        >
-                          12:00 Siang
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setSchedHour('17'); setSchedMinute('00'); }}
-                          className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 transition"
-                        >
-                          17:00 Sore
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setSchedHour('19'); setSchedMinute('00'); }}
-                          className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 transition"
-                        >
-                          19:00 Malam
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setSchedHour('21'); setSchedMinute('00'); }}
-                          className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 transition"
-                        >
-                          21:00 Malam
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Link Referensi</label>
-                      <input
-                        type="url"
-                        placeholder="https://..."
-                        value={formData.referenceUrl}
-                        onChange={(e) => setFormData({ ...formData, referenceUrl: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1">Link File / Aset Desain</label>
-                      <input
-                        type="url"
-                        placeholder="Google Drive link..."
-                        value={formData.assetUrl}
-                        onChange={(e) => setFormData({ ...formData, assetUrl: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Caption</label>
-                    <textarea
-                      rows="2"
-                      placeholder="Tulis caption dan call-to-action..."
-                      value={formData.caption}
-                      onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs"
-                    ></textarea>
-                  </div>
-
-                  {formData.status === 'Published' && (
-                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                      <span className="font-bold text-slate-800 text-[11px] block">Pencatatan Metrik Performa:</span>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <label className="block text-[10px] text-slate-500 font-semibold">Views</label>
-                          <input
-                            type="number"
-                            value={formData.views}
-                            onChange={(e) => setFormData({ ...formData, views: e.target.value })}
-                            className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] text-slate-500 font-semibold">Reach</label>
-                          <input
-                            type="number"
-                            value={formData.reach}
-                            onChange={(e) => setFormData({ ...formData, reach: e.target.value })}
-                            className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] text-slate-500 font-semibold">Likes</label>
-                          <input
-                            type="number"
-                            value={formData.likes}
-                            onChange={(e) => setFormData({ ...formData, likes: e.target.value })}
-                            className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowContentModal(false)}
-                      className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-semibold hover:bg-slate-50"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-5 py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-md shadow-indigo-600/30 hover:bg-indigo-700"
-                    >
-                      Simpan Konten
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-        </div>
-      );
-    }
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-</body>
-</html>
