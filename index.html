@@ -718,22 +718,28 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
           viewsTikTok, viewsInstagram, viewsFacebook
         };
       }, [contents, grandTotalWeeklyTarget]);
-
-      const filteredContents = useMemo(() => {
+// DAFTAR PLATFORM YANG SEDANG AKTIF DICENTANG
+      const activePlatformList = useMemo(() => {
+        const all = ['Instagram', 'TikTok', 'Facebook', 'YouTube', 'Shopee'];
+        return all.filter(p => Boolean(projectAccounts[p.toLowerCase()]));
+      }, [projectAccounts]);
+     const filteredContents = useMemo(() => {
         return contents.filter(c => {
+          const isPlatformActive = Boolean(projectAccounts[c.platform?.toLowerCase()]);
           const matchSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               (c.caption && c.caption.toLowerCase().includes(searchQuery.toLowerCase()));
           const matchPlatform = filterPlatform === 'ALL' || c.platform === filterPlatform;
           const matchStatus = filterStatus === 'ALL' || c.status === filterStatus;
           const matchFormat = filterFormat === 'ALL' || c.format === filterFormat;
-          return matchSearch && matchPlatform && matchStatus && matchFormat;
+          return isPlatformActive && matchSearch && matchPlatform && matchStatus && matchFormat;
         });
-      }, [contents, searchQuery, filterPlatform, filterStatus, filterFormat]);
+      }, [contents, searchQuery, filterPlatform, filterStatus, filterFormat, projectAccounts]);
 
       const filteredCalendarContents = useMemo(() => {
-        if (calendarStatusFilter === 'ALL') return contents;
-        return contents.filter(c => c.status === calendarStatusFilter);
-      }, [contents, calendarStatusFilter]);
+        const activeOnly = contents.filter(c => Boolean(projectAccounts[c.platform?.toLowerCase()]));
+        if (calendarStatusFilter === 'ALL') return activeOnly;
+        return activeOnly.filter(c => c.status === calendarStatusFilter);
+      }, [contents, calendarStatusFilter, projectAccounts]);
 
       const handleExportCSV = () => {
         const headers = ["ID", "Project", "Judul", "Platform", "Format", "Pillar", "Status", "Tanggal", "Jam (24 Jam)", "Views", "Reach", "Likes", "Comments", "Shares", "Saves", "Referensi", "Aset"];
@@ -1284,21 +1290,17 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
 
                 {/* TAB 2: CONTENT PLANNER */}
                 {currentTab === 'planner' && (
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2 items-center justify-between bg-white p-3.5 rounded-2xl border border-slate-200">
-                      <input
-                        type="text"
-                        placeholder="Cari judul konten atau caption..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="text-xs border border-slate-200 rounded-xl px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                      <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                       <select
-                        value={formData.platform}
-                        onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-bold"
-                      >
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <select
+                          value={filterPlatform}
+                          onChange={(e) => setFilterPlatform(e.target.value)}
+                          className="text-xs border border-slate-200 rounded-xl px-3 py-2 bg-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          <option value="ALL">Semua Platform Aktif</option>
+                          {activePlatformList.map(p => (
+                            <option key={p} value={p}>{p}</option>
+                          ))}
+                        </select>
                         <option value="Instagram">Instagram (Reels, Story, Feed)</option>
                         <option value="TikTok">TikTok (Short Video)</option>
                         <option value="Facebook">Facebook (Post, Video)</option>
@@ -1757,13 +1759,14 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                             className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none md:col-span-1"
                           />
                           <select
+                          <select
                             value={ideaForm.platform}
                             onChange={(e) => setIdeaForm({ ...ideaForm, platform: e.target.value })}
                             className="border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none font-medium"
                           >
-                            <option value="TikTok">TikTok</option>
-                            <option value="Instagram">Instagram</option>
-                            <option value="Facebook">Facebook</option>
+                            {activePlatformList.map(p => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
                           </select>
                           <select
                             value={ideaForm.format}
@@ -2297,9 +2300,13 @@ const handleDeleteProject = (projectIdToDelete, projectName) => {
                         onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
                         className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-bold"
                       >
-                        <option value="Instagram">Instagram (Reels, Story, Feed)</option>
-                        <option value="TikTok">TikTok (Short Video)</option>
-                        <option value="Facebook">Facebook (Post, Video)</option>
+                        {activePlatformList.length === 0 ? (
+                          <option value="">(Belum ada medsos aktif)</option>
+                        ) : (
+                          activePlatformList.map(p => (
+                            <option key={p} value={p}>{p}</option>
+                          ))
+                        )}
                       </select>
                     </div>
                     <div>
