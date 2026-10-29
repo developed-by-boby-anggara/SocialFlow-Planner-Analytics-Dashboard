@@ -274,14 +274,19 @@
       // LISTENER PERGANTIAN PROYEK & QUERY FIRESTORE
       useEffect(() => {
         const handleProjectSwitch = (payload) => {
-          if (payload && payload.projectId) {
-            setActiveProjectId(payload.projectId);
+          const newId = (payload && payload.projectId) ? payload.projectId : (payload && payload.detail && payload.detail.projectId);
+          if (newId) {
+            setActiveProjectId(newId);
           }
         };
 
-        if (window.SocialFlow && window.SocialFlow.Core) {
-          window.SocialFlow.Core.events.on('project:changed', handleProjectSwitch);
+        const sfCore = window.SocialFlow && window.SocialFlow.Core;
+        const hasCoreEvents = sfCore && sfCore.events && typeof sfCore.events.on === 'function';
+
+        if (hasCoreEvents) {
+          sfCore.events.on('project:changed', handleProjectSwitch);
         }
+        window.addEventListener('project:changed', handleProjectSwitch);
 
         if (!firestoreDb) return;
         const unsubscribe = firestoreDb.collection("contents")
@@ -301,9 +306,10 @@
 
         return () => {
           unsubscribe();
-          if (window.SocialFlow && window.SocialFlow.Core) {
-            window.SocialFlow.Core.events.off('project:changed', handleProjectSwitch);
+          if (hasCoreEvents && typeof sfCore.events.off === 'function') {
+            sfCore.events.off('project:changed', handleProjectSwitch);
           }
+          window.removeEventListener('project:changed', handleProjectSwitch);
         };
       }, [activeProjectId]);
 
