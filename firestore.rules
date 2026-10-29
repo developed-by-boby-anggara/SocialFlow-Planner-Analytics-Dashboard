@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =====================================================================
+    // HELPER FUNCTIONS & RBAC ENFORCEMENT
+    // =====================================================================
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isProjectMember(projId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/project_members/$(projId + '_' + request.auth.uid));
+    }
+
+    function getMemberDoc(projId) {
+      return get(/databases/$(database)/documents/project_members/$(projId + '_' + request.auth.uid)).data;
+    }
+
+    function getUserRole(projId) {
+      return getMemberDoc(projId).role;
+    }
+
+    function isProjectAdmin(projId) {
+      return isProjectMember(projId) && (getUserRole(projId) in ['Owner', 'Admin']);
+    }
+
+    function isInternalTeam(projId) {
+      return isProjectMember(projId) &&
+        (getUserRole(projId) in ['Owner', 'Admin', 'Strategist', 'Editor', 'Content Creator', 'Analyst']);
+    }
+
+    function isFinancePrivileged(projId) {
+      return isProjectMember(projId) &&
+        (getUserRole(projId) in ['Owner', 'Admin', 'Strategist']);
+    }
+
+    function isProjectIdUnchanged() {
+      return request.resource.data.projectId == resource.data.projectId;
+    }
+
+    // =====================================================================
+    // 1. WORKSPACES (Tenant Isolation)
+    // =====================================================================
+    match /workspaces/{workspaceId} {
+      allow read: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // =====================================================================
+    // 2. PROJECT MEMBERS & RBAC (Strict ID & Role Verification)
+    // =====================================================================
+    match /project_members/{memberId} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || 
+        isProjectMember(resource.data.projectId)
+      );
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.projectId is string &&
+        request.resource.data.uid is string &&
+        memberId == request.resource.data.projectId + '_' + request.resource.data.uid &&
+        request.resource.data.role in ['Owner', 'Admin', 'Strategist', 'Editor', 'Content Creator', 'Analyst', 'Client Reviewer', 'Viewer'] &&
+        isProjectAdmin(request.resource.data.projectId);
+
+      allow update: if isProjectAdmin(resource.data.projectId) &&
+        request.resource.data.projectId == resource.data.projectId &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.role in ['Owner', 'Admin', 'Strategist', 'Editor', 'Content Creator', 'Analyst', 'Client Reviewer', 'Viewer'];
+
+      allow delete: if isProjectAdmin(resource.data.projectId);
+    }
+
+    // =====================================================================
+    // 3. CONTENTS (Legacy Matrix & Field-Level RBAC)
+    // =====================================================================
+    match /contents/{contentId} {
+      allow read: if isProjectMember(resource.data.projectId);
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.projectId is string &&
+        isProjectMember(request.resource.data.projectId) &&
+        (getUserRole(request.resource.data.projectId) in ['Owner', 'Admin', 'Strategist', 'Content Creator', 'Editor']);
+
+      allow update: if isProjectMember(resource.data.projectId) && isProjectIdUnchanged() && (
+        getUserRole(resource.data.projectId) in ['Owner', 'Admin', 'Strategist', 'Editor'] ||
+        (getUserRole(resource.data.projectId) == 'Content Creator' && 
+         resource.data.workflowStatus in ['Idea', 'Brief', 'Revision Required']) ||
+        (getUserRole(resource.data.projectId) == 'Client Reviewer' && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['workflowStatus', 'clientFeedback', 'updatedAt']))
+      );
+
+      allow delete: if isProjectMember(resource.data.projectId) && isProjectAdmin(resource.data.projectId);
+    }
+
+    // =====================================================================
+    // 4. FINANCIAL & PROFITABILITY COLLECTIONS
+    // =====================================================================
+    match /cost_records/{recordId} {
+      allow read: if isFinancePrivileged(resource.data.projectId);
+      allow create: if isAuthenticated() && isFinancePrivileged(request.resource.data.projectId);
+      allow update: if isFinancePrivileged(resource.data.projectId) && isProjectIdUnchanged();
+      allow delete: if isFinancePrivileged(resource.data.projectId);
+    }
+
+    match /client_invoices/{invoiceId} {
+      allow read: if isFinancePrivileged(resource.data.projectId);
+      allow create: if isAuthenticated() && isFinancePrivileged(request.resource.data.projectId);
+      allow update: if isFinancePrivileged(resource.data.projectId) && isProjectIdUnchanged();
+      allow delete: if isProjectAdmin(resource.data.projectId);
+    }
+
+    match /affiliate_records/{affId} {
+      allow read: if isFinancePrivileged(resource.data.projectId);
+      allow create: if isAuthenticated() && isFinancePrivileged(request.resource.data.projectId);
+      allow update: if isFinancePrivileged(resource.data.projectId) && isProjectIdUnchanged();
+      allow delete: if isFinancePrivileged(resource.data.projectId);
+    }
+
+    // =====================================================================
+    // 5. CAMPAIGNS, ASSETS & SOCIAL ACCOUNTS
+    // =====================================================================
+    match /campaigns/{campaignId} {
+      allow read: if isProjectMember(resource.data.projectId);
+      allow create: if isAuthenticated() && isInternalTeam(request.resource.data.projectId);
+      allow update: if isInternalTeam(resource.data.projectId) && isProjectIdUnchanged();
+      allow delete: if isProjectAdmin(resource.data.projectId);
+    }
+
+    match /campaign_assets/{assetId} {
+      allow read: if isProjectMember(resource.data.projectId);
+      allow create: if isAuthenticated() && isInternalTeam(request.resource.data.projectId);
+      allow update: if isInternalTeam(resource.data.projectId) && isProjectIdUnchanged();
+      allow delete: if isInternalTeam(resource.data.projectId);
+    }
+
+    match /social_accounts/{accId} {
+      allow read: if isProjectMember(resource.data.projectId);
+      allow create: if isAuthenticated() && isProjectAdmin(request.resource.data.projectId);
+      allow update: if isProjectAdmin(resource.data.projectId) && isProjectIdUnchanged();
+      allow delete: if isProjectAdmin(resource.data.projectId);
+    }
+
+    // =====================================================================
+    // 6. SCHEDULING, AUTOMATION & AUDIT TRAILS
+    // =====================================================================
+    match /publishing_schedules/{scheduleId} {
+      allow read: if isProjectMember(resource.data.projectId);
+      allow create: if isAuthenticated() && isInternalTeam(request.resource.data.projectId);
+      allow update: if isInternalTeam(resource.data.projectId) && isProjectIdUnchanged();
+      allow delete: if isProjectAdmin(resource.data.projectId);
+    }
+
+    match /automation_rules/{ruleId} {
+      allow read: if isProjectMember(resource.data.projectId);
+      allow create: if isAuthenticated() && isProjectAdmin(request.resource.data.projectId);
+      allow update: if isProjectAdmin(resource.data.projectId) && isProjectIdUnchanged();
+      allow delete: if isProjectAdmin(resource.data.projectId);
+    }
+
+    match /activity_logs/{logId} {
+      allow read: if isProjectMember(resource.data.projectId);
+      allow create: if isAuthenticated() && request.resource.data.projectId is string && isProjectMember(request.resource.data.projectId);
+      allow update, delete: if false;
+    }
+
+    match /app_notifications/{ntfId} {
+      allow read: if isProjectMember(resource.data.projectId);
+      allow create: if isAuthenticated() && isProjectMember(request.resource.data.projectId);
+      allow update: if isProjectMember(resource.data.projectId) && isProjectIdUnchanged() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if false;
+    }
+  }
+}
